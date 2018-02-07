@@ -3,6 +3,7 @@ python:
   - "3.6"
 cache: pip
 install:
+  - sudo apt-get install enchant
   - pip install -r requirements.txt
 script:
   - pytest
