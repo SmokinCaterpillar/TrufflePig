@@ -9,7 +9,7 @@ def count_paragraphs(text):
     return text.count('\n\n') + 1
 
 
-def detect_language(text, max_length=1024):
+def detect_language(text, max_length=5000):
     """ Detexts text language, returns None in case of failure
 
     Parameters
