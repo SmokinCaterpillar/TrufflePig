@@ -32,3 +32,7 @@ def test_replace_newlines():
     assert result == 'Hi ee'
 
 
+def test_filter_punctuation():
+    result = tptf.filter_punctuation('hi. my. name. is yolo!;;k;')
+    assert result == 'hi my name is yolok'
+

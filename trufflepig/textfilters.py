@@ -29,3 +29,8 @@ def filter_formatting(text):
 
 def replace_newlines(text):
     return re.sub('\s+', ' ', text)
+
+
+def filter_punctuation(text):
+    return re.sub('[;,.?!]+', '', text)
+
