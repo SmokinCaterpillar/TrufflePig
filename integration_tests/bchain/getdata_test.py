@@ -25,7 +25,7 @@ def test_get_headers(steem, bchain):
     assert headers
 
 
-def test_get_headers_bchain(steem):
+def test_get_headers2(steem):
     target = pd.datetime.utcnow() - pd.Timedelta(days=3)
     minutes_ago = target - pd.Timedelta(minutes=3)
     headers = tpbg.get_block_headers_between(minutes_ago, target, steem)
@@ -35,5 +35,6 @@ def test_get_headers_bchain(steem):
 def test_find_offset(steem, bchain):
     now = pd.datetime.utcnow()
     target = now - pd.Timedelta(days=42)
-    offset, datetime = tpbg.find_nearest_block_num(target, steem, bchain)
-    assert 0 < offset <  bchain.get_current_block_num()
+    latest_block_num = bchain.get_current_block_num()
+    offset, datetime = tpbg.find_nearest_block_num(target, steem, latest_block_num)
+    assert 0 < offset <  latest_block_num
