@@ -1,4 +1,6 @@
 pytest
 numpy
+pandas
 langdetect==1.0.7
 pyenchant==2.0.0
+steem==0.18.103
