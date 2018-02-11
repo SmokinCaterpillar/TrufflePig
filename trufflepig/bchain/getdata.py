@@ -233,7 +233,11 @@ def scrape_or_load_full_day(date, steem, directory, overwrite=False,
     start_datetime = pd.to_datetime(date)
     end_datetime = start_datetime + pd.Timedelta(days=1)
     if not os.path.isdir(directory):
-        os.makedirs(directory)
+        try:
+            os.makedirs(directory)
+        except FileExistsError:
+            # race conditions
+            pass
     filename = FILENAME_TEMPLATE.format(year=start_datetime.year,
                                         month=start_datetime.month,
                                         day=start_datetime.day)
@@ -278,6 +282,8 @@ def scrape_or_load_training_data_parallel(node_urls, directory,
 
     if current_datetime is None:
         current_datetime = pd.datetime.utcnow()
+    else:
+        current_datetime = pd.to_datetime(current_datetime)
 
     start_datetime = current_datetime - pd.Timedelta(days=days + offset)
 
