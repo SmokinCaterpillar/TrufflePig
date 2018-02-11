@@ -6,6 +6,6 @@ install:
   - sudo apt-get install enchant
   - pip install -r requirements.txt
 script:
-  - py.test coveralls/tests.py --doctest-modules --pep8 coveralls -v --cov coveralls --cov-report term-missing
+  - py.test coveralls/tests.py
 after_success:
   - coveralls
