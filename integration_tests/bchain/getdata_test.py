@@ -4,6 +4,7 @@ import shutil
 import tempfile
 
 import pandas as pd
+from pandas.testing import assert_frame_equal
 from steem import Steem
 from steem.blockchain import Blockchain
 
@@ -18,6 +19,11 @@ def steem():
 @pytest.fixture
 def bchain(steem):
     return Blockchain(steem)
+
+
+@pytest.fixture
+def temp_dir(tmpdir_factory):
+    return tmpdir_factory.mktemp('test', numbered=True)
 
 
 def test_get_headers(steem, bchain):
@@ -51,16 +57,25 @@ def test_get_all_posts_between(steem):
     assert posts
 
 
-def test_scrape_date(steem):
+def test_scrape_date(steem, temp_dir):
     yesterday = (pd.datetime.utcnow() - pd.Timedelta(days=1)).date()
 
-    directory = tempfile.mkdtemp()
-    tpbg.scrape_or_load_full_day(yesterday, steem, directory, stop_after=25)
+    p1 = tpbg.scrape_or_load_full_day(yesterday, steem, temp_dir, stop_after=25)
 
-    assert len(os.listdir(directory)) == 1
+    assert len(os.listdir(temp_dir)) == 1
 
-    tpbg.scrape_or_load_full_day(yesterday, steem, directory, stop_after=25)
+    p2 = tpbg.scrape_or_load_full_day(yesterday, steem, temp_dir, stop_after=25)
 
-    assert len(os.listdir(directory)) == 1
+    assert len(os.listdir(temp_dir)) == 1
 
-    shutil.rmtree(directory)
+    assert_frame_equal(p1, p2)
+    assert len(p1) > 0
+
+
+def test_scrape_or_load_data_parallel(temp_dir):
+    frames = tpbg.scrape_or_load_training_data_parallel([config.NODE_URL],
+                                                       temp_dir,
+                                                       days=5,
+                                                       stop_after=10,
+                                                       ncores=5)
+    assert len(frames) == 5

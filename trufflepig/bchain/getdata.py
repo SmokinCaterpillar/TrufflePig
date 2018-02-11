@@ -1,8 +1,10 @@
 import logging
 import os
+import multiprocessing as mp
 from collections import OrderedDict
 
 import pandas as pd
+from steem import Steem
 from steem.blockchain import Blockchain
 from steem.post import Post
 import json
@@ -248,3 +250,51 @@ def scrape_or_load_full_day(date, steem, directory, overwrite=False,
             logger.info('Storing file {} to disk'.format(filename))
             post_frame.to_pickle(filename, compression='gzip')
     return post_frame
+
+
+def scrape_or_load_full_day_mp(date, node_urls, directory, overwrite=False,
+                            store=True,
+                            stop_after=None):
+    steem = Steem(nodes=node_urls)
+    return scrape_or_load_full_day(date=date,
+                                   steem=steem,
+                                   directory=directory,
+                                   overwrite=overwrite,
+                                   store=store,
+                                   stop_after=stop_after)
+
+
+def config_mp_logging():
+    logging.basicConfig(level=logging.INFO)
+
+
+def scrape_or_load_training_data_parallel(node_urls, directory,
+                                          days=20, offset=8,
+                                          ncores=10,
+                                          current_datetime=None,
+                                          stop_after=None):
+    ctx = mp.get_context('fork')
+    pool = ctx.Pool(ncores, initializer=config_mp_logging)
+
+    if current_datetime is None:
+        current_datetime = pd.datetime.utcnow()
+
+    start_datetime = current_datetime - pd.Timedelta(days=days + offset)
+
+    async_results = []
+    for day in range(days):
+        next_date = (start_datetime + pd.Timedelta(days=day)).date()
+        result = pool.apply_async(scrape_or_load_full_day_mp,
+                                  args=(next_date, node_urls, directory,
+                                        False, True, stop_after))
+        async_results.append(result)
+
+    pool.close()
+
+    frames = []
+    for async in async_results:
+        frames.append(async.get(timeout=3600*6))
+
+    pool.join()
+
+    return frames
