@@ -57,5 +57,10 @@ def test_scrape_date(steem):
     directory = tempfile.mkdtemp()
     tpbg.scrape_or_load_full_day(yesterday, steem, directory, stop_after=25)
 
-    assert len(os.listdir(directory))>0
+    assert len(os.listdir(directory)) == 1
+
+    tpbg.scrape_or_load_full_day(yesterday, steem, directory, stop_after=25)
+
+    assert len(os.listdir(directory)) == 1
+
     shutil.rmtree(directory)

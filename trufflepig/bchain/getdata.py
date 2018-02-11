@@ -238,11 +238,13 @@ def scrape_or_load_full_day(date, steem, directory, overwrite=False,
     filename = os.path.join(directory,filename)
     if os.path.isfile(filename) and not overwrite:
         logger.info('Found file {} will load it'.format(filename))
-        post_frame = pd.read_pickle(filename)
+        post_frame = pd.read_pickle(filename, compression='gzip')
     else:
+        logger.info('File {} not found, will start scraping'.format(filename))
         posts = get_all_posts_between(start_datetime, end_datetime, steem,
                                       stop_after=stop_after)
         post_frame = pd.DataFrame(data=posts, columns=sorted(posts[0].keys()))
         if store:
+            logger.info('Storing file {} to disk'.format(filename))
             post_frame.to_pickle(filename, compression='gzip')
     return post_frame
