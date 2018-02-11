@@ -210,10 +210,10 @@ def get_all_posts_between(start_datetime, end_datetime, steem):
     for idx, block_num in enumerate(range(start_num, end_num+1)):
         posts_in_block = get_all_posts_from_block(block_num, steem)
         posts.extend(posts_in_block)
-        # logger.info('Finsihsed block {} '
-        #             '(last is {}) found so far {} '
-        #             'posts'.format(block_num, end_num, len(posts)))
-        progressbar(idx, total, percentage_step=1, logger=logger)
+        if progressbar(idx, total, percentage_step=1, logger=logger):
+            logger.info('Finished block {} '
+                    '(last is {}) found so far {} '
+                    'posts...'.format(block_num, end_num, len(posts)))
 
     logger.info('Scraped {} posts'.format(len(posts)))
     return posts
