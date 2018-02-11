@@ -1,4 +1,7 @@
 import pytest
+import os
+import shutil
+import tempfile
 
 import pandas as pd
 from steem import Steem
@@ -43,6 +46,16 @@ def test_find_offset(steem, bchain):
 def test_get_all_posts_between(steem):
     now = pd.datetime.utcnow()
     end = now
-    start = end - pd.Timedelta(minutes=1)
-    posts = tpbg.get_all_posts_between(start, end, steem)
+    start = end - pd.Timedelta(minutes=10)
+    posts = tpbg.get_all_posts_between(start, end, steem, stop_after=25)
     assert posts
+
+
+def test_scrape_date(steem):
+    yesterday = (pd.datetime.utcnow() - pd.Timedelta(days=1)).date()
+
+    directory = tempfile.mkdtemp()
+    tpbg.scrape_or_load_full_day(yesterday, steem, directory, stop_after=25)
+
+    assert len(os.listdir(directory))>0
+    shutil.rmtree(directory)

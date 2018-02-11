@@ -1,6 +1,6 @@
 pytest
 numpy
-pandas
+pandas==0.22.0
 python-coveralls
 pytest-cov
 langdetect==1.0.7

@@ -1,4 +1,5 @@
 import logging
+import os
 from collections import OrderedDict
 
 import pandas as pd
@@ -13,6 +14,8 @@ from trufflepig.utils import progressbar
 logger = logging.getLogger(__name__)
 
 MIN_CHARACTERS = 1024
+
+FILENAME_TEMPLATE = 'steemit_posts__{year:04d}-{month:02d}-{day:02d}.pkl'
 
 
 def steem2bchain(steem):
@@ -196,7 +199,8 @@ def get_all_posts_from_block(block_num, steem):
     return []
 
 
-def get_all_posts_between(start_datetime, end_datetime, steem):
+def get_all_posts_between(start_datetime, end_datetime, steem,
+                          stop_after=None):
     start_num, _ = find_nearest_block_num(start_datetime, steem)
     end_num, _ = find_nearest_block_num(end_datetime, steem)
 
@@ -214,7 +218,31 @@ def get_all_posts_between(start_datetime, end_datetime, steem):
             logger.info('Finished block {} '
                     '(last is {}) found so far {} '
                     'posts...'.format(block_num, end_num, len(posts)))
+        if stop_after is not None and len(posts) >= stop_after:
+            break
 
     logger.info('Scraped {} posts'.format(len(posts)))
     return posts
 
+
+def scrape_or_load_full_day(date, steem, directory, overwrite=False,
+                            store=True,
+                            stop_after=None):
+    start_datetime = pd.to_datetime(date)
+    end_datetime = start_datetime + pd.Timedelta(days=1)
+    if not os.path.isdir(directory):
+        os.makedirs(directory)
+    filename = FILENAME_TEMPLATE.format(year=start_datetime.year,
+                                        month=start_datetime.month,
+                                        day=start_datetime.day)
+    filename = os.path.join(directory,filename)
+    if os.path.isfile(filename) and not overwrite:
+        logger.info('Found file {} will load it'.format(filename))
+        post_frame = pd.read_pickle(filename)
+    else:
+        posts = get_all_posts_between(start_datetime, end_datetime, steem,
+                                      stop_after=stop_after)
+        post_frame = pd.DataFrame(data=posts, columns=sorted(posts[0].keys()))
+        if store:
+            post_frame.to_pickle(filename, compression='gzip')
+    return post_frame
