@@ -38,3 +38,11 @@ def test_find_offset(steem, bchain):
     latest_block_num = bchain.get_current_block_num()
     offset, datetime = tpbg.find_nearest_block_num(target, steem, latest_block_num)
     assert 0 < offset <  latest_block_num
+
+
+def test_get_all_posts_between(steem):
+    now = pd.datetime.utcnow()
+    end = now
+    start = end - pd.Timedelta(minutes=1)
+    posts = tpbg.get_all_posts_between(start, end, steem)
+    assert posts

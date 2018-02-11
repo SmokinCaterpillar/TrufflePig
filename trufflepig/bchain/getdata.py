@@ -3,9 +3,20 @@ from collections import OrderedDict
 
 import pandas as pd
 from steem.blockchain import Blockchain
+from steem.post import Post
+import json
+from json import JSONDecodeError
+
+from trufflepig.utils import progressbar
 
 
 logger = logging.getLogger(__name__)
+
+MIN_CHARACTERS = 1024
+
+
+def steem2bchain(steem):
+    return Blockchain(steem)
 
 
 def get_block_headers_between_offset_start(start_datetime, end_datetime,
@@ -46,7 +57,8 @@ def get_block_headers_between_offset_start(start_datetime, end_datetime,
     return headers
 
 
-def find_nearest_block_num(target_datetime, steem, latest_block_num,
+def find_nearest_block_num(target_datetime, steem,
+                           latest_block_num=None,
                            max_tries=5000,
                            block_num_tolerance=5):
     """ Finds nearest block number to `target_datetime`
@@ -57,6 +69,7 @@ def find_nearest_block_num(target_datetime, steem, latest_block_num,
     steem: Steem object
     latest_block_num: int
         latest block number in bchain
+        leave None to get from steem directly
     max_tries: int
         number of maximum tries
     block_num_tolerance: int
@@ -68,6 +81,9 @@ def find_nearest_block_num(target_datetime, steem, latest_block_num,
     datetime: datetime of matching block
 
     """
+    if latest_block_num is None:
+        latest_block_num = steem2bchain(steem).get_current_block_num()
+
     current_block_num = latest_block_num
     best_largest_block_num = latest_block_num
 
@@ -110,3 +126,95 @@ def get_block_headers_between(start_datetime, end_datetime, steem):
     return get_block_headers_between_offset_start(start_datetime, end_datetime,
                                                   steem=steem,
                                                   end_offset_num=end_offset_num)
+
+
+def extract_authors_and_permalinks(operations):
+    authors_and_permalinks = []
+    for operation in operations:
+        op = operation['op']
+        if op[0] == 'comment':
+            title = op[1]['title']
+            body = op[1]['body']
+            if title != '' and op[1]['json_metadata'] != '' and len(body) >= MIN_CHARACTERS:
+                try:
+                    metadata = json.loads(op[1]['json_metadata'])
+                except JSONDecodeError:
+                    logger.debug('Could not decode metadata for {}'.format(op))
+                    continue
+                try:
+                    tags = metadata['tags']
+                except KeyError as e:
+                    logger.debug('No tags for for {}'.format(op))
+                    continue
+                except TypeError as e:
+                    logger.debug('Type Error for for {}'.format(op))
+                    continue
+                try:
+                    _ = tags[0]
+                except IndexError as e:
+                    logger.debug('Tags empty for {}'.format(op))
+                    continue
+                author = op[1]['author']
+                permalink = op[1]['permlink']
+                authors_and_permalinks.append((author, permalink))
+    return authors_and_permalinks
+
+
+def get_post_data(authors_and_permalinks, steem):
+    posts = []
+    for kdx, (author, permalink) in enumerate(authors_and_permalinks):
+        try:
+            p = Post('@{}/{}'.format(author, permalink), steem)
+        except Exception as e:
+            print(repr(e))
+            continue
+
+        post = {
+            'title': p.title,
+            'reward': p.reward.amount,
+            'votes': len(p.active_votes),
+            'created': p.created,
+            'tags': p.tags,
+            'body': p.body,
+            'author': author,
+            'permalink': permalink
+        }
+        posts.append(post)
+    return posts
+
+
+def get_all_posts_from_block(block_num, steem):
+    operations = steem.get_ops_in_block(block_num, False)
+    if operations:
+        authors_and_permalinks = extract_authors_and_permalinks(operations)
+        if authors_and_permalinks:
+            return get_post_data(authors_and_permalinks, steem)
+        else:
+            logger.debug('Could not find any posts for block {}'.format(block_num))
+    else:
+        logger.warning('Could not find any operations for block {}'.format(block_num))
+    return []
+
+
+def get_all_posts_between(start_datetime, end_datetime, steem):
+    start_num, _ = find_nearest_block_num(start_datetime, steem)
+    end_num, _ = find_nearest_block_num(end_datetime, steem)
+
+    total = end_num - start_num
+    posts = []
+    logger.info('Querying all posts between '
+                '{} (block {}) and {} (block {})'.format(start_datetime,
+                                                         start_num,
+                                                         end_datetime,
+                                                         end_num))
+    for idx, block_num in enumerate(range(start_num, end_num+1)):
+        posts_in_block = get_all_posts_from_block(block_num, steem)
+        posts.extend(posts_in_block)
+        # logger.info('Finsihsed block {} '
+        #             '(last is {}) found so far {} '
+        #             'posts'.format(block_num, end_num, len(posts)))
+        progressbar(idx, total, percentage_step=1, logger=logger)
+
+    logger.info('Scraped {} posts'.format(len(posts)))
+    return posts
+
