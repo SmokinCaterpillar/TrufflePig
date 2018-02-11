@@ -102,3 +102,6 @@ ENV/
 
 # PyCharm
 .idea
+
+# Data in general
+scraped_data

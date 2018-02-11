@@ -33,7 +33,7 @@ class _Progressbar(object):
         self._total = float(total)
         self._total_minus_one = total - 1
         self._length = length
-        self._norm_factor = total * percentage_step / 100.0
+        self._norm_factor = max(total * percentage_step / 100.0, 1)
         self._current_interval = int((index + 1.0) / self._norm_factor)
 
     def _get_remaining(self, index):
