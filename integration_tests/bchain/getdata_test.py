@@ -10,9 +10,15 @@ from steem.blockchain import Blockchain
 from trufflepig import config
 import trufflepig.bchain.getdata as tpbg
 
+
+@pytest.fixture()
+def steem_kwargs():
+    return dict(nodes=[config.NODE_URL])
+
+
 @pytest.fixture
-def steem():
-    return tpbg.Steem(nodes=[config.NODE_URL])
+def steem(steem_kwargs):
+    return tpbg.Steem(steem_kwargs)
 
 
 @pytest.fixture
@@ -71,11 +77,17 @@ def test_scrape_date(steem, temp_dir):
     assert len(p1) > 0
 
 
-def test_scrape_or_load_data_parallel(temp_dir):
-    steem_kwargs = dict(nodes=[config.NODE_URL])
-    frames = tpbg.scrape_or_load_training_data(steem_kwargs,
+def test_scrape_or_load_data_parallel(temp_dir, steem_kwargs):
+
+    frame = tpbg.scrape_or_load_training_data(steem_kwargs,
                                                temp_dir,
                                                days=3,
                                                stop_after=10,
                                                ncores=5)
-    assert len(frames) == 3
+    assert len(frame) >= 30
+
+
+def test_scrape_recent_date(steem_kwargs):
+    frame = tpbg.scrape_recent_data(steem_kwargs,
+                                    stop_after=10)
+    assert len(frame)

@@ -143,7 +143,7 @@ def get_block_headers_between(start_datetime, end_datetime, steem):
 
 
 def extract_authors_and_permalinks(operations):
-    authors_and_permalinks = []
+    authors_and_permalinks = set()
     for operation in operations:
         op = operation['op']
         if op[0] == 'comment':
@@ -170,8 +170,8 @@ def extract_authors_and_permalinks(operations):
                     continue
                 author = op[1]['author']
                 permalink = op[1]['permlink']
-                authors_and_permalinks.append((author, permalink))
-    return authors_and_permalinks
+                authors_and_permalinks.add((author, permalink))
+    return list(authors_and_permalinks)
 
 
 def get_post_data(authors_and_permalinks, steem):
@@ -180,7 +180,8 @@ def get_post_data(authors_and_permalinks, steem):
         try:
             p = Post('@{}/{}'.format(author, permalink), steem)
         except Exception as e:
-            print(repr(e))
+            logger.exception('Error in loading post {} by {}'.format(author,
+                                                                     permalink))
             continue
 
         post = {
@@ -311,8 +312,8 @@ def scrape_or_load_full_day(date, steem_or_args, directory, overwrite=False,
         logger.info('File {} not found, will start scraping'.format(filename))
 
         if ncores == 1:
-            steem_or_args = check_and_convert_steem(steem_or_args)
-            posts = get_all_posts_between(start_datetime, end_datetime, steem_or_args,
+            steem = check_and_convert_steem(steem_or_args)
+            posts = get_all_posts_between(start_datetime, end_datetime, steem,
                                           stop_after=stop_after)
         else:
             posts = get_all_posts_between_parallel(start_datetime, end_datetime,
@@ -352,4 +353,27 @@ def scrape_or_load_training_data(steem_or_args, directory,
                                         store=True, stop_after=stop_after,
                                         ncores=ncores)
         frames.append(frame)
-    return frames
+    return pd.concat(frames, axis=0)
+
+
+def scrape_recent_data(steem_or_args, hours=30, current_datetime=None,
+                       ncores=8, stop_after=None):
+    if current_datetime is None:
+        current_datetime = pd.datetime.utcnow()
+    else:
+        current_datetime = pd.to_datetime(current_datetime)
+
+    start_datetime = current_datetime - pd.Timedelta(hours=hours)
+
+    if ncores == 1:
+        steem = check_and_convert_steem(steem_or_args)
+        posts = get_all_posts_between(start_datetime, current_datetime,
+                                      steem, stop_after=stop_after)
+    else:
+        posts = get_all_posts_between_parallel(start_datetime, current_datetime,
+                                               steem_or_args,
+                                               stop_after=stop_after,
+                                               ncores=ncores)
+
+    post_frame = pd.DataFrame(data=posts, columns=sorted(posts[0].keys()))
+    return post_frame
