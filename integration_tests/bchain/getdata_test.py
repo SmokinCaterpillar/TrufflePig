@@ -16,7 +16,7 @@ def steem_kwargs():
 
 @pytest.fixture
 def steem(steem_kwargs):
-    return tpbg.Steem(steem_kwargs)
+    return tpbg.Steem(**steem_kwargs)
 
 
 @pytest.fixture

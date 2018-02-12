@@ -2,7 +2,7 @@ pytest
 numpy
 python-coveralls
 pytest-cov
-google-compute-engine
+google-compute-engine # this is not needed, but boto fails on travis otherwise!
 boto==2.48.0
 pandas==0.22.0
 gensim==3.2.0
