@@ -57,7 +57,7 @@ def preprocess(post_df, ncores=8, chunksize=100):
                                                            tftf.filter_special_characters(x))
 
     logger.info('Counting paragraphs')
-    post_df['paragraphs'] = post_df.filtered_body.apply(lambda x:
+    post_df['num_paragraphs'] = post_df.filtered_body.apply(lambda x:
                                                         tfsm.count_paragraphs(x))
 
     logger.info('Calculating length')
@@ -107,7 +107,7 @@ def preprocess(post_df, ncores=8, chunksize=100):
 
     logger.info('Spell checking')
     checker = tfsm.SpellErrorCounter()
-    en_df['spelling_errors'] = apply_parallel(checker.count_mistakes,
+    en_df['num_spelling_errors'] = apply_parallel(checker.count_mistakes,
                                               en_df.combined,
                                               ncores=ncores,
                                               chunksize=chunksize)
@@ -120,12 +120,12 @@ def preprocess(post_df, ncores=8, chunksize=100):
     en_df['chars_per_word'] = en_df.body_length / en_df.num_words
 
     logger.info('Computing words per paragraph')
-    en_df['words_per_paragraph'] = en_df.num_words / en_df.paragraphs
+    en_df['words_per_paragraph'] = en_df.num_words / en_df.num_paragraphs
 
     logger.info('Computing mistakes per word')
-    en_df['errors_per_word'] = en_df.spelling_errors / en_df.num_words
+    en_df['errors_per_word'] = en_df.num_spelling_errors / en_df.num_words
 
     final_df = en_df.dropna()
-    logger.info('Final data set has {} shaoe'.format(final_df.shape))
+    logger.info('Final data set has {} shape'.format(final_df.shape))
 
     return final_df
