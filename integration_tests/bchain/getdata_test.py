@@ -5,7 +5,6 @@ import tempfile
 
 import pandas as pd
 from pandas.testing import assert_frame_equal
-from steem import Steem
 from steem.blockchain import Blockchain
 
 from trufflepig import config
@@ -13,7 +12,7 @@ import trufflepig.bchain.getdata as tpbg
 
 @pytest.fixture
 def steem():
-    return Steem(nodes=[config.NODE_URL])
+    return tpbg.Steem(nodes=[config.NODE_URL])
 
 
 @pytest.fixture
@@ -73,9 +72,10 @@ def test_scrape_date(steem, temp_dir):
 
 
 def test_scrape_or_load_data_parallel(temp_dir):
-    frames = tpbg.scrape_or_load_training_data_parallel([config.NODE_URL],
-                                                       temp_dir,
-                                                       days=5,
-                                                       stop_after=10,
-                                                       ncores=5)
-    assert len(frames) == 5
+    steem_kwargs = dict(nodes=[config.NODE_URL])
+    frames = tpbg.scrape_or_load_training_data(steem_kwargs,
+                                               temp_dir,
+                                               days=3,
+                                               stop_after=10,
+                                               ncores=5)
+    assert len(frames) == 3

@@ -24,6 +24,15 @@ def steem2bchain(steem):
     return Blockchain(steem)
 
 
+def check_and_convert_steem(steem_or_args_kwargs):
+    if isinstance(steem_or_args_kwargs, dict):
+        return Steem(**steem_or_args_kwargs)
+    elif isinstance(steem_or_args_kwargs, (list, tuple)):
+        return Steem(*steem_or_args_kwargs)
+    else:
+        return steem_or_args_kwargs
+
+
 def get_block_headers_between_offset_start(start_datetime, end_datetime,
                                            end_offset_num, steem):
     """ Returns block headers between a date range
@@ -227,9 +236,66 @@ def get_all_posts_between(start_datetime, end_datetime, steem,
     return posts
 
 
-def scrape_or_load_full_day(date, steem, directory, overwrite=False,
-                            store=True,
-                            stop_after=None):
+def _get_all_posts_for_blocks_parallel(block_nums, steem_args,
+                                       stop_after=None):
+    steem = check_and_convert_steem(steem_args)
+    posts = []
+    for block_num in block_nums:
+        posts_in_block = get_all_posts_from_block(block_num, steem)
+        posts.extend(posts_in_block)
+        if stop_after is not None and len(posts) >= stop_after:
+            break
+    return posts
+
+
+def get_all_posts_between_parallel(start_datetime, end_datetime, steem_args,
+                                   stop_after=None, ncores=8,
+                                   chunksize=20, timeout=3600):
+    steem = check_and_convert_steem(steem_args)
+    start_num, _ = find_nearest_block_num(start_datetime, steem)
+    end_num, _ = find_nearest_block_num(end_datetime, steem)
+
+    logger.info('Querying IN PARALLEL with {} cores all posts between'
+                '{} (block {}) and {} (block {})'.format(ncores,
+                                                         start_datetime,
+                                                         start_num,
+                                                         end_datetime,
+                                                         end_num))
+    block_nums = list(range(start_num, end_num + 1))
+    chunks = [block_nums[irun: irun + chunksize]
+                for irun in range(0, len(block_nums), chunksize)]
+
+    ctx = mp.get_context('spawn')
+    pool = ctx.Pool(ncores, initializer=config_mp_logging)
+
+    async_results = []
+    for idx, chunk in enumerate(chunks):
+        result = pool.apply_async(_get_all_posts_for_blocks_parallel,
+                                  args=(chunk, steem_args, stop_after))
+        async_results.append(result)
+        if stop_after is not None and idx >= stop_after:
+            break
+
+    pool.close()
+
+    posts = []
+    for kdx, async in enumerate(async_results):
+        try:
+            new_posts = async.get(timeout=timeout)
+            posts.extend(new_posts)
+            if progressbar(kdx, len(chunks), percentage_step=1, logger=logger):
+                logger.info('Finished chunk {} '
+                            'out of {} found so far {} '
+                            'posts...'.format(kdx + 1, len(chunks), len(posts)))
+        except TimeoutError:
+            logger.exception('Something went totally wrong dude!')
+
+    pool.join()
+    return posts
+
+
+def scrape_or_load_full_day(date, steem_or_args, directory, overwrite=False,
+                            store=True, stop_after=None, ncores=1):
     start_datetime = pd.to_datetime(date)
     end_datetime = start_datetime + pd.Timedelta(days=1)
     if not os.path.isdir(directory):
@@ -247,8 +313,17 @@ def scrape_or_load_full_day(date, steem, directory, overwrite=False,
         post_frame = pd.read_pickle(filename, compression='gzip')
     else:
         logger.info('File {} not found, will start scraping'.format(filename))
-        posts = get_all_posts_between(start_datetime, end_datetime, steem,
-                                      stop_after=stop_after)
+
+        if ncores == 1:
+            steem_or_args = check_and_convert_steem(steem_or_args)
+            posts = get_all_posts_between(start_datetime, end_datetime, steem_or_args,
+                                          stop_after=stop_after)
+        else:
+            posts = get_all_posts_between_parallel(start_datetime, end_datetime,
+                                                   steem_or_args,
+                                                   stop_after=stop_after,
+                                                   ncores=ncores)
+
         post_frame = pd.DataFrame(data=posts, columns=sorted(posts[0].keys()))
         if store:
             logger.info('Storing file {} to disk'.format(filename))
@@ -256,29 +331,15 @@ def scrape_or_load_full_day(date, steem, directory, overwrite=False,
     return post_frame
 
 
-def scrape_or_load_full_day_mp(date, node_urls, directory, overwrite=False,
-                            store=True,
-                            stop_after=None):
-    steem = Steem(nodes=node_urls)
-    return scrape_or_load_full_day(date=date,
-                                   steem=steem,
-                                   directory=directory,
-                                   overwrite=overwrite,
-                                   store=store,
-                                   stop_after=stop_after)
+def config_mp_logging(level=logging.INFO):
+    logging.basicConfig(level=level)
 
 
-def config_mp_logging():
-    logging.basicConfig(level=logging.INFO)
-
-
-def scrape_or_load_training_data_parallel(node_urls, directory,
-                                          days=20, offset=8,
-                                          ncores=10,
-                                          current_datetime=None,
-                                          stop_after=None):
-    ctx = mp.get_context('fork')
-    pool = ctx.Pool(ncores, initializer=config_mp_logging)
+def scrape_or_load_training_data(steem_or_args, directory,
+                                 days=20, offset=8,
+                                 ncores=8,
+                                 current_datetime=None,
+                                 stop_after=None):
 
     if current_datetime is None:
         current_datetime = pd.datetime.utcnow()
@@ -287,20 +348,12 @@ def scrape_or_load_training_data_parallel(node_urls, directory,
 
     start_datetime = current_datetime - pd.Timedelta(days=days + offset)
 
-    async_results = []
+    frames = []
     for day in range(days):
         next_date = (start_datetime + pd.Timedelta(days=day)).date()
-        result = pool.apply_async(scrape_or_load_full_day_mp,
-                                  args=(next_date, node_urls, directory,
-                                        False, True, stop_after))
-        async_results.append(result)
-
-    pool.close()
-
-    frames = []
-    for async in async_results:
-        frames.append(async.get(timeout=3600*6))
-
-    pool.join()
-
+        frame = scrape_or_load_full_day(next_date, steem_or_args,
+                                        directory, overwrite=False,
+                                        store=True, stop_after=stop_after,
+                                        ncores=ncores)
+        frames.append(frame)
     return frames
