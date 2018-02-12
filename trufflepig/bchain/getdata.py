@@ -299,11 +299,7 @@ def scrape_or_load_full_day(date, steem_or_args, directory, overwrite=False,
     start_datetime = pd.to_datetime(date)
     end_datetime = start_datetime + pd.Timedelta(days=1)
     if not os.path.isdir(directory):
-        try:
-            os.makedirs(directory)
-        except FileExistsError:
-            # race conditions
-            pass
+        os.makedirs(directory)
     filename = FILENAME_TEMPLATE.format(year=start_datetime.year,
                                         month=start_datetime.month,
                                         day=start_datetime.day)
