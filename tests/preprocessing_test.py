@@ -9,10 +9,12 @@ def test_preprocessing():
     post_frame = pd.DataFrame(POSTS)
     filtered = tppp.preprocess(post_frame, ncores=1)
 
+    assert len(filtered)
+
 
 def test_preprocessing_parallel():
-    post_frame = pd.DataFrame([POSTS[0] for _ in range(1000)])
-    post_frame['permalink'] = ['kkk'+str(irun % 500) for irun in range(1000)]
-    filtered = tppp.preprocess(post_frame, ncores=7)
+    post_frame = pd.DataFrame([POSTS[0] for _ in range(100)])
+    post_frame['permalink'] = ['kkk'+str(irun % 50) for irun in range(100)]
+    filtered = tppp.preprocess(post_frame, ncores=5, chunksize=20)
 
-    assert len(filtered) > 400
+    assert len(filtered) > 40

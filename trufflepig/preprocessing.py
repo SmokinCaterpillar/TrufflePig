@@ -32,7 +32,7 @@ def apply_parallel(function, iterable, ncores, chunksize=1000):
         return results
 
 
-def preprocess(post_df, ncores=8):
+def preprocess(post_df, ncores=8, chunksize=100):
     logger.info('Filtering duplicates')
     post_df = filter_duplicates(post_df)
 
@@ -70,7 +70,8 @@ def preprocess(post_df, ncores=8):
     logger.info('Detecting language')
     large_post_df.loc[:, 'language'] = apply_parallel(tfsm.detect_language,
                                                       large_post_df.filtered_body,
-                                                      ncores=ncores)
+                                                      ncores=ncores,
+                                                      chunksize=chunksize)
 
     en_df = large_post_df.loc[large_post_df.language == 'en', :]
     logger.info('Found {} English posts'.format(len(en_df)))
@@ -108,7 +109,8 @@ def preprocess(post_df, ncores=8):
     checker = tfsm.SpellErrorCounter()
     en_df['spelling_errors'] = apply_parallel(checker.count_mistakes,
                                               en_df.combined,
-                                              ncores=ncores)
+                                              ncores=ncores,
+                                              chunksize=chunksize)
 
     logger.info('Tokenization')
     en_df['tokens'] = en_df.combined.apply(lambda x: x.split(' '))
