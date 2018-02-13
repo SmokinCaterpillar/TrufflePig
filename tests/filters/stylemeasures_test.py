@@ -12,6 +12,12 @@ def test_detect_language():
     assert result == 'de'
 
 
+def test_language_probs():
+    detector = tpsm.LanguageDetector()
+    result = detector.get_probabilities('die katze ist klein and I love mike and peter')
+    assert len(result) > 1
+
+
 def test_split_into_sentences():
     result = tpsm.split_into_sentences('Hi my name is! Slim Shady! Really? Yeah.')
     assert result == ['Hi my name is!', 'Slim Shady!', 'Really?', 'Yeah.']

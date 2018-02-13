@@ -34,7 +34,8 @@ def apply_parallel(function, iterable, ncores, chunksize=1000):
 
 
 def preprocess(post_df, ncores=8, chunksize=1000,
-               detect_seed=42, detect_max_length=3000):
+               detect_seed=42, detect_max_length=1000,
+               min_en_prob=0.8):
     logger.info('Filtering duplicates')
     post_df = filter_duplicates(post_df)
 
@@ -72,12 +73,13 @@ def preprocess(post_df, ncores=8, chunksize=1000,
     logger.info('Detecting language')
     detector = tfsm.LanguageDetector(seed=detect_seed,
                                      max_length=detect_max_length)
-    large_post_df.loc[:, 'language'] = apply_parallel(detector.detect_language,
+    large_post_df['languages'] = apply_parallel(detector.get_probabilities,
                                                       large_post_df.filtered_body,
                                                       ncores=ncores,
                                                       chunksize=chunksize)
-
-    en_df = large_post_df.loc[large_post_df.language == 'en', :]
+    large_post_df['en_prob'] = large_post_df.languages.apply(lambda x:
+                                                             x.get('en', 0))
+    en_df = large_post_df.loc[large_post_df.en_prob >= min_en_prob, :]
     logger.info('Found {} English posts'.format(len(en_df)))
 
     logger.info('Splitting into sentences')

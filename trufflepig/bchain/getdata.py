@@ -15,7 +15,7 @@ from trufflepig.utils import progressbar
 
 logger = logging.getLogger(__name__)
 
-MIN_CHARACTERS = 1024
+MIN_CHARACTERS = 500
 
 FILENAME_TEMPLATE = 'steemit_posts__{time}.gz'
 

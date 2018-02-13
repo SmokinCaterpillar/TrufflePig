@@ -85,3 +85,14 @@ class LanguageDetector(object):
             return detector.detect()
         except Exception as e:
             return None
+
+    def get_probabilities(self, text):
+        try:
+            detector = self.factory.create()
+            if self.max_length:
+                text = text[:self.max_length]
+            detector.append(text)
+            probs =  detector.get_probabilities()
+            return {x.lang: x.prob for x in probs}
+        except Exception as e:
+            return None
