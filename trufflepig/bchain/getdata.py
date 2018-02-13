@@ -17,7 +17,7 @@ logger = logging.getLogger(__name__)
 
 MIN_CHARACTERS = 1024
 
-FILENAME_TEMPLATE = 'steemit_posts__{year:04d}-{month:02d}-{day:02d}.pkl'
+FILENAME_TEMPLATE = 'steemit_posts__{time}.gz'
 
 
 def steem2bchain(steem):
@@ -301,9 +301,7 @@ def scrape_or_load_full_day(date, steem_or_args, directory, overwrite=False,
     end_datetime = start_datetime + pd.Timedelta(days=1)
     if not os.path.isdir(directory):
         os.makedirs(directory)
-    filename = FILENAME_TEMPLATE.format(year=start_datetime.year,
-                                        month=start_datetime.month,
-                                        day=start_datetime.day)
+    filename = FILENAME_TEMPLATE.format(time=start_datetime.strftime('%Y-%m-%d'))
     filename = os.path.join(directory,filename)
     if os.path.isfile(filename) and not overwrite:
         logger.info('Found file {} will load it'.format(filename))
@@ -333,7 +331,7 @@ def config_mp_logging(level=logging.INFO):
 
 
 def scrape_or_load_training_data(steem_or_args, directory,
-                                 days=20, offset=8,
+                                 days=20, offset_days=8,
                                  ncores=8,
                                  current_datetime=None,
                                  stop_after=None):
@@ -343,7 +341,7 @@ def scrape_or_load_training_data(steem_or_args, directory,
     else:
         current_datetime = pd.to_datetime(current_datetime)
 
-    start_datetime = current_datetime - pd.Timedelta(days=days + offset)
+    start_datetime = current_datetime - pd.Timedelta(days=days + offset_days)
 
     frames = []
     for day in range(days):
@@ -356,21 +354,25 @@ def scrape_or_load_training_data(steem_or_args, directory,
     return pd.concat(frames, axis=0)
 
 
-def scrape_recent_data(steem_or_args, hours=30, current_datetime=None,
-                       ncores=8, stop_after=None):
+def scrape_hour_data(steem_or_args, hours=25,
+                     offset_hours=24,
+                     current_datetime=None,
+                     ncores=8, stop_after=None):
     if current_datetime is None:
         current_datetime = pd.datetime.utcnow()
     else:
         current_datetime = pd.to_datetime(current_datetime)
 
-    start_datetime = current_datetime - pd.Timedelta(hours=hours)
+    end_datetime = current_datetime - pd.Timedelta(hours=offset_hours)
+    start_datetime = end_datetime - pd.Timedelta(hours=hours)
 
     if ncores == 1:
         steem = check_and_convert_steem(steem_or_args)
-        posts = get_all_posts_between(start_datetime, current_datetime,
+        posts = get_all_posts_between(start_datetime, end_datetime,
                                       steem, stop_after=stop_after)
     else:
-        posts = get_all_posts_between_parallel(start_datetime, current_datetime,
+        posts = get_all_posts_between_parallel(start_datetime,
+                                               end_datetime,
                                                steem_or_args,
                                                stop_after=stop_after,
                                                ncores=ncores)

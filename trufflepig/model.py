@@ -1,8 +1,11 @@
 import logging
+import os
 
 import numpy as np
+import pandas as pd
 from sklearn.ensemble import RandomForestRegressor
 from sklearn.pipeline import FeatureUnion, Pipeline
+from sklearn.externals import joblib
 
 from gensim.models.lsimodel import LsiModel
 from gensim import corpora
@@ -18,6 +21,7 @@ FEATURES = ['body_length', 'num_paragraphs', 'num_paragraphs',
 
 TARGETS = ['reward', 'votes']
 
+FILENAME_TEMPLATE = 'truffle_pipeline__{time}.gz'
 
 class TopicModel(object):
     def __init__(self, no_below, no_above, num_topics):
@@ -64,12 +68,7 @@ class FeatureSelector(object):
         return data.loc[:, self.features]
 
 
-def train_pipeline(post_frame, topic_kwargs, regressor_kwargs,
-                 features=FEATURES, targets=TARGETS):
-
-    logger.info('Training pipeline...')
-    target_frame = post_frame.loc[:, targets]
-
+def create_pipeline(topic_kwargs, regressor_kwargs, features=FEATURES):
     feature_generation = FeatureUnion(
         transformer_list=[
             ('topic_model', TopicModel(**topic_kwargs)),
@@ -83,6 +82,16 @@ def train_pipeline(post_frame, topic_kwargs, regressor_kwargs,
         ]
     )
 
+    return pipeline
+
+
+def train_pipeline(post_frame, **kwargs):
+    targets = kwargs.get('targets', TARGETS)
+
+    logger.info('Training pipeline...')
+    target_frame = post_frame.loc[:, targets]
+
+    pipeline = create_pipeline(**kwargs)
     pipeline.fit(post_frame, target_frame)
 
     score = pipeline.score(post_frame, target_frame)
@@ -91,29 +100,29 @@ def train_pipeline(post_frame, topic_kwargs, regressor_kwargs,
     return pipeline
 
 
-######## Deprecated ############
+# def cross_validate(post_frame, param_grid=None, **kwargs):
+#     targets = kwargs.get('targets', TARGETS)
 
-# def train_models(post_frame, topic_kwargs, regressor_kwargs,
-#                  features=FEATURES, targets=TARGETS):
-#
-#     logger.info('Training topic model with {}'.format(topic_kwargs))
-#     topic_model = TopicModel(**topic_kwargs)
-#     topic_model.train(post_frame.tokens)
-#
-#     X_topic = topic_model.project_dense(post_frame.tokens)
-#     X_style = post_frame.loc[:, features].values
-#     X = np.concatenate((X_topic, X_style), axis=1)
-#
-#     logger.info('Training data shape {}'.format(X.shape))
-#
-#     Y = post_frame.loc[:, targets].values
-#
-#     logger.info('Target data shape {}.\nTraining regressor'.format(Y.shape))
-#
-#     regressor = RandomForestRegressor(**regressor_kwargs)
-#     regressor.fit(X, Y)
-#
-#     score = regressor.score(X, Y)
-#     logger.info('Training score {}'.format(score))
-#
-#     return topic_model, regressor
+
+def load_or_train_pipeline(post_frame, directory, current_datetime=None,
+                           overwrite=False, store=True, **kwargs):
+    if current_datetime is None:
+        current_datetime = pd.datetime.utcnow()
+    else:
+        current_datetime = pd.to_datetime(current_datetime)
+
+    if not os.path.isdir(directory):
+        os.makedirs(directory)
+    filename = FILENAME_TEMPLATE.format(time=current_datetime.strftime('%Y-%U'))
+
+    filename = os.path.join(directory,filename)
+    if os.path.isfile(filename) and not overwrite:
+        logger.info('Found file {} will load it'.format(filename))
+        pipeline = joblib.load(filename)
+    else:
+        logger.info('File {} not found, will start training'.format(filename))
+        pipeline = train_pipeline(post_frame, **kwargs)
+        if store:
+            logger.info('Storing file {} to disk'.format(filename))
+            joblib.dump(pipeline, filename, compress=8)
+    return pipeline
