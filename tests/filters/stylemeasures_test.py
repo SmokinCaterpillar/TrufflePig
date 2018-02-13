@@ -1,4 +1,4 @@
-import trufflepig.stylemeasures as tpsm
+import trufflepig.filters.stylemeasures as tpsm
 
 
 def test_count_paragraphs():

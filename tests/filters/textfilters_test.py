@@ -1,4 +1,4 @@
-import trufflepig.textfilters as tptf
+import trufflepig.filters.textfilters as tptf
 
 
 def test_filter_html_tags():

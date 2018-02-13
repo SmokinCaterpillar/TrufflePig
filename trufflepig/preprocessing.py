@@ -1,11 +1,8 @@
 import logging
 import multiprocessing as mp
 
-import pandas as pd
-
-import trufflepig.textfilters as tftf
-import trufflepig.stylemeasures as tfsm
-
+import trufflepig.filters.stylemeasures as tfsm
+import trufflepig.filters.textfilters as tftf
 
 logger = logging.getLogger(__name__)
 

@@ -6,7 +6,7 @@ from collections import OrderedDict
 import pandas as pd
 from steem import Steem
 from steem.blockchain import Blockchain
-from steem.post import Post
+from steem.post import Post, PostDoesNotExist
 import json
 from json import JSONDecodeError
 
@@ -179,7 +179,12 @@ def get_post_data(authors_and_permalinks, steem):
     for kdx, (author, permalink) in enumerate(authors_and_permalinks):
         try:
             p = Post('@{}/{}'.format(author, permalink), steem)
-        except Exception as e:
+        except PostDoesNotExist:
+            # This happens to oftern we will suppress this
+            logger.debug('Post {} by {} does not exist!'.format(author,
+                                                                permalink))
+            continue
+        except Exception:
             logger.exception('Error in loading post {} by {}'.format(author,
                                                                      permalink))
             continue
@@ -213,15 +218,15 @@ def get_all_posts_from_block(block_num, steem):
 
 def get_all_posts_between(start_datetime, end_datetime, steem,
                           stop_after=None):
-    start_num, _ = find_nearest_block_num(start_datetime, steem)
-    end_num, _ = find_nearest_block_num(end_datetime, steem)
+    start_num, block_start_datetime = find_nearest_block_num(start_datetime, steem)
+    end_num, block_end_datetime = find_nearest_block_num(end_datetime, steem)
 
     total = end_num - start_num
     posts = []
     logger.info('Querying all posts between '
-                '{} (block {}) and {} (block {})'.format(start_datetime,
+                '{} (block {}) and {} (block {})'.format(block_start_datetime,
                                                          start_num,
-                                                         end_datetime,
+                                                         block_end_datetime,
                                                          end_num))
     for idx, block_num in enumerate(range(start_num, end_num+1)):
         posts_in_block = get_all_posts_from_block(block_num, steem)
@@ -253,14 +258,14 @@ def get_all_posts_between_parallel(start_datetime, end_datetime, steem_args,
                                    stop_after=None, ncores=8,
                                    chunksize=20, timeout=3600):
     steem = check_and_convert_steem(steem_args)
-    start_num, _ = find_nearest_block_num(start_datetime, steem)
-    end_num, _ = find_nearest_block_num(end_datetime, steem)
+    start_num, block_start_datetime = find_nearest_block_num(start_datetime, steem)
+    end_num, block_end_datetime = find_nearest_block_num(end_datetime, steem)
 
-    logger.info('Querying IN PARALLEL with {} cores all posts between'
+    logger.info('Querying IN PARALLEL with {} cores all posts between '
                 '{} (block {}) and {} (block {})'.format(ncores,
-                                                         start_datetime,
+                                                         block_start_datetime,
                                                          start_num,
-                                                         end_datetime,
+                                                         block_end_datetime,
                                                          end_num))
     block_nums = list(range(start_num, end_num + 1))
     chunks = [block_nums[irun: irun + chunksize]
@@ -284,7 +289,7 @@ def get_all_posts_between_parallel(start_datetime, end_datetime, steem_args,
         try:
             new_posts = async.get(timeout=timeout)
             posts.extend(new_posts)
-            if progressbar(kdx, len(chunks), percentage_step=1, logger=logger):
+            if progressbar(kdx, len(chunks), percentage_step=5, logger=logger):
                 logger.info('Finished chunk {} '
                             'out of {} found so far {} '
                             'posts...'.format(kdx + 1, len(chunks), len(posts)))
