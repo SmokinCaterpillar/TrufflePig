@@ -95,4 +95,4 @@ class LanguageDetector(object):
             probs =  detector.get_probabilities()
             return {x.lang: x.prob for x in probs}
         except Exception as e:
-            return None
+            return {}

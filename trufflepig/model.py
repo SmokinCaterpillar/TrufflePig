@@ -112,7 +112,8 @@ def create_pipeline(topic_kwargs, regressor_kwargs, features=FEATURES):
 def train_pipeline(post_frame, **kwargs):
     targets = kwargs.pop('targets', TARGETS)
 
-    logger.info('Training pipeline with targets {}...'.format(targets))
+    logger.info('Training pipeline with targets {} and {} '
+                'samples...'.format(targets, len(post_frame)))
     target_frame = post_frame.loc[:, targets]
 
     pipeline = create_pipeline(**kwargs)

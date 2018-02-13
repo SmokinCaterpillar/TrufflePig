@@ -22,22 +22,23 @@ def main():
 
     post_frame = pd.read_pickle('../scraped_data/first_post_set.gz')
 
-    regressor_kwargs = dict(n_estimators=200, max_leaf_nodes=1000,
+    regressor_kwargs = dict(n_estimators=256, max_leaf_nodes=256,
                               max_features=0.1, n_jobs=-1, verbose=1,
                               random_state=42)
 
-    topic_kwargs = dict(num_topics=100, no_below=5, no_above=0.33)
+    topic_kwargs = dict(num_topics=64, no_below=5, no_above=0.1)
 
     post_frame['votes'] = 0
     post_frame = tppp.load_or_preprocess(post_frame, crossval_filename,
-                                         ncores=4, chunksize=20)
+                                         ncores=4, chunksize=1000)
 
-    param_grid = {
-        'feature_generation__topic_model__no_above':[0.33],
-        #'regressor__max_leaf_nodes': [500, 1000],
-       # 'regressor__max_features': [0.1, 0.2, 0.3]
-        }
-
+    # param_grid = {
+    #     #'feature_generation__topic_model__no_above':[0.05, 0.1, 0.2, 0.33],
+    #     #'feature_generation__topic_model__num_topics':[50, 100, 200],
+    #     'regressor__max_leaf_nodes': [50, 100, 200]
+    #    # 'regressor__max_features': [0.1, 0.2, 0.3, 0.66]
+    #     }
+    #
     # tpmo.cross_validate(post_frame, param_grid, topic_kwargs=topic_kwargs,
     #                     regressor_kwargs=regressor_kwargs, n_iter=None,
     #                     n_jobs=4, targets=['reward'])

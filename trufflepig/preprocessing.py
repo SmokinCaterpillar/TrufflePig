@@ -34,7 +34,7 @@ def apply_parallel(function, iterable, ncores, chunksize=1000):
 
 
 def preprocess(post_df, ncores=8, chunksize=1000,
-               detect_seed=42, detect_max_length=1000,
+               detect_seed=42, detect_max_length=2000,
                min_en_prob=0.8):
     logger.info('Filtering duplicates')
     post_df = filter_duplicates(post_df)

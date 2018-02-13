@@ -26,14 +26,14 @@ def main():
                                                    days=3,
                                                    offset_days=0)
 
-    regressor_kwargs = dict(n_estimators=200, max_leaf_nodes=1000,
+    regressor_kwargs = dict(n_estimators=256, max_leaf_nodes=4096,
                               max_features=0.1, n_jobs=-1, verbose=1,
                               random_state=42)
 
-    topic_kwargs = dict(num_topics=100, no_below=5, no_above=0.33)
+    topic_kwargs = dict(num_topics=64, no_below=5, no_above=0.1)
 
     post_frame = tppp.load_or_preprocess(post_frame, crossval_filename,
-                                         ncores=4, chunksize=20)
+                                         ncores=4, chunksize=1000)
 
     param_grid = {
         'feature_generation__topic_model__no_above':[0.33],
@@ -46,10 +46,10 @@ def main():
     #                     n_jobs=4, targets=['reward'])
 
     pipe = tpmo.train_test_pipeline(post_frame,  topic_kwargs=topic_kwargs,
-                         regressor_kwargs=regressor_kwargs, targets=['reward'])
+                         regressor_kwargs=regressor_kwargs, targets=['reward', 'votes'])
 
     topic_model = pipe.named_steps['feature_generation'].transformer_list[0][1]
-    logging.getLogger().info(topic_model.print_topics())
+    logging.getLogger().info(topic_model.print_topics(n_best=None))
 
 
 if __name__ == '__main__':
