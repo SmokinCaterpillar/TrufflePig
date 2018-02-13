@@ -29,6 +29,22 @@ def test_pipeline_model():
                                     regressor_kwargs=regressor_kwargs)
 
 
+def test_train_test_pipeline():
+    posts = create_n_random_posts(300)
+
+    post_frame = pd.DataFrame(posts)
+
+    regressor_kwargs = dict(n_estimators=20, max_leaf_nodes=100,
+                              max_features=0.1, n_jobs=-1, verbose=1,
+                              random_state=42)
+
+    topic_kwargs = dict(num_topics=50, no_below=5, no_above=0.7)
+
+    post_frame = tppp.preprocess(post_frame, ncores=4, chunksize=50)
+    tpmo.train_test_pipeline(post_frame, topic_kwargs=topic_kwargs,
+                                    regressor_kwargs=regressor_kwargs)
+
+
 def test_load_or_train(temp_dir):
     cdt = pd.datetime.utcnow()
     posts = create_n_random_posts(300)
@@ -47,6 +63,10 @@ def test_load_or_train(temp_dir):
                                        current_datetime=cdt,
                                        topic_kwargs=topic_kwargs,
                                        regressor_kwargs=regressor_kwargs)
+
+    topic_model = pipe.named_steps['feature_generation'].transformer_list[0][1]
+    result = topic_model.print_topics()
+    assert result
 
     assert len(os.listdir(temp_dir)) == 1
 

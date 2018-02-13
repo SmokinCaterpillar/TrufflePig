@@ -24,6 +24,7 @@ def filter_formatting(text):
     text = re.sub('&?nbsp', ' ',text)
     text = re.sub('aligncenter', '', text)
     text = re.sub('styletextalign', '', text)
+    text = re.sub('href', '', text)
     return text
 
 
