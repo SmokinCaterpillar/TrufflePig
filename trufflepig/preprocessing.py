@@ -1,5 +1,8 @@
 import logging
+import os
 import multiprocessing as mp
+
+import pandas as pd
 
 import trufflepig.filters.stylemeasures as tfsm
 import trufflepig.filters.textfilters as tftf
@@ -8,7 +11,8 @@ logger = logging.getLogger(__name__)
 
 
 def filter_duplicates(frame):
-    filtered = frame.drop_duplicates(subset=['author', 'permalink'])
+    filtered = frame.drop_duplicates(subset=['author', 'permalink'],
+                                     keep='last')
     if len(filtered) < len(frame):
         logger.info('Filtered {} duplicates'.format(len(frame) - len(filtered)))
     return filtered
@@ -29,7 +33,8 @@ def apply_parallel(function, iterable, ncores, chunksize=1000):
         return results
 
 
-def preprocess(post_df, ncores=8, chunksize=100):
+def preprocess(post_df, ncores=8, chunksize=1000,
+               detect_seed=42, detect_max_length=3000):
     logger.info('Filtering duplicates')
     post_df = filter_duplicates(post_df)
 
@@ -65,7 +70,9 @@ def preprocess(post_df, ncores=8, chunksize=100):
                                                                  len(post_df)))
 
     logger.info('Detecting language')
-    large_post_df.loc[:, 'language'] = apply_parallel(tfsm.detect_language,
+    detector = tfsm.LanguageDetector(seed=detect_seed,
+                                     max_length=detect_max_length)
+    large_post_df.loc[:, 'language'] = apply_parallel(detector.detect_language,
                                                       large_post_df.filtered_body,
                                                       ncores=ncores,
                                                       chunksize=chunksize)
@@ -130,3 +137,22 @@ def preprocess(post_df, ncores=8, chunksize=100):
     logger.info('Final data set has {} shape'.format(final_df.shape))
 
     return final_df
+
+
+def load_or_preprocess(post_frame, filename, *args, overwrite=False, store=True,
+                       **kwargs):
+    if os.path.isfile(filename) and not overwrite:
+        logger.info('Found file {} will load it'.format(filename))
+        post_frame = pd.read_pickle(filename, compression='gzip')
+    else:
+        logger.info('File {} not found, will start prepocessing'.format(filename))
+        post_frame = preprocess(post_frame, *args, **kwargs)
+        if store:
+            directory = os.path.dirname(filename)
+            if not os.path.isdir(directory):
+                os.makedirs(directory)
+            logger.info('Storing file {} to disk'.format(filename))
+            post_frame.to_pickle(filename, compression='gzip')
+    return post_frame
+
+

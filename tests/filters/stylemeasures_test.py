@@ -7,7 +7,8 @@ def test_count_paragraphs():
 
 
 def test_detect_language():
-    result = tpsm.detect_language('die katze ist klein der hund auch')
+    detector = tpsm.LanguageDetector()
+    result = detector.detect_language('die katze ist klein der hund auch')
     assert result == 'de'
 
 

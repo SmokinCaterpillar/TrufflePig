@@ -171,7 +171,7 @@ def extract_authors_and_permalinks(operations):
                 author = op[1]['author']
                 permalink = op[1]['permlink']
                 authors_and_permalinks.add((author, permalink))
-    return list(authors_and_permalinks)
+    return authors_and_permalinks
 
 
 def get_post_data(authors_and_permalinks, steem):
@@ -203,17 +203,20 @@ def get_post_data(authors_and_permalinks, steem):
     return posts
 
 
-def get_all_posts_from_block(block_num, steem):
+def get_all_posts_from_block(block_num, steem,
+                             exclude_authors_and_permalinks=None):
     operations = steem.get_ops_in_block(block_num, False)
     if operations:
         authors_and_permalinks = extract_authors_and_permalinks(operations)
+        if exclude_authors_and_permalinks:
+            authors_and_permalinks -= exclude_authors_and_permalinks
         if authors_and_permalinks:
-            return get_post_data(authors_and_permalinks, steem)
+            return get_post_data(authors_and_permalinks, steem), authors_and_permalinks
         else:
             logger.debug('Could not find any posts for block {}'.format(block_num))
     else:
         logger.warning('Could not find any operations for block {}'.format(block_num))
-    return []
+    return [], set()
 
 
 def get_all_posts_between(start_datetime, end_datetime, steem,
@@ -228,8 +231,12 @@ def get_all_posts_between(start_datetime, end_datetime, steem,
                                                          start_num,
                                                          block_end_datetime,
                                                          end_num))
+    exclude_authors_and_permalinks = set()
     for idx, block_num in enumerate(range(start_num, end_num+1)):
-        posts_in_block = get_all_posts_from_block(block_num, steem)
+        posts_in_block, authors_and_permalinks = get_all_posts_from_block(block_num,
+                                                                          steem,
+                                                                          exclude_authors_and_permalinks)
+        exclude_authors_and_permalinks |= authors_and_permalinks
         posts.extend(posts_in_block)
         if progressbar(idx, total, percentage_step=1, logger=logger):
             logger.info('Finished block {} '
@@ -246,8 +253,12 @@ def _get_all_posts_for_blocks_parallel(block_nums, steem_args,
                                        stop_after=None):
     steem = check_and_convert_steem(steem_args)
     posts = []
+    exclude_authors_and_permalinks = set()
     for block_num in block_nums:
-        posts_in_block = get_all_posts_from_block(block_num, steem)
+        posts_in_block, authors_and_permalinks = get_all_posts_from_block(block_num,
+                                                                          steem,
+                                                                          exclude_authors_and_permalinks)
+        exclude_authors_and_permalinks |= authors_and_permalinks
         posts.extend(posts_in_block)
         if stop_after is not None and len(posts) >= stop_after:
             break
@@ -300,7 +311,7 @@ def get_all_posts_between_parallel(start_datetime, end_datetime, steem_args,
     return posts
 
 
-def scrape_or_load_full_day(date, steem_or_args, directory, overwrite=False,
+def load_or_scrape_full_day(date, steem_or_args, directory, overwrite=False,
                             store=True, stop_after=None, ncores=1):
     start_datetime = pd.to_datetime(date)
     end_datetime = start_datetime + pd.Timedelta(days=1)
@@ -335,7 +346,7 @@ def config_mp_logging(level=logging.INFO):
     logging.basicConfig(level=level)
 
 
-def scrape_or_load_training_data(steem_or_args, directory,
+def load_or_scrape_training_data(steem_or_args, directory,
                                  days=20, offset_days=8,
                                  ncores=8,
                                  current_datetime=None,
@@ -351,7 +362,7 @@ def scrape_or_load_training_data(steem_or_args, directory,
     frames = []
     for day in range(days):
         next_date = (start_datetime + pd.Timedelta(days=day)).date()
-        frame = scrape_or_load_full_day(next_date, steem_or_args,
+        frame = load_or_scrape_full_day(next_date, steem_or_args,
                                         directory, overwrite=False,
                                         store=True, stop_after=stop_after,
                                         ncores=ncores)

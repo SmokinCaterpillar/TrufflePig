@@ -9,26 +9,6 @@ def count_paragraphs(text):
     return text.count('\n\n') + 1
 
 
-def detect_language(text, max_length=5000):
-    """ Detexts text language, returns None in case of failure
-
-    Parameters
-    ----------
-    text: str
-    max_length: int
-        Up to max_length characters are considered for the detection
-
-    Returns
-    -------
-    str: language or None in case of failure
-
-    """
-    try:
-        return langdetect.detect(text[:max_length])
-    except Exception:
-        return None
-
-
 CAPS = "([A-Z])"
 PREFIXES = "(Mr|St|Mrs|Ms|Dr)[.]"
 SUFFIXES = "(Inc|Ltd|Jr|Sr|Co)"
@@ -87,3 +67,21 @@ class SpellErrorCounter(object):
         nerrors = len([x for x in self.checker])
         return nerrors
 
+
+class LanguageDetector(object):
+
+    def __init__(self, max_length=5000, seed=42):
+        self.max_length = max_length
+        self.factory = langdetect.DetectorFactory()
+        self.factory.set_seed(seed)
+        self.factory.load_profile(langdetect.PROFILES_DIRECTORY)
+
+    def detect_language(self, text):
+        try:
+            detector = self.factory.create()
+            if self.max_length:
+                text = text[:self.max_length]
+            detector.append(text)
+            return detector.detect()
+        except Exception as e:
+            return None

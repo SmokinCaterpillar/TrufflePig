@@ -63,11 +63,11 @@ def test_get_all_posts_between(steem):
 def test_scrape_date(steem, temp_dir):
     yesterday = (pd.datetime.utcnow() - pd.Timedelta(days=1)).date()
 
-    p1 = tpbg.scrape_or_load_full_day(yesterday, steem, temp_dir, stop_after=25)
+    p1 = tpbg.load_or_scrape_full_day(yesterday, steem, temp_dir, stop_after=25)
 
     assert len(os.listdir(temp_dir)) == 1
 
-    p2 = tpbg.scrape_or_load_full_day(yesterday, steem, temp_dir, stop_after=25)
+    p2 = tpbg.load_or_scrape_full_day(yesterday, steem, temp_dir, stop_after=25)
 
     assert len(os.listdir(temp_dir)) == 1
 
@@ -77,11 +77,11 @@ def test_scrape_date(steem, temp_dir):
 
 def test_scrape_or_load_data_parallel(temp_dir, steem_kwargs):
 
-    frame = tpbg.scrape_or_load_training_data(steem_kwargs,
-                                               temp_dir,
-                                               days=3,
-                                               stop_after=10,
-                                               ncores=5)
+    frame = tpbg.load_or_scrape_training_data(steem_kwargs,
+                                              temp_dir,
+                                              days=3,
+                                              stop_after=10,
+                                              ncores=5)
     assert len(frame) >= 30
 
 

@@ -15,7 +15,10 @@ def main():
 
     steem = dict(nodes=[config.NODE_URL])
     current_datetime = '2018-02-01'
-    post_frame = tpgd.scrape_or_load_training_data(steem, directory,
+
+    crossval_filename = os.path.join(directory, 'xval_{}.gz'.format(current_datetime))
+
+    post_frame = tpgd.load_or_scrape_training_data(steem, directory,
                                                    current_datetime=current_datetime,
                                                    days=3,
                                                    offset_days=0)
@@ -26,7 +29,8 @@ def main():
 
     topic_kwargs = dict(num_topics=50, no_below=5, no_above=0.7)
 
-    post_frame = tppp.preprocess(post_frame, ncores=4, chunksize=20)
+    post_frame = tppp.load_or_preprocess(post_frame, crossval_filename,
+                                         ncores=4, chunksize=20)
 
     param_grid = {
         'feature_generation__topic_model__no_above':[0.2, 0.3],
