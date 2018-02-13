@@ -1,11 +1,13 @@
 import logging
 import os
 
-import numpy as np
 import pandas as pd
 from sklearn.ensemble import RandomForestRegressor
 from sklearn.pipeline import FeatureUnion, Pipeline
 from sklearn.externals import joblib
+from sklearn.model_selection import train_test_split, GridSearchCV
+from sklearn.metrics import classification_report
+from sklearn.base import BaseEstimator
 
 from gensim.models.lsimodel import LsiModel
 from gensim import corpora
@@ -16,6 +18,7 @@ logger = logging.getLogger(__name__)
 
 
 FEATURES = ['body_length', 'num_paragraphs', 'num_paragraphs',
+            'num_words', 'unique_words', 'unique_ratio',
             'num_spelling_errors', 'chars_per_word', 'words_per_paragraph',
             'errors_per_word', 'average_sentence_length', 'sentence_length_variance']
 
@@ -23,7 +26,7 @@ TARGETS = ['reward', 'votes']
 
 FILENAME_TEMPLATE = 'truffle_pipeline__{time}.gz'
 
-class TopicModel(object):
+class TopicModel(BaseEstimator):
     def __init__(self, no_below, no_above, num_topics):
         self.num_topics = num_topics
         self.no_below = no_below
@@ -57,7 +60,7 @@ class TopicModel(object):
         return self.project_dense(data.tokens)
 
 
-class FeatureSelector(object):
+class FeatureSelector(BaseEstimator):
     def __init__(self, features):
         self.features = features
 
@@ -100,8 +103,32 @@ def train_pipeline(post_frame, **kwargs):
     return pipeline
 
 
-# def cross_validate(post_frame, param_grid=None, **kwargs):
-#     targets = kwargs.get('targets', TARGETS)
+def cross_validate(post_frame, param_grid,
+                   train_size=0.8, n_jobs=3,
+                   cv=3, refit=True, verbose=1, **kwargs):
+
+    targets = kwargs.get('targets', TARGETS)
+
+    train_frame, test_frame = train_test_split(post_frame,
+                                               train_size=train_size)
+
+    pipeline = create_pipeline(**kwargs)
+
+    grid_search = GridSearchCV(pipeline, param_grid, n_jobs=n_jobs,
+                               cv=cv, refit=refit, verbose=verbose)
+    logger.info('Starting Grid Search')
+    grid_search.fit(train_frame, train_frame.loc[:, targets])
+
+    logger.info("\nGrid scores on development set:\n")
+    means = grid_search.cv_results_['mean_test_score']
+    stds = grid_search.cv_results_['std_test_score']
+    for mean, std, params in zip(means, stds, grid_search.cv_results_['params']):
+        logger.info("{:0.3f} (+/-{:0.03f}) for {}".format(mean, std * 2, params))
+
+    score = grid_search.score(test_frame, test_frame.loc[:, targets])
+
+    logger.info("FINAL TEST Score {} \n of best estimator:\n\n{}".format(score,
+                                        grid_search.best_estimator_.get_params()))
 
 
 def load_or_train_pipeline(post_frame, directory, current_datetime=None,

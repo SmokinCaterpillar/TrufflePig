@@ -98,13 +98,13 @@ def create_post():
     randwords = np.random.randint(0, len(WORDS), nwords)
     body = ' '.join(WORDS[x] for x in randwords)
 
-    nwords = np.random.randint(1, 12)
-    randtitle = np.random.randint(0, len(WORDS), nwords)
+    ntwords = np.random.randint(1, 12)
+    randtitle = np.random.randint(0, len(WORDS), ntwords)
     title = ' '.join(WORDS[x] for x in randtitle)
     permalink = title.replace(' ', '-').lower()
 
-    reward = np.random.rand() * 100
-    votes = np.random.randint(0, 500)
+    reward = np.random.rand() * 100 + 0.1 * nwords
+    votes = np.random.randint(0, 500) + int(0.2 * nwords)
 
     created = pd.datetime.utcnow()
 

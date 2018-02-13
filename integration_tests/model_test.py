@@ -25,8 +25,8 @@ def test_pipeline_model():
     topic_kwargs = dict(num_topics=50, no_below=5, no_above=0.7)
 
     post_frame = tppp.preprocess(post_frame, ncores=4, chunksize=50)
-    tpmo.train_pipeline(post_frame, **dict(topic_kwargs=topic_kwargs,
-                                            regressor_kwargs=regressor_kwargs))
+    tpmo.train_pipeline(post_frame, topic_kwargs=topic_kwargs,
+                                    regressor_kwargs=regressor_kwargs)
 
 
 def test_load_or_train(temp_dir):
@@ -45,16 +45,37 @@ def test_load_or_train(temp_dir):
 
     pipe = tpmo.load_or_train_pipeline(post_frame, temp_dir,
                                        current_datetime=cdt,
-                                       **dict(topic_kwargs=topic_kwargs,
-                                              regressor_kwargs=regressor_kwargs))
+                                       topic_kwargs=topic_kwargs,
+                                       regressor_kwargs=regressor_kwargs)
 
     assert len(os.listdir(temp_dir)) == 1
 
     pipe2 = tpmo.load_or_train_pipeline(post_frame, temp_dir,
                                         current_datetime=cdt,
-                                       **dict(topic_kwargs=topic_kwargs,
-                                              regressor_kwargs=regressor_kwargs))
+                                        topic_kwargs=topic_kwargs,
+                                        regressor_kwargs=regressor_kwargs)
 
     assert len(os.listdir(temp_dir)) == 1
     assert set(pipe.named_steps.keys()) == set(pipe2.named_steps.keys())
 
+
+def test_crossval():
+    posts = create_n_random_posts(100)
+
+    post_frame = pd.DataFrame(posts)
+
+    regressor_kwargs = dict(n_estimators=20, max_leaf_nodes=100,
+                              max_features=0.1, n_jobs=-1, verbose=1,
+                              random_state=42)
+
+    topic_kwargs = dict(num_topics=50, no_below=5, no_above=0.7)
+
+    post_frame = tppp.preprocess(post_frame, ncores=4, chunksize=20)
+
+    param_grid = {
+        'feature_generation__topic_model__no_above':[0.2, 0.3],
+        'regressor__max_leaf_nodes': [50, 100],
+        }
+
+    tpmo.cross_validate(post_frame, param_grid, topic_kwargs=topic_kwargs,
+                        regressor_kwargs=regressor_kwargs)

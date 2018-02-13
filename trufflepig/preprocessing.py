@@ -116,6 +116,10 @@ def preprocess(post_df, ncores=8, chunksize=100):
     en_df['tokens'] = en_df.combined.apply(lambda x: x.split(' '))
     en_df['num_words'] = en_df.tokens.apply(lambda x: len(x))
 
+    logger.info('Counting unique words')
+    en_df['unique_words'] = en_df.tokens.apply(lambda x: len(set(x)))
+    en_df['unique_ratio'] = en_df.unique_words / en_df.num_words
+
     logger.info('Computing characters per word')
     en_df['chars_per_word'] = en_df.body_length / en_df.num_words
 
