@@ -1,5 +1,6 @@
 import logging
 import os
+import numpy as np
 
 import pandas as pd
 from sklearn.ensemble import RandomForestRegressor
@@ -19,6 +20,7 @@ logger = logging.getLogger(__name__)
 
 
 FEATURES = ['body_length',
+            'num_sentences',
             'num_paragraphs',
             'num_words',
             'unique_words',
@@ -28,7 +30,9 @@ FEATURES = ['body_length',
             'words_per_paragraph',
             'errors_per_word',
             'average_sentence_length',
-            'sentence_length_variance']
+            'sentence_length_variance',
+            'average_punctuation',
+            'connectors_per_sentence']
 
 TARGETS = ['reward', 'votes']
 
@@ -109,6 +113,10 @@ def create_pipeline(topic_kwargs, regressor_kwargs, features=FEATURES):
     return pipeline
 
 
+def compute_weights(target_frame):
+    return 1 + np.log(1 + target_frame.votes)
+
+
 def train_pipeline(post_frame, **kwargs):
     targets = kwargs.pop('targets', TARGETS)
 
@@ -116,10 +124,14 @@ def train_pipeline(post_frame, **kwargs):
                 'samples...'.format(targets, len(post_frame)))
     target_frame = post_frame.loc[:, targets]
 
-    pipeline = create_pipeline(**kwargs)
-    pipeline.fit(post_frame, target_frame)
+    sample_weight = compute_weights(target_frame)
 
-    score = pipeline.score(post_frame, target_frame)
+    pipeline = create_pipeline(**kwargs)
+    pipeline.fit(post_frame, target_frame,
+                 regressor__sample_weight=sample_weight)
+
+    score = pipeline.score(post_frame, target_frame,
+                           sample_weight=sample_weight)
     logger.info('...Done! Training score {}'.format(score))
 
     return pipeline
@@ -134,9 +146,11 @@ def train_test_pipeline(post_frame, train_size=0.8, **kwargs):
     target_frame = test_frame.loc[:, targets]
 
     logger.info('Using test data...')
-    score = pipeline.score(test_frame, target_frame)
+    sample_weight = compute_weights(target_frame)
+    score = pipeline.score(test_frame, target_frame,
+                           sample_weight=sample_weight)
     logger.info('...Done! Test score {}'.format(score))
-    return pipeline
+    return pipeline, test_frame
 
 
 def cross_validate(post_frame, param_grid,
@@ -199,3 +213,34 @@ def load_or_train_pipeline(post_frame, directory, current_datetime=None,
             logger.info('Storing file {} to disk'.format(filename))
             joblib.dump(pipeline, filename, compress=8)
     return pipeline
+
+
+def find_truffles(post_frame, pipeline, min_reward=1.0, min_votes=5, k=10):
+    logger.info('Filtering scraped data')
+    post_frame = post_frame.loc[(post_frame.reward >= min_reward) &
+                                (post_frame.votes >= min_votes)]
+
+    logger.info('Predicting truffles')
+    predicted_rewards_and_votes = pipeline.predict(post_frame)
+
+    post_frame['predicted_reward'] = predicted_rewards_and_votes[:, 0]
+    post_frame['predicted_votes'] = predicted_rewards_and_votes[:, 1]
+    post_frame['reward_difference'] = post_frame.predicted_reward - post_frame.reward
+
+    post_frame = post_frame.sort_values('reward_difference', ascending=False)
+
+    for irun in range(k):
+        row = post_frame.iloc[irun]
+        logger.info('\n\n----------------------------------------------'
+                    '--------------------------------------------------'
+                    '\n############ {} ############'.format(row.title))
+        logger.info('https://steemit.com/@{}/{}'.format(row.author, row.permalink))
+        logger.info('Estimated Reward: {} vs. {}; Estimated votes {} vs. '
+                    '{}'.format(row.predicted_reward, row.reward, row.predicted_votes, row.votes))
+        logger.info('\n-------------------------------------------------'
+                    '---------------------------------------------------\n')
+        logger.info(row.body[:1000])
+        logger.info('\n-------------------------------------------------'
+                    '---------------------------------------------------\n')
+
+    return post_frame

@@ -85,6 +85,7 @@ def preprocess(post_df, ncores=8, chunksize=1000,
     logger.info('Splitting into sentences')
     en_df['filtered_sentences'] = en_df.filtered_body.apply(lambda x:
                                                             tfsm.split_into_sentences(x))
+    en_df['num_sentences'] = en_df.filtered_sentences.apply(lambda x: len(x))
 
     logger.info('Computing average sentence length')
     en_df['average_sentence_length'] =  \
@@ -95,6 +96,10 @@ def preprocess(post_df, ncores=8, chunksize=1000,
     en_df['sentence_length_variance'] =  \
         en_df.filtered_sentences.apply(lambda x:
                                        tfsm.compute_sentence_length_variance(x))
+
+    logger.info('Computing average punctuation')
+    en_df['average_punctuation'] = en_df.filtered_sentences.apply(lambda x:
+                                                            tfsm.compute_average_puncitation(x))
 
     logger.info('Combining Body and Title')
     en_df['combined'] = (en_df.title.apply(lambda x: x.lower()) + ' '
@@ -134,6 +139,10 @@ def preprocess(post_df, ncores=8, chunksize=1000,
 
     logger.info('Computing mistakes per word')
     en_df['errors_per_word'] = en_df.num_spelling_errors / en_df.num_words
+
+    logger.info('Counting connectors')
+    en_df['num_connectors'] = en_df.tokens.apply(lambda x: tfsm.count_connectors(x))
+    en_df['connectors_per_sentence'] = en_df.num_connectors / en_df.num_sentences
 
     final_df = en_df.dropna()
     logger.info('Final data set has {} shape'.format(final_df.shape))

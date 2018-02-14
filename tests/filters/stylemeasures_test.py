@@ -33,7 +33,17 @@ def test_compute_sentence_length_variance():
     assert result == 13.25
 
 
+def test_compute_average_punctiation():
+    result = tpsm.compute_average_puncitation(['..jj', '..asdsad!!asdsd'])
+    assert result == 3
+
+
 def test_count_mistakes():
     counter = tpsm.SpellErrorCounter()
     result = counter.count_mistakes('hi hiw are you')
     assert result == 1
+
+
+def test_count_connectors():
+    result = tpsm.count_connectors(['indeed', 'i', 'like', 'hence'])
+    assert result == 2

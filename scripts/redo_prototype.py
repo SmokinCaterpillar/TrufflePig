@@ -28,9 +28,10 @@ def main():
 
     topic_kwargs = dict(num_topics=64, no_below=5, no_above=0.1)
 
-    post_frame['votes'] = 0
+    post_frame['votes'] = post_frame.reward.astype(int).astype(float)
     post_frame = tppp.load_or_preprocess(post_frame, crossval_filename,
-                                         ncores=4, chunksize=1000)
+                                         ncores=4, chunksize=1000,
+                                         min_en_prob=0.9)
 
     # param_grid = {
     #     #'feature_generation__topic_model__no_above':[0.05, 0.1, 0.2, 0.33],
@@ -43,11 +44,13 @@ def main():
     #                     regressor_kwargs=regressor_kwargs, n_iter=None,
     #                     n_jobs=4, targets=['reward'])
 
-    pipe = tpmo.train_test_pipeline(post_frame,  topic_kwargs=topic_kwargs,
-                         regressor_kwargs=regressor_kwargs, targets=['reward'])
+    pipe, test_frame = tpmo.train_test_pipeline(post_frame,  topic_kwargs=topic_kwargs,
+                         regressor_kwargs=regressor_kwargs, targets=['reward', 'votes'])
 
     topic_model = pipe.named_steps['feature_generation'].transformer_list[0][1]
     logging.getLogger().info(topic_model.print_topics())
+
+    tpmo.find_truffles(test_frame, pipe, min_votes=0)
 
 
 if __name__ == '__main__':
