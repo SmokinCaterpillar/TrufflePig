@@ -45,7 +45,7 @@ FILENAME_TEMPLATE = 'truffle_pipeline__{time}.gz'
 
 
 class Doc2VecModel(BaseEstimator, RegressorMixin):
-    def __init__(self, alpha=0.05, min_alpha=0.05, size=32,
+    def __init__(self, alpha=0.25, min_alpha=0.01, size=32,
                  window=8, min_count=5, workers=4, sample=1e-4,
                  negative=5, epochs=5, infer_steps=10):
         self.alpha = alpha
@@ -101,7 +101,7 @@ class Doc2VecModel(BaseEstimator, RegressorMixin):
 
 
 class KNNDoc2Vec(Doc2VecModel):
-    def __init__(self, knn=7, alpha=0.05, min_alpha=0.05, size=32,
+    def __init__(self, knn=7, alpha=0.25, min_alpha=0.01, size=32,
                  window=8, min_count=5, workers=4, sample=1e-4,
                  negative=5, epochs=5, infer_steps=10):
         super().__init__(alpha=alpha, min_alpha=min_alpha, size=size,
