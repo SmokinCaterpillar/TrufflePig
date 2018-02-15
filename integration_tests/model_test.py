@@ -64,7 +64,7 @@ def test_load_or_train(temp_dir):
                                        topic_kwargs=topic_kwargs,
                                        regressor_kwargs=regressor_kwargs)
 
-    topic_model = pipe.named_steps['feature_generation'].transformer_list[0][1]
+    topic_model = pipe.named_steps['feature_generation'].transformer_list[1][1]
     result = topic_model.print_topics()
     assert result
 
@@ -77,6 +77,20 @@ def test_load_or_train(temp_dir):
 
     assert len(os.listdir(temp_dir)) == 1
     assert set(pipe.named_steps.keys()) == set(pipe2.named_steps.keys())
+
+
+def test_Doc2Vec_KNN():
+    posts = create_n_random_posts(100)
+
+    post_frame = pd.DataFrame(posts)
+
+    post_frame = tppp.preprocess(post_frame, ncores=4, chunksize=30)
+
+    pipe = tpmo.create_pure_doc2vec_pipeline(dict(epochs=2, size=16))
+
+    pipe, frame = tpmo.train_test_pipeline(post_frame, pipeline=pipe)
+    pass
+
 
 
 def test_crossval():

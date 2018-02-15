@@ -10,7 +10,7 @@ from sklearn.externals import joblib
 from sklearn.model_selection import train_test_split, GridSearchCV, \
     RandomizedSearchCV
 from sklearn.metrics import classification_report
-from sklearn.base import BaseEstimator
+from sklearn.base import BaseEstimator, RegressorMixin
 from sklearn.preprocessing import StandardScaler
 from sklearn.neighbors import KNeighborsRegressor
 from sklearn.linear_model import SGDRegressor
@@ -44,10 +44,10 @@ TARGETS = ['reward', 'votes']
 FILENAME_TEMPLATE = 'truffle_pipeline__{time}.gz'
 
 
-class Doc2VecModel(BaseEstimator):
+class Doc2VecModel(BaseEstimator, RegressorMixin):
     def __init__(self, alpha=0.05, min_alpha=0.05, size=32,
                  window=8, min_count=5, workers=4, sample=1e-4,
-                 negative=5, epochs=5, infer_steps=8):
+                 negative=5, epochs=5, infer_steps=10):
         self.alpha = alpha
         self.min_alpha = min_alpha
         self.size = size
@@ -62,10 +62,11 @@ class Doc2VecModel(BaseEstimator):
 
 
     def create_tagged_documents(self, document_frame):
-        tags = document_frame.permalink
+        permalinks = document_frame.permalink
+        authors = document_frame.author
         tokens = document_frame.tokens
-        return [d2v.TaggedDocument(words=tks, tags=[tag])
-                for tks, tag in zip(tokens, tags)]
+        return [d2v.TaggedDocument(words=tks, tags=[author+'/'+permalink])
+                for tks, author, permalink in zip(tokens, authors, permalinks)]
 
     def train(self, document_frame):
         tagged_docs = self.create_tagged_documents(document_frame)
@@ -97,6 +98,35 @@ class Doc2VecModel(BaseEstimator):
                 inputs[kdx, :] = self.model.infer_vector(tagged_docs[kdx].words,
                                                          steps=self.infer_steps)
         return inputs
+
+
+class KNNDoc2Vec(Doc2VecModel):
+    def __init__(self, knn=7, alpha=0.05, min_alpha=0.05, size=32,
+                 window=8, min_count=5, workers=4, sample=1e-4,
+                 negative=5, epochs=5, infer_steps=10):
+        super().__init__(alpha=alpha, min_alpha=min_alpha, size=size,
+                         window=window, min_count=min_count, workers=workers,
+                         sample=sample, negative=negative, epochs=epochs,
+                         infer_steps=infer_steps)
+        self.knn = knn
+        self.trainY = None
+
+    def fit(self, document_frame, target_frame, sample_weight=None):
+        self.trainY = target_frame.copy()
+        self.trainY['doctag'] = document_frame.author + '/' + document_frame.permalink
+        self.trainY = self.trainY.set_index('doctag')
+        return super().fit(document_frame, target_frame)
+
+    def predict(self, document_frame):
+        values = self.transform(document_frame)
+        results = np.zeros((len(values), self.trainY.shape[1]))
+        for idx in range(len(values)):
+            vector = values[idx, :]
+            returns = self.model.docvecs.most_similar(positive=[vector], topn=self.knn)
+            indices = [doctag for doctag, sim in returns]
+            mean_vals = self.trainY.loc[indices, :].mean()
+            results[idx, :] = mean_vals
+        return results
 
 
 class TopicModel(BaseEstimator):
@@ -138,7 +168,7 @@ class TopicModel(BaseEstimator):
 
         result = ''
         for topic in range(n_best):
-            best_words = self.lsi.show_topic(topic, 7)
+            best_words = self.lsi.show_topic(topic, n_words)
             inwords = [(self.dictionary[int(x[0])], x[1]) for x in best_words]
             wordstring = ', '.join('{}: {:0.2f}'.format(*x) for x in inwords)
             result += 'Topic {}: {}\n'.format(topic, wordstring)
@@ -159,45 +189,52 @@ class FeatureSelector(BaseEstimator):
         return data.loc[:, self.features]
 
 
-def create_pipeline2(doc2vec_kwargs, regressor_kwargs, features=FEATURES):
-    logger.info('Using features {}'.format(features))
-    feature_generation = FeatureUnion(
-        transformer_list=[
-            ('feature_selection', FeatureSelector(features)),
-            ('doc2vec_model', Doc2VecModel(**doc2vec_kwargs))
-        ]
-    )
+# def create_pipeline2(doc2vec_kwargs, regressor_kwargs, features=FEATURES):
+#     logger.info('Using features {}'.format(features))
+#     feature_generation = FeatureUnion(
+#         transformer_list=[
+#             ('feature_selection', FeatureSelector(features)),
+#             ('doc2vec_model', Doc2VecModel(**doc2vec_kwargs))
+#         ]
+#     )
+#
+#     pipeline = Pipeline(steps=[
+#             ('feature_generation', feature_generation),
+#             ('regressor', RandomForestRegressor(**regressor_kwargs))
+#         ]
+#     )
+#
+#     return pipeline
+#
+#
+# def create_pipeline3(topic_kwargs, regressor_kwargs,
+#                     doc2vec_kwargs, features=FEATURES):
+#     logger.info('Using features {}'.format(features))
+#     feature_generation = FeatureUnion(
+#         transformer_list=[
+#             ('feature_selection', FeatureSelector(features)),
+#             ('topic_model', TopicModel(**topic_kwargs)),
+#             ('doc2vec_model', Doc2VecModel(**doc2vec_kwargs)),
+#         ]
+#     )
+#
+#     pipeline = Pipeline(steps=[
+#             ('feature_generation', feature_generation),
+#             ('regressor', RandomForestRegressor(**regressor_kwargs))
+#         ]
+#     )
+#
+#     return pipeline
 
-    pipeline = Pipeline(steps=[
-            ('feature_generation', feature_generation),
-            ('regressor', RandomForestRegressor(**regressor_kwargs))
-        ]
-    )
 
+def create_pure_doc2vec_pipeline(knn_doc2vec_kwargs):
+    logger.info('Pure Doc2Vec Model')
+    pipeline = Pipeline(
+        steps=[('regressor', KNNDoc2Vec(**knn_doc2vec_kwargs))]
+    )
     return pipeline
 
-
-def create_pipeline3(topic_kwargs, regressor_kwargs,
-                    doc2vec_kwargs, features=FEATURES):
-    logger.info('Using features {}'.format(features))
-    feature_generation = FeatureUnion(
-        transformer_list=[
-            ('feature_selection', FeatureSelector(features)),
-            ('topic_model', TopicModel(**topic_kwargs)),
-            ('doc2vec_model', Doc2VecModel(**doc2vec_kwargs)),
-        ]
-    )
-
-    pipeline = Pipeline(steps=[
-            ('feature_generation', feature_generation),
-            ('regressor', RandomForestRegressor(**regressor_kwargs))
-        ]
-    )
-
-    return pipeline
-
-
-def create_pipeline(topic_kwargs, regressor_kwargs, features=FEATURES):
+def create_default_pipeline(topic_kwargs, regressor_kwargs, features=FEATURES):
     logger.info('Using features {}'.format(features))
     feature_generation = FeatureUnion(
         transformer_list=[
@@ -219,7 +256,7 @@ def compute_weights(target_frame):
     return 1 + np.log(1 + target_frame.votes)
 
 
-def train_pipeline(post_frame, **kwargs):
+def train_pipeline(post_frame, pipeline=None, **kwargs):
     targets = kwargs.pop('targets', TARGETS)
 
     logger.info('Training pipeline with targets {} and {} '
@@ -228,7 +265,10 @@ def train_pipeline(post_frame, **kwargs):
 
     sample_weight = compute_weights(target_frame)
 
-    pipeline = create_pipeline(**kwargs)
+    if pipeline is None:
+        logger.info('...Creating the default pipeline...')
+        pipeline = create_default_pipeline(**kwargs)
+
     pipeline.fit(post_frame, target_frame,
                  regressor__sample_weight=sample_weight)
 
@@ -239,11 +279,13 @@ def train_pipeline(post_frame, **kwargs):
     return pipeline
 
 
-def train_test_pipeline(post_frame, train_size=0.8, **kwargs):
+def train_test_pipeline(post_frame, pipeline=None,
+                        train_size=0.8, **kwargs):
     train_frame, test_frame = train_test_split(post_frame,
                                                train_size=train_size)
     targets = kwargs.get('targets', TARGETS)
-    pipeline = train_pipeline(train_frame, **kwargs)
+    pipeline = train_pipeline(train_frame, pipeline=pipeline,
+                              **kwargs)
 
     target_frame = test_frame.loc[:, targets]
 
@@ -266,7 +308,7 @@ def cross_validate(post_frame, param_grid,
     train_frame, test_frame = train_test_split(post_frame,
                                                train_size=train_size)
 
-    pipeline = create_pipeline(**kwargs)
+    pipeline = create_default_pipeline(**kwargs)
     if n_iter is None:
         grid_search = GridSearchCV(pipeline, param_grid, n_jobs=n_jobs,
                                    cv=cv, refit=True, verbose=verbose)
@@ -317,9 +359,10 @@ def load_or_train_pipeline(post_frame, directory, current_datetime=None,
     return pipeline
 
 
-def find_truffles(post_frame, pipeline, min_reward=1.0, min_votes=5, k=10):
+def find_truffles(post_frame, pipeline, min_max_reward=(1.0, 10), min_votes=5, k=10):
     logger.info('Filtering scraped data')
-    post_frame = post_frame.loc[(post_frame.reward >= min_reward) &
+    post_frame = post_frame.loc[(post_frame.reward >= min_max_reward[0]) &
+                                (post_frame.reward <= min_max_reward[1]) &
                                 (post_frame.votes >= min_votes)]
 
     logger.info('Predicting truffles')
