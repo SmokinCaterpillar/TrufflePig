@@ -1,7 +1,8 @@
 import logging
 import os
-import numpy as np
+import random
 
+import numpy as np
 import pandas as pd
 from sklearn.ensemble import RandomForestRegressor
 from sklearn.pipeline import FeatureUnion, Pipeline
@@ -10,10 +11,14 @@ from sklearn.model_selection import train_test_split, GridSearchCV, \
     RandomizedSearchCV
 from sklearn.metrics import classification_report
 from sklearn.base import BaseEstimator
+from sklearn.preprocessing import StandardScaler
+from sklearn.neighbors import KNeighborsRegressor
+from sklearn.linear_model import SGDRegressor
 
 from gensim.models.lsimodel import LsiModel
 from gensim import corpora
 from gensim.matutils import corpus2dense
+import gensim.models.doc2vec as d2v
 
 
 logger = logging.getLogger(__name__)
@@ -37,6 +42,62 @@ FEATURES = ['body_length',
 TARGETS = ['reward', 'votes']
 
 FILENAME_TEMPLATE = 'truffle_pipeline__{time}.gz'
+
+
+class Doc2VecModel(BaseEstimator):
+    def __init__(self, alpha=0.05, min_alpha=0.05, size=32,
+                 window=8, min_count=5, workers=4, sample=1e-4,
+                 negative=5, epochs=5, infer_steps=8):
+        self.alpha = alpha
+        self.min_alpha = min_alpha
+        self.size = size
+        self.window = window
+        self.min_count = min_count
+        self.workers = workers
+        self.sample = sample
+        self.negative = negative
+        self.epochs=epochs
+        self.model = None
+        self.infer_steps = infer_steps
+
+
+    def create_tagged_documents(self, document_frame):
+        tags = document_frame.permalink
+        tokens = document_frame.tokens
+        return [d2v.TaggedDocument(words=tks, tags=[tag])
+                for tks, tag in zip(tokens, tags)]
+
+    def train(self, document_frame):
+        tagged_docs = self.create_tagged_documents(document_frame)
+        model = d2v.Doc2Vec(alpha=self.alpha, min_alpha=self.min_alpha,
+                            size=self.size, window=self.window,
+                            min_count=self.min_count, workers=self.workers,
+                            sample=self.sample, negative=self.negative)
+        logger.info('Building vocab')
+        model.build_vocab(tagged_docs)
+        model.train(tagged_docs, total_examples=model.corpus_count,
+                    epochs = self.epochs)
+        logger.info('Training successfull')
+        model.delete_temporary_training_data()
+        self.model = model
+
+    def fit(self, document_frame, y=None):
+        self.train(document_frame)
+        return self
+
+    def transform(self, document_frame):
+        dim = self.model.vector_size
+        inputs = np.zeros((len(document_frame), dim))
+        tagged_docs = self.create_tagged_documents(document_frame)
+        for kdx, permalink in enumerate(document_frame.permalink):
+            try:
+                inputs[kdx, :] = self.model.docvecs[permalink]
+            except KeyError:
+                # infer the test vector
+                inputs[kdx, :] = self.model.infer_vector(tagged_docs[kdx].words,
+                                                         steps=self.infer_steps)
+        return inputs
+
 
 class TopicModel(BaseEstimator):
     def __init__(self, no_below, no_above, num_topics):
@@ -87,20 +148,61 @@ class TopicModel(BaseEstimator):
 class FeatureSelector(BaseEstimator):
     def __init__(self, features):
         self.features = features
+        #self.scaler = StandardScaler()
 
-    def fit(self, X=None, y=None):
+    def fit(self, data, y=None):
+        #self.scaler.fit(data.loc[:, self.features])
         return self
 
     def transform(self, data):
+        #return self.scaler.transform(data.loc[:, self.features])
         return data.loc[:, self.features]
+
+
+def create_pipeline2(doc2vec_kwargs, regressor_kwargs, features=FEATURES):
+    logger.info('Using features {}'.format(features))
+    feature_generation = FeatureUnion(
+        transformer_list=[
+            ('feature_selection', FeatureSelector(features)),
+            ('doc2vec_model', Doc2VecModel(**doc2vec_kwargs))
+        ]
+    )
+
+    pipeline = Pipeline(steps=[
+            ('feature_generation', feature_generation),
+            ('regressor', RandomForestRegressor(**regressor_kwargs))
+        ]
+    )
+
+    return pipeline
+
+
+def create_pipeline3(topic_kwargs, regressor_kwargs,
+                    doc2vec_kwargs, features=FEATURES):
+    logger.info('Using features {}'.format(features))
+    feature_generation = FeatureUnion(
+        transformer_list=[
+            ('feature_selection', FeatureSelector(features)),
+            ('topic_model', TopicModel(**topic_kwargs)),
+            ('doc2vec_model', Doc2VecModel(**doc2vec_kwargs)),
+        ]
+    )
+
+    pipeline = Pipeline(steps=[
+            ('feature_generation', feature_generation),
+            ('regressor', RandomForestRegressor(**regressor_kwargs))
+        ]
+    )
+
+    return pipeline
 
 
 def create_pipeline(topic_kwargs, regressor_kwargs, features=FEATURES):
     logger.info('Using features {}'.format(features))
     feature_generation = FeatureUnion(
         transformer_list=[
+            ('feature_selection', FeatureSelector(features)),
             ('topic_model', TopicModel(**topic_kwargs)),
-            ('feature_selection', FeatureSelector(features))
         ]
     )
 
@@ -232,6 +334,10 @@ def find_truffles(post_frame, pipeline, min_reward=1.0, min_votes=5, k=10):
     for irun in range(k):
         row = post_frame.iloc[irun]
         logger.info('\n\n----------------------------------------------'
+                    '--------------------------------------------------'
+                    '\n----------------------------------------------'
+                    '--------------------------------------------------'
+                    '\n----------------------------------------------'
                     '--------------------------------------------------'
                     '\n############ {} ############'.format(row.title))
         logger.info('https://steemit.com/@{}/{}'.format(row.author, row.permalink))

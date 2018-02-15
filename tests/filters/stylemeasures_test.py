@@ -40,10 +40,16 @@ def test_compute_average_punctiation():
 
 def test_count_mistakes():
     counter = tpsm.SpellErrorCounter()
-    result = counter.count_mistakes('hi hiw are you')
+    result = counter.count_mistakes('hi hiw are you blockchain crypto cryptocurrency '
+                                    'cryptocurrencies steem steemit bitcoin ethereum')
     assert result == 1
 
 
 def test_count_connectors():
     result = tpsm.count_connectors(['indeed', 'i', 'like', 'hence'])
     assert result == 2
+
+
+def test_count_letters():
+    result = tpsm.count_letters('hallo54 my namE!!')
+    assert result == 11

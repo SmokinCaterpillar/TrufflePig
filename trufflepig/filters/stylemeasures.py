@@ -5,7 +5,6 @@ import numpy as np
 import langdetect
 from enchant.checker import SpellChecker
 
-
 CAPS = "([A-Z])"
 PREFIXES = "(Mr|St|Mrs|Ms|Dr)[.]"
 SUFFIXES = "(Inc|Ltd|Jr|Sr|Co)"
@@ -42,6 +41,19 @@ CONNECTORS = {
     'rather',
     'afterwards',
 }
+
+STEEMIT_WORDS = (
+        'crypto',
+        'cryptocurrency',
+        'cryptocurrencies',
+        'bitcoin',
+        'blockchain',
+        'litecoin',
+        'ethereum',
+        'ripple',
+        'steem',
+        'steemit',
+)
 
 def split_into_sentences(text):
     """ Splits a `text` into a list of sentences.
@@ -97,10 +109,16 @@ def count_connectors(tokens):
     return sum(1 for x in tokens if x in CONNECTORS)
 
 
+def count_letters(text):
+    return len(re.findall('[a-zA-Z]', text))
+
+
 class SpellErrorCounter(object):
 
-    def __init__(self, language='en_US'):
+    def __init__(self, language='en_US', pwl=STEEMIT_WORDS):
         self.checker = SpellChecker(language)
+        for word in pwl:
+            self.checker.add(word)
 
     def count_mistakes(self, text):
         self.checker.set_text(text)

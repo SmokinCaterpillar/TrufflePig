@@ -23,14 +23,15 @@ def main():
 
     post_frame = tpgd.load_or_scrape_training_data(steem, directory,
                                                    current_datetime=current_datetime,
-                                                   days=7,
+                                                   days=3,
                                                    offset_days=0)
 
     regressor_kwargs = dict(n_estimators=256, max_leaf_nodes=4096,
                               max_features=0.2, n_jobs=-1, verbose=1,
-                              random_state=42)
+                              random_state=42, oob_score=True)
 
     topic_kwargs = dict(num_topics=32, no_below=5, no_above=0.1)
+    doc2vec_kwargs = dict(size=32, epochs=8)
 
     post_frame = tppp.load_or_preprocess(post_frame, crossval_filename,
                                          ncores=4, chunksize=1000,
@@ -46,8 +47,11 @@ def main():
     #                     regressor_kwargs=regressor_kwargs, n_iter=None,
     #                     n_jobs=4, targets=['reward'])
 
-    pipe, test_frame = tpmo.train_test_pipeline(post_frame,  topic_kwargs=topic_kwargs,
-                         regressor_kwargs=regressor_kwargs, targets=['reward', 'votes'])
+    pipe, test_frame = tpmo.train_test_pipeline(post_frame,
+                                                topic_kwargs=topic_kwargs,
+                                                regressor_kwargs=regressor_kwargs,
+                                                doc2vec_kwargs=doc2vec_kwargs,
+                                                targets=['reward', 'votes'])
 
     topic_model = pipe.named_steps['feature_generation'].transformer_list[1][1]
     logging.getLogger().info(topic_model.print_topics(n_best=None))
