@@ -36,7 +36,13 @@ FEATURES = ['body_length',
             'sentence_length_variance',
             'average_punctuation',
             'connectors_per_sentence',
-            'pronouns_per_sentence']
+            'pronouns_per_sentence',
+            'complex_word_ratio',
+            'gunning_fog_index',
+            'flesch_kincaid_index',
+            'smog_index',
+            'average_syllables',
+            'syllable_variance']
 
 TARGETS = ['reward', 'votes']
 

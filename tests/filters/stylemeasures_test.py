@@ -59,3 +59,25 @@ def test_count_pronouns():
 def test_count_letters():
     result = tpsm.count_letters('hallo54 my namE!!')
     assert result == 11
+
+
+def test_syllable_count():
+    tokens2syllables = tpsm.SyllableConverter()
+    result = tokens2syllables.tokens2syllablses(['i', 'am', 'better', 'crypto', 'currency'])
+    assert result == [1, 1, 2, 2, 3]
+
+
+def test_gunning_fog_index():
+    result = tpsm.gunning_fog_index(num_words=20, num_complex_words=10,
+                                    num_sentences=2)
+    assert result == 24
+
+
+def test_smog_index():
+    result = tpsm.smog_index(30, 1)
+    assert result == 34.4191
+
+
+def test_flesch_kincaid_index():
+    result = tpsm.flesch_kincaid_index(3, 2, 1)
+    assert result == 77.90500000000002

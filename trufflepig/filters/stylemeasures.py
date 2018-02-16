@@ -3,6 +3,7 @@ import string
 
 import numpy as np
 import langdetect
+import pyphen
 from enchant.checker import SpellChecker
 
 CAPS = "([A-Z])"
@@ -118,6 +119,32 @@ def count_pronouns(tokens):
 
 def count_letters(text):
     return len(re.findall('[a-zA-Z]', text))
+
+
+def gunning_fog_index(num_words, num_complex_words, num_sentences):
+    """https://en.wikipedia.org/wiki/Gunning_fog_index"""
+    return 0.4*((num_words / num_sentences) + 100 * (num_complex_words / num_words))
+
+
+def flesch_kincaid_index(num_syllables, num_words, num_sentences):
+    """https://en.wikipedia.org/wiki/Flesch%E2%80%93Kincaid_readability_tests"""
+    return 206.835 - 1.015 * (num_words / num_sentences) - 84.6 * (num_syllables / num_words)
+
+
+def smog_index(num_complex_words, num_sentences):
+    return 1.0430 * np.sqrt(num_complex_words * 30 / num_sentences) + 3.1291
+
+
+class SyllableConverter(object):
+    def __init__(self, language='en'):
+        self.dic = pyphen.Pyphen(lang=language)
+
+    def tokens2syllablses(self, tokens):
+        results = []
+        for token in tokens:
+            nsyllables = len(self.dic.positions(token)) + 1
+            results.append(nsyllables)
+        return results
 
 
 class SpellErrorCounter(object):

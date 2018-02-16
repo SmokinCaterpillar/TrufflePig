@@ -3,6 +3,7 @@ import os
 import multiprocessing as mp
 
 import pandas as pd
+import numpy as np
 
 import trufflepig.filters.stylemeasures as tfsm
 import trufflepig.filters.textfilters as tftf
@@ -206,6 +207,27 @@ def preprocess(post_df, ncores=8, chunksize=1000,
     en_df = en_df.loc[en_df.errors_per_word <= max_erros_per_word]
     logger.info('Filtered according to spelling mistake limit {} per word'
                 'kept {} posts.'.format(max_erros_per_word, len(en_df)))
+
+
+    logger.info('Calculating syllables')
+    syllable_converter = tfsm.SyllableConverter()
+    en_df['token_syllables'] = en_df.tokens.apply(lambda x:
+                                                  syllable_converter.tokens2syllablses(x))
+    logger.info('Computing features based on the syllables')
+    en_df['num_syllables'] = en_df.token_syllables.apply(lambda x: sum(x))
+    en_df['num_complex_words'] = en_df.token_syllables.apply(lambda x:
+                                                             sum([y >= 3 for y in x]))
+    en_df['complex_word_ratio'] = en_df.num_complex_words / en_df.num_words
+    en_df['average_syllables'] = en_df.token_syllables.apply(lambda x: np.mean(x))
+    en_df['syllable_variance'] = en_df.token_syllables.apply(lambda x: np.var(x))
+    en_df['gunning_fog_index'] = tfsm.gunning_fog_index(num_words=en_df.num_words,
+                                                        num_complex_words=en_df.num_complex_words,
+                                                        num_sentences=en_df.num_sentences)
+    en_df['flesch_kincaid_index'] = tfsm.flesch_kincaid_index(num_syllables=en_df.num_syllables,
+                                                              num_words=en_df.num_words,
+                                                              num_sentences=en_df.num_sentences)
+    en_df['smog_index']= tfsm.smog_index(num_complex_words=en_df.num_complex_words,
+                                         num_sentences=en_df.num_sentences)
 
     final_df = en_df.dropna()
     logger.info('Final data set has {} shape'.format(final_df.shape))
