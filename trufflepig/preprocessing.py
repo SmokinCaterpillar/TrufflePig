@@ -47,7 +47,7 @@ def preprocess(post_df, ncores=8, chunksize=1000,
                min_max_num_paragraphs=(2, 100),
                min_max_num_words=(100, 7500),
                min_max_num_sentences=(5, 750),
-               min_max_words_per_paragraph=(10, 500),
+               min_max_words_per_paragraph=(20, 500),
                max_erros_per_word=0.1,
                min_max_average_punctuation=(1.05, 5),
                min_max_average_sentence_length=(10, 300),
@@ -189,6 +189,10 @@ def preprocess(post_df, ncores=8, chunksize=1000,
     logger.info('Counting connectors')
     en_df['num_connectors'] = en_df.tokens.apply(lambda x: tfsm.count_connectors(x))
     en_df['connectors_per_sentence'] = en_df.num_connectors / en_df.num_sentences
+
+    logger.info('Counting pronouns')
+    en_df['num_pronouns'] = en_df.tokens.apply(lambda x: tfsm.count_pronouns(x))
+    en_df['pronouns_per_sentence'] = en_df.num_pronouns / en_df.num_sentences
 
     logger.info('Spell checking')
     checker = tfsm.SpellErrorCounter()

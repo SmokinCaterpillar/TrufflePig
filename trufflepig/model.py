@@ -9,16 +9,14 @@ from sklearn.pipeline import FeatureUnion, Pipeline
 from sklearn.externals import joblib
 from sklearn.model_selection import train_test_split, GridSearchCV, \
     RandomizedSearchCV
-from sklearn.metrics import classification_report
 from sklearn.base import BaseEstimator, RegressorMixin
-from sklearn.preprocessing import StandardScaler
-from sklearn.neighbors import KNeighborsRegressor
-from sklearn.linear_model import SGDRegressor
 
 from gensim.models.lsimodel import LsiModel
 from gensim import corpora
 from gensim.matutils import corpus2dense
 import gensim.models.doc2vec as d2v
+
+from trufflepig.utils import progressbar
 
 
 logger = logging.getLogger(__name__)
@@ -37,7 +35,8 @@ FEATURES = ['body_length',
             'average_sentence_length',
             'sentence_length_variance',
             'average_punctuation',
-            'connectors_per_sentence']
+            'connectors_per_sentence',
+            'pronouns_per_sentence']
 
 TARGETS = ['reward', 'votes']
 
@@ -78,9 +77,10 @@ class Doc2VecModel(BaseEstimator, RegressorMixin):
         model.build_vocab(tagged_docs)
         model.train(tagged_docs, total_examples=model.corpus_count,
                     epochs = self.epochs)
-        logger.info('Training successfull')
+        logger.info('Training successfull deleting temporary data..')
         model.delete_temporary_training_data()
         self.model = model
+        logger.info('...done, have fun with your new network!')
 
     def fit(self, document_frame, y=None):
         self.train(document_frame)
@@ -89,19 +89,23 @@ class Doc2VecModel(BaseEstimator, RegressorMixin):
     def transform(self, document_frame):
         dim = self.model.vector_size
         inputs = np.zeros((len(document_frame), dim))
+        logger.info('Transforming documents into matrix of '
+                    'shape {}'.format(inputs.shape))
         tagged_docs = self.create_tagged_documents(document_frame)
-        for kdx, permalink in enumerate(document_frame.permalink):
+        for kdx, (author, permalink) in enumerate(zip(document_frame.author,
+                                                      document_frame.permalink)):
             try:
-                inputs[kdx, :] = self.model.docvecs[permalink]
+                inputs[kdx, :] = self.model.docvecs[author+'/'+permalink]
             except KeyError:
                 # infer the test vector
                 inputs[kdx, :] = self.model.infer_vector(tagged_docs[kdx].words,
                                                          steps=self.infer_steps)
+            progressbar(kdx, len(inputs), logger=logger)
         return inputs
 
 
 class KNNDoc2Vec(Doc2VecModel):
-    def __init__(self, knn=7, alpha=0.25, min_alpha=0.01, size=32,
+    def __init__(self, knn=5, alpha=0.25, min_alpha=0.01, size=32,
                  window=8, min_count=5, workers=4, sample=1e-4,
                  negative=5, epochs=5, infer_steps=10):
         super().__init__(alpha=alpha, min_alpha=min_alpha, size=size,
@@ -118,14 +122,17 @@ class KNNDoc2Vec(Doc2VecModel):
         return super().fit(document_frame, target_frame)
 
     def predict(self, document_frame):
+        logger.info('Predicting {} values'.format(len(document_frame)))
         values = self.transform(document_frame)
         results = np.zeros((len(values), self.trainY.shape[1]))
+        logger.info('Finding {} nearest neighbors'.format(self.knn))
         for idx in range(len(values)):
             vector = values[idx, :]
             returns = self.model.docvecs.most_similar(positive=[vector], topn=self.knn)
             indices = [doctag for doctag, sim in returns]
             mean_vals = self.trainY.loc[indices, :].mean()
             results[idx, :] = mean_vals
+            progressbar(idx, len(values), logger=logger)
         return results
 
 
@@ -181,50 +188,10 @@ class FeatureSelector(BaseEstimator):
         #self.scaler = StandardScaler()
 
     def fit(self, data, y=None):
-        #self.scaler.fit(data.loc[:, self.features])
         return self
 
     def transform(self, data):
-        #return self.scaler.transform(data.loc[:, self.features])
         return data.loc[:, self.features]
-
-
-# def create_pipeline2(doc2vec_kwargs, regressor_kwargs, features=FEATURES):
-#     logger.info('Using features {}'.format(features))
-#     feature_generation = FeatureUnion(
-#         transformer_list=[
-#             ('feature_selection', FeatureSelector(features)),
-#             ('doc2vec_model', Doc2VecModel(**doc2vec_kwargs))
-#         ]
-#     )
-#
-#     pipeline = Pipeline(steps=[
-#             ('feature_generation', feature_generation),
-#             ('regressor', RandomForestRegressor(**regressor_kwargs))
-#         ]
-#     )
-#
-#     return pipeline
-#
-#
-# def create_pipeline3(topic_kwargs, regressor_kwargs,
-#                     doc2vec_kwargs, features=FEATURES):
-#     logger.info('Using features {}'.format(features))
-#     feature_generation = FeatureUnion(
-#         transformer_list=[
-#             ('feature_selection', FeatureSelector(features)),
-#             ('topic_model', TopicModel(**topic_kwargs)),
-#             ('doc2vec_model', Doc2VecModel(**doc2vec_kwargs)),
-#         ]
-#     )
-#
-#     pipeline = Pipeline(steps=[
-#             ('feature_generation', feature_generation),
-#             ('regressor', RandomForestRegressor(**regressor_kwargs))
-#         ]
-#     )
-#
-#     return pipeline
 
 
 def create_pure_doc2vec_pipeline(knn_doc2vec_kwargs):
@@ -233,6 +200,7 @@ def create_pure_doc2vec_pipeline(knn_doc2vec_kwargs):
         steps=[('regressor', KNNDoc2Vec(**knn_doc2vec_kwargs))]
     )
     return pipeline
+
 
 def create_default_pipeline(topic_kwargs, regressor_kwargs, features=FEATURES):
     logger.info('Using features {}'.format(features))
@@ -252,18 +220,25 @@ def create_default_pipeline(topic_kwargs, regressor_kwargs, features=FEATURES):
     return pipeline
 
 
-def compute_weights(target_frame):
+def compute_log_vote_weights(target_frame):
+    logger.info('Computing sample weights')
     return 1 + np.log(1 + target_frame.votes)
 
 
-def train_pipeline(post_frame, pipeline=None, **kwargs):
+def train_pipeline(post_frame, pipeline=None, sample_weight_function='default', **kwargs):
     targets = kwargs.pop('targets', TARGETS)
 
     logger.info('Training pipeline with targets {} and {} '
                 'samples...'.format(targets, len(post_frame)))
     target_frame = post_frame.loc[:, targets]
 
-    sample_weight = compute_weights(target_frame)
+    if sample_weight_function == 'default':
+        sample_weight_function = compute_log_vote_weights
+
+    if sample_weight_function is not None:
+        sample_weight = sample_weight_function(target_frame)
+    else:
+        sample_weight = None
 
     if pipeline is None:
         logger.info('...Creating the default pipeline...')
@@ -280,17 +255,27 @@ def train_pipeline(post_frame, pipeline=None, **kwargs):
 
 
 def train_test_pipeline(post_frame, pipeline=None,
-                        train_size=0.8, **kwargs):
+                        train_size=0.8, sample_weight_function='default',
+                        **kwargs):
     train_frame, test_frame = train_test_split(post_frame,
                                                train_size=train_size)
     targets = kwargs.get('targets', TARGETS)
     pipeline = train_pipeline(train_frame, pipeline=pipeline,
+                              sample_weight_function=sample_weight_function,
                               **kwargs)
 
     target_frame = test_frame.loc[:, targets]
 
     logger.info('Using test data...')
-    sample_weight = compute_weights(target_frame)
+
+    if sample_weight_function == 'default':
+        sample_weight_function = compute_log_vote_weights
+
+    if sample_weight_function is not None:
+        sample_weight = sample_weight_function(target_frame)
+    else:
+        sample_weight = None
+
     score = pipeline.score(test_frame, target_frame,
                            sample_weight=sample_weight)
     logger.info('...Done! Test score {}'.format(score))
@@ -327,9 +312,6 @@ def cross_validate(post_frame, param_grid,
 
     score = grid_search.score(test_frame, test_frame.loc[:, targets])
     best_estimator = grid_search.best_estimator_
-
-    topic_model = best_estimator.named_steps['feature_generation'].transformer_list[0][1]
-    logger.info('Best topics\n{}\n'.format(topic_model.print_topics()))
 
     logger.info("FINAL TEST Score {} \n of best estimator:\n\n{}".format(score,
                                         best_estimator.get_params()))

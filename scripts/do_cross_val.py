@@ -23,7 +23,7 @@ def main():
 
     post_frame = tpgd.load_or_scrape_training_data(steem, directory,
                                                    current_datetime=current_datetime,
-                                                   days=7,
+                                                   days=14,
                                                    offset_days=0)
 
     regressor_kwargs = dict(n_estimators=256, max_leaf_nodes=4096,

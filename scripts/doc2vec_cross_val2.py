@@ -31,7 +31,6 @@ def main():
                               random_state=42, oob_score=True)
 
    # topic_kwargs = dict(num_topics=32, no_below=5, no_above=0.1)
-    doc2vec_kwargs = dict(size=128, epochs=32)
 
     post_frame = tppp.load_or_preprocess(post_frame, crossval_filename,
                                          ncores=4, chunksize=1000,
@@ -47,9 +46,10 @@ def main():
     #                     regressor_kwargs=regressor_kwargs, n_iter=None,
     #                     n_jobs=4, targets=['reward'])
 
-    pipe = tpmo.create_pure_doc2vec_pipeline(dict(epochs=10, size=128))
+    pipe = tpmo.create_pure_doc2vec_pipeline(dict(epochs=32, size=128))
 
     pipe, test_frame = tpmo.train_test_pipeline(post_frame,
+                                                with_weight=False,
                                                 pipeline=pipe,
                                                 targets=['reward', 'votes'])
 

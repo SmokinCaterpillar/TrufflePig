@@ -42,6 +42,9 @@ CONNECTORS = {
     'afterwards',
 }
 
+PRONOUNS = {'i', 'me', 'my' , 'you', 'your', 'he', 'him', 'his', 'she', 'her',
+            'it', 'its', 'we', 'us' 'our', 'they', 'them', 'their'}
+
 STEEMIT_WORDS = (
         'crypto',
         'cryptocurrency',
@@ -107,6 +110,10 @@ def compute_average_puncitation(text_list):
 
 def count_connectors(tokens):
     return sum(1 for x in tokens if x in CONNECTORS)
+
+
+def count_pronouns(tokens):
+    return sum(1 for x in tokens if x in PRONOUNS)
 
 
 def count_letters(text):

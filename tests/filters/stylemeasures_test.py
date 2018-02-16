@@ -50,6 +50,12 @@ def test_count_connectors():
     assert result == 2
 
 
+def test_count_pronouns():
+    result = tpsm.count_pronouns(['me', 'and', 'myself', 'like',
+                                  'to', 'go', 'to', 'her'])
+    assert result == 2
+
+
 def test_count_letters():
     result = tpsm.count_letters('hallo54 my namE!!')
     assert result == 11

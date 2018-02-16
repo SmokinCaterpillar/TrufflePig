@@ -1,5 +1,6 @@
 import os
 
+import numpy as np
 import pandas as pd
 import pytest
 
@@ -88,9 +89,9 @@ def test_Doc2Vec_KNN():
 
     pipe = tpmo.create_pure_doc2vec_pipeline(dict(epochs=2, size=16))
 
-    pipe, frame = tpmo.train_test_pipeline(post_frame, pipeline=pipe)
+    pipe, frame = tpmo.train_test_pipeline(post_frame, pipeline=pipe,
+                                           sample_weight_function=None)
     pass
-
 
 
 def test_crossval():
@@ -134,6 +135,6 @@ def test_find_truffles():
 
     post_frame = pd.DataFrame(posts)
     post_frame = tppp.preprocess(post_frame, ncores=4, chunksize=50)
-    truffles = tpmo.find_truffles(post_frame, pipeline)
+    truffles = tpmo.find_truffles(post_frame, pipeline, min_max_reward=(0,100))
 
     assert truffles.iloc[0].reward_difference == truffles.reward_difference.max()
