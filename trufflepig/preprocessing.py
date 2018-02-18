@@ -59,7 +59,7 @@ def preprocess(post_df, ncores=8, chunksize=1000,
 
     logger.info('Filtering dodgy tags {}'.format(filter_tags))
     filter_tags = set(filter_tags)
-    tag_filter = post_df.tags.apply(lambda x: bool(set(x).intersection(filter_tags)))
+    tag_filter = post_df.tags.apply(lambda x: tftf.is_in_filter_tags(x, filter_tags))
     post_df = post_df.loc[~tag_filter]
     logger.info('Kept {} posts'.format(len(post_df)))
 

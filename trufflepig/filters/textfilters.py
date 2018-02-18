@@ -1,4 +1,9 @@
 import re
+import logging
+
+
+logger = logging.getLogger(__name__)
+
 
 def filter_html_tags(text):
     return re.sub('</?[a-z]{1,11}>', '', text)
@@ -34,4 +39,13 @@ def replace_newlines(text):
 
 def filter_punctuation(text):
     return re.sub('[;,.?!]+', '', text)
+
+
+def is_in_filter_tags(tags, filter_tags):
+    try:
+        return bool(set(tags).intersection(filter_tags))
+    except TypeError:
+        logger.exception('Could not identify tags {}, '
+                         'will return True anyway'.format(tags))
+        return True
 

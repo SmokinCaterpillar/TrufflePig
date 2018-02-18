@@ -36,3 +36,12 @@ def test_filter_punctuation():
     result = tptf.filter_punctuation('hi. my. name. is yolo!;;k;')
     assert result == 'hi my name is yolok'
 
+
+def test_is_in_tags():
+    result = tptf.is_in_filter_tags(['hi', 'ho'], {'ha', 'hi'})
+    assert result
+
+
+def test_is_in_tags_typerror():
+    result = tptf.is_in_filter_tags(['hi', ['ho']], {'ha', 'hi'})
+    assert result

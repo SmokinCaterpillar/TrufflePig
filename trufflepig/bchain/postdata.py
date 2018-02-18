@@ -1,6 +1,8 @@
 import logging
+import time
 
 from steem.post import Post, PostDoesNotExist
+from steembase.exceptions import RPCError
 
 import trufflepig.bchain.posts as tfbp
 import trufflepig.bchain.getdata as tfgd
@@ -23,11 +25,11 @@ def post_topN_list(sorted_post_frame, steem_or_args, account, current_datetime, 
                              topN_permalinks=df.permalink,
                              topN_titles=df.title,
                              topN_filtered_bodies=df.filtered_body,
-                             topN_votes=df.votes,
-                             topN_rewards=df.reward,
+                             topN_votes=df.predicted_votes,
+                             topN_rewards=df.predicted_reward,
                              title_date=current_datetime)
 
-    permalink = PERMALINK_TEMPLATE.format(date=current_datetime.strftime('Y-%m-%d'))
+    permalink = PERMALINK_TEMPLATE.format(date=current_datetime.strftime('%Y-%m-%d'))
     logger.info('Posting top post with permalink: {}'.format(permalink))
     steem.commit.post(author=account,
                       title=title,
@@ -44,7 +46,7 @@ def vote_and_comment_on_topK(sorted_post_frame, steem_or_args, account, topN_per
 
     logger.info('Voting and commenting on {} top truffles'.format(K))
     steem = tfgd.check_and_convert_steem(steem_or_args)
-    weight = 100.0 / K
+    weight = min(900.0 / K, 100)
     topN_link = 'https://steemit.com/@{author}/{permalink}'.format(author=account,
                                                     permalink=topN_permalink)
 
@@ -54,15 +56,18 @@ def vote_and_comment_on_topK(sorted_post_frame, steem_or_args, account, topN_per
         try:
             logger.info('Voting and commenting on https://steemit.com/@{author}/{permalink}'
                         ''.format(author=row.author, permalink=row.permalink))
-            reply = tfbp.truffle_comment(reward=row.reward,
-                                         votes=row.votes,
+            reply = tfbp.truffle_comment(reward=row.predicted_reward,
+                                         votes=row.predicted_votes,
                                          rank=kdx + 1,
                                          topN_link=topN_link)
             post = Post('@{}/{}'.format(row.author, row.permalink), steem)
             post.upvote(weight=weight, voter=account)
             post.reply(body=reply, author=account)
+            time.sleep(25)
         except PostDoesNotExist:
             logger.exception('Post not found of row {}'.format(row))
+        except RPCError:
+            logger.exception('Could not post row {}'.format(row))
 
 
 def create_wallet(steem_or_args, password, posting_key):
