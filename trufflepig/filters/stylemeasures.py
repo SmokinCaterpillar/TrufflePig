@@ -135,6 +135,10 @@ def smog_index(num_complex_words, num_sentences):
     return 1.0430 * np.sqrt(num_complex_words * 30 / num_sentences) + 3.1291
 
 
+def adverb_estimate(tokens):
+    return sum([1 for x in tokens if x.endswith('ly')])
+
+
 class SyllableConverter(object):
     def __init__(self, language='en'):
         self.dic = pyphen.Pyphen(lang=language)

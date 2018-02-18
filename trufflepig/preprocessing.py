@@ -130,14 +130,6 @@ def preprocess(post_df, ncores=8, chunksize=1000,
         post_df.filtered_sentences.apply(lambda x:
                                        tfsm.compute_sentence_length_variance(x))
 
-    logger.info('Computing average punctuation')
-    post_df['average_punctuation'] = post_df.filtered_sentences.apply(lambda x:
-                                                            tfsm.compute_average_puncitation(x))
-    post_df = post_df.loc[(post_df.average_punctuation >= min_max_average_punctuation[0]) &
-                          (post_df.average_punctuation <= min_max_average_punctuation[1])]
-    logger.info('Filtered according to punctuation limits {} '
-                'kept {} posts.'.format(min_max_average_punctuation, len(post_df)))
-
     logger.info('Combining Body and Title')
     post_df['combined'] = (post_df.title.apply(lambda x: x.lower()) + ' '
                          + post_df.filtered_body.apply(lambda x: x.lower()))
@@ -175,6 +167,14 @@ def preprocess(post_df, ncores=8, chunksize=1000,
     logger.info('Filtered according to num words per paragraph limits {} '
                 'kept {} posts.'.format(min_max_words_per_paragraph, len(post_df)))
 
+    logger.info('Computing average punctuation')
+    post_df['average_punctuation'] = post_df.filtered_sentences.apply(lambda x:
+                                                            tfsm.compute_average_puncitation(x))
+    post_df = post_df.loc[(post_df.average_punctuation >= min_max_average_punctuation[0]) &
+                          (post_df.average_punctuation <= min_max_average_punctuation[1])]
+    logger.info('Filtered according to punctuation limits {} '
+                'kept {} posts.'.format(min_max_average_punctuation, len(post_df)))
+
     logger.info('Detecting language')
     detector = tfsm.LanguageDetector(seed=detect_seed,
                                      max_length=detect_max_length)
@@ -208,6 +208,9 @@ def preprocess(post_df, ncores=8, chunksize=1000,
     logger.info('Filtered according to spelling mistake limit {} per word'
                 'kept {} posts.'.format(max_erros_per_word, len(en_df)))
 
+    logger.info('Counting adverbs')
+    en_df['num_adverbs'] = en_df.tokens.apply(lambda x: tfsm.adverb_estimate(x))
+    en_df['adverbs_per_sentence'] = en_df.num_adverbs / en_df.num_sentences
 
     logger.info('Calculating syllables')
     syllable_converter = tfsm.SyllableConverter()

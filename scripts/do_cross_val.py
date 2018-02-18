@@ -1,5 +1,6 @@
 import logging
 import os
+import gc
 
 from steem import Steem
 
@@ -23,8 +24,10 @@ def main():
 
     post_frame = tpgd.load_or_scrape_training_data(steem, directory,
                                                    current_datetime=current_datetime,
-                                                   days=14,
+                                                   days=9,
                                                    offset_days=0)
+
+    gc.collect()
 
     regressor_kwargs = dict(n_estimators=256, max_leaf_nodes=4096,
                               max_features=0.2, n_jobs=-1, verbose=1,
@@ -35,7 +38,7 @@ def main():
     post_frame = tppp.load_or_preprocess(post_frame, crossval_filename,
                                          ncores=4, chunksize=1000,
                                          min_en_prob=0.9)
-
+    gc.collect()
     param_grid = {
         'feature_generation__topic_model__no_above':[0.33],
         #'regressor__max_leaf_nodes': [500, 1000],

@@ -81,3 +81,8 @@ def test_smog_index():
 def test_flesch_kincaid_index():
     result = tpsm.flesch_kincaid_index(3, 2, 1)
     assert result == 77.90500000000002
+
+
+def test_adverb_estimate():
+    result = tpsm.adverb_estimate(['i', 'am', 'heavily', 'in', 'use'])
+    assert result == 1

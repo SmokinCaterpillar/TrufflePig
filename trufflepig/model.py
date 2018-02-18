@@ -42,7 +42,8 @@ FEATURES = ['body_length',
             'flesch_kincaid_index',
             'smog_index',
             'average_syllables',
-            'syllable_variance']
+            'syllable_variance',
+            'adverbs_per_sentence']
 
 TARGETS = ['reward', 'votes']
 
