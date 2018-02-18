@@ -370,7 +370,7 @@ def load_or_scrape_training_data(steem_or_args, directory,
     return pd.concat(frames, axis=0)
 
 
-def scrape_hour_data(steem_or_args, hours=25,
+def scrape_hour_data(steem_or_args, hours=24,
                      offset_hours=24,
                      current_datetime=None,
                      ncores=8, stop_after=None):

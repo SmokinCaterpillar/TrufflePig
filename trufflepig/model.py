@@ -324,6 +324,18 @@ def cross_validate(post_frame, param_grid,
                                         best_estimator.get_params()))
 
 
+def make_filename(current_datetime, directory):
+    filename = FILENAME_TEMPLATE.format(time=current_datetime.strftime('%Y-%U'))
+
+    filename = os.path.join(directory,filename)
+    return filename
+
+
+def model_exists(current_datetime, directory):
+    filename = make_filename(current_datetime, directory)
+    return os.path.isfile(filename)
+
+
 def load_or_train_pipeline(post_frame, directory, current_datetime=None,
                            overwrite=False, store=True, **kwargs):
     if current_datetime is None:
@@ -333,10 +345,10 @@ def load_or_train_pipeline(post_frame, directory, current_datetime=None,
 
     if not os.path.isdir(directory):
         os.makedirs(directory)
-    filename = FILENAME_TEMPLATE.format(time=current_datetime.strftime('%Y-%U'))
 
-    filename = os.path.join(directory,filename)
-    if os.path.isfile(filename) and not overwrite:
+    filename = make_filename(current_datetime, directory)
+
+    if model_exists(current_datetime, directory) and not overwrite:
         logger.info('Found file {} will load it'.format(filename))
         pipeline = joblib.load(filename)
     else:
@@ -349,7 +361,8 @@ def load_or_train_pipeline(post_frame, directory, current_datetime=None,
 
 
 def find_truffles(post_frame, pipeline, min_max_reward=(1.0, 10), min_votes=5, k=10):
-    logger.info('Filtering scraped data')
+    logger.info('Looking for truffles and filtering preprocessed data further. '
+                'min max reward {} and min votes {}'.format(min_max_reward, min_votes))
     post_frame = post_frame.loc[(post_frame.reward >= min_max_reward[0]) &
                                 (post_frame.reward <= min_max_reward[1]) &
                                 (post_frame.votes >= min_votes)]
@@ -382,3 +395,13 @@ def find_truffles(post_frame, pipeline, min_max_reward=(1.0, 10), min_votes=5, k
                     '---------------------------------------------------\n')
 
     return post_frame
+
+
+def log_pipeline_info(pipeline):
+    topic_model = pipeline.named_steps['feature_generation'].transformer_list[1][1]
+    logging.getLogger().info(topic_model.print_topics(n_best=None))
+
+    feature_importance_string = 'Feature importances \n'
+    for kdx, importance in enumerate(pipeline.named_steps['regressor'].feature_importances_):
+        feature_importance_string += '{:03d}: {:.3f}\n'.format(kdx, importance)
+    logger.info(feature_importance_string)

@@ -11,7 +11,8 @@ import trufflepig.bchain.getdata as tpbg
 
 @pytest.fixture()
 def steem_kwargs():
-    return dict(nodes=[config.NODE_URL])
+    return dict(nodes=[config.NODE_URL],
+                no_broadcast=True)
 
 
 @pytest.fixture

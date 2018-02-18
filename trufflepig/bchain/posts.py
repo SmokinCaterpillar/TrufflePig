@@ -8,10 +8,10 @@ QUOTE_MAX_LENGTH=256
 TAGS = ['steemit', 'steem', 'minnowsupport', 'upvote', 'trufflepig']
 
 
-def truffle_comment(reward, votes, rank, top10_link, truffle_link=TRUFFLE_LINK, truffle_image_small=TRUFFLE_IMAGE_SMALL):
+def truffle_comment(reward, votes, rank, topN_link, truffle_link=TRUFFLE_LINK, truffle_image_small=TRUFFLE_IMAGE_SMALL):
     post = """**Congratulations!** Your post has been selected as quality content that deserves more attention.
     
-To my mind your post is at least **{reward} SBD** worth and should have received **{votes} votes**. It's now up to the lovely Steemit community to make this come true. By the way, your post is listed on rank {rank} of all truffles found today! You can find the [top 10 daily truffle picks here.]({top10_link})
+To my mind your post is at least **{reward} SBD** worth and should have received **{votes} votes**. It's now up to the lovely Steemit community to make this come true. By the way, your post is listed on rank {rank} of all truffles found today! You can find the [top daily truffle picks here.]({topN_link})
     
 I am `TrufflePig`, an Artificial Intellingence Bot that helps minnows and content curators. I was created and am being maintained by @smcaterpillar. If you are curious how I select content, [you can find an explanation here!]({truffle_link})
     
@@ -22,15 +22,15 @@ Have a nice day and sincerely yours,
 PS: Upvoting and resteeming my posts and comments will support paying for server costs and further development, thank you ;-)
     """
 
-    return post.format(reward=int(reward), votes=int(votes), top10_link=top10_link,
+    return post.format(reward=int(reward), votes=int(votes), topN_link=topN_link,
                        truffle_link=truffle_link, rank=rank,
                        truffle_image_small=truffle_image_small)
 
 
-def top10_list(top10_authors, top10_permalinks, top10_titles, top10_filtered_bodies, top10_rewards, top10_votes,
+def topN_list(topN_authors, topN_permalinks, topN_titles, topN_filtered_bodies, topN_rewards, topN_votes,
                quote_max_length):
 
-    top10_entry="""{rank}. [{title}](https://steemit.com/@{author}/{permalink})  --  **by @{author} with an estimated worth of {reward:d} SBD and {votes:d} votes**
+    topN_entry="""{rank}. [{title}](https://steemit.com/@{author}/{permalink})  --  **by @{author} with an estimated worth of {reward:d} SBD and {votes:d} votes**
     
     {quote}
 
@@ -38,23 +38,23 @@ def top10_list(top10_authors, top10_permalinks, top10_titles, top10_filtered_bod
 
     result_string = ""
 
-    iterable = zip(top10_authors, top10_permalinks, top10_titles,
-                   top10_filtered_bodies, top10_rewards, top10_votes)
+    iterable = zip(topN_authors, topN_permalinks, topN_titles,
+                   topN_filtered_bodies, topN_rewards, topN_votes)
 
     for idx, (author, permalink, title, filtered_body, reward, votes) in enumerate(iterable):
         rank = idx + 1
         quote = '>' + filtered_body[:QUOTE_MAX_LENGTH].replace('\n', ' ') + '...'
         title = tftf.replace_newlines(title)
         title = tftf.filter_special_characters(title)
-        entry = top10_entry.format(rank=rank, author=author, permalink=permalink,
+        entry = topN_entry.format(rank=rank, author=author, permalink=permalink,
                                    title=title, quote=quote, votes=int(votes),
                                    reward=int(reward))
         result_string += entry
     return result_string
 
 
-def top10_post(top10_authors, top10_permalinks, top10_titles,
-               top10_filtered_bodies, top10_rewards, top10_votes, title_date,
+def topN_post(topN_authors, topN_permalinks, topN_titles,
+               topN_filtered_bodies, topN_rewards, topN_votes, title_date,
                truffle_link=TRUFFLE_LINK, truffle_image=TRUFFLE_IMAGE,
                quote_max_length=QUOTE_MAX_LENGTH):
 
@@ -64,18 +64,18 @@ def top10_post(top10_authors, top10_permalinks, top10_titles,
     
 Good day dear beloved Steemit Community! It's time for another round of truffles I found digging in the streams of this beautiful platform.
 
-For those of you who do not know me: My name is *TrufflePig*. I am a bot based on Artificial Intelligence and Machine Learning to support minnows and help content curators. I was created and am being maintained by @smcaterpillar. I search for quality content that got less rewards than it deserves. I call these posts truffles and publish a daily top 10 list. Now it is up to you to give these posts the attention they deserve. If you are curious how I select content, [you can find an explanation here.]({truffle_link})
+For those of you who do not know me: My name is *TrufflePig*. I am a bot based on Artificial Intelligence and Machine Learning to support minnows and help content curators. I was created and am being maintained by @smcaterpillar. I search for quality content that got less rewards than it deserves. I call these posts truffles and publish a daily top list. Now it is up to you to give these posts the attention they deserve. If you are curious how I select content, [you can find an explanation here.]({truffle_link})
     
 Please, be aware that the list below has been automatically generated by a Machine Learning algorithm. Of course, **this algorithm can make mistakes**. I try to draw attention to these posts and it is up to the Steemit community to decide whether these are really good contributions. I personally do not endors any content, opinions, or political views found in these posts. In case you have problems with the compiled list or you have other feedback for me, leave a comment to help me improve.
     
 # The Top 10 Truffles
 
-Here are the top 10 posts that - according to my algorithm - deseve more reward and votes:
+Here are the top 10 posts that - according to my algorithm - deseve more reward and votes. The rank of a truffle is determined by the difference between current and my estimated rewards.
 
-{top10_truffles}
+{topN_truffles}
 
 #### You can Help and Contribute
-By upvoting and resteeming the found truffles from above, you help minnows and promote good content on Steemit. By upvoting and resteeming this top 10 list, you help covering the server costs and finance further development and improvement of my humble self.
+By upvoting and resteeming the found truffles from above, you help minnows and promote good content on Steemit. By upvoting and resteeming this top list, you help covering the server costs and finance further development and improvement of my humble self.
 
 Cheers,
 
@@ -84,16 +84,16 @@ Cheers,
 *`TrufflePig`*
     """
 
-    top10_truffles = top10_list(top10_authors=top10_authors,
-                               top10_permalinks=top10_permalinks,
-                               top10_titles=top10_titles,
-                               top10_filtered_bodies=top10_filtered_bodies,
-                               top10_rewards=top10_rewards,
-                               top10_votes=top10_votes,
+    topN_truffles = topN_list(topN_authors=topN_authors,
+                               topN_permalinks=topN_permalinks,
+                               topN_titles=topN_titles,
+                               topN_filtered_bodies=topN_filtered_bodies,
+                               topN_rewards=topN_rewards,
+                               topN_votes=topN_votes,
                                quote_max_length=quote_max_length)
 
     title = title.format(date=title_date.strftime('%d.%m.%Y'))
-    post = post.format(top10_truffles=top10_truffles,
+    post = post.format(topN_truffles=topN_truffles,
                           truffle_image=truffle_image,
                           truffle_link=truffle_link)
     return title, post

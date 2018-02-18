@@ -1,6 +1,9 @@
 import numpy as np
 import pandas as pd
 
+import trufflepig.filters.textfilters as tftf
+
+
 AUTHORS = ['mary', 'mike', 'maureen', 'michael', 'manuel', 'miriam']
 
 WORDS = """
@@ -101,6 +104,8 @@ def create_post():
     ntwords = np.random.randint(1, 12)
     randtitle = np.random.randint(0, len(WORDS), ntwords)
     title = ' '.join(WORDS[x] for x in randtitle)
+    title = tftf.replace_newlines(title)
+    title = tftf.filter_special_characters(title)
     permalink = title.replace(' ', '-').lower()
 
     reward = np.random.rand() * 100 + 0.1 * nwords

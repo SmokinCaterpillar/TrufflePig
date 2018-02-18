@@ -12,24 +12,24 @@ def test_comment():
     result = tbpo.truffle_comment(reward=post['reward'],
                                   votes=post['votes'],
                                   rank=1,
-                                  top10_link='www.example.com')
+                                  topN_link='www.example.com')
 
     assert result
 
 
-def test_top10_post():
+def test_topN_post():
     posts = random_data.create_n_random_posts(10)
     df = pd.DataFrame(posts)
     df = tppp.preprocess(df, ncores=1)
 
     date = pd.datetime.utcnow().date()
 
-    title, post = tbpo.top10_post(top10_authors=df.author,
-                             top10_permalinks=df.permalink,
-                             top10_titles=df.title,
-                             top10_filtered_bodies=df.filtered_body,
-                             top10_votes=df.votes,
-                             top10_rewards=df.reward,
+    title, post = tbpo.topN_post(topN_authors=df.author,
+                             topN_permalinks=df.permalink,
+                             topN_titles=df.title,
+                             topN_filtered_bodies=df.filtered_body,
+                             topN_votes=df.votes,
+                             topN_rewards=df.reward,
                              title_date=date)
 
     assert post
