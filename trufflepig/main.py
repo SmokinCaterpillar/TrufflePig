@@ -57,7 +57,6 @@ def main():
 
     tpmo.log_pipeline_info(pipeline=pipeline)
 
-
     prediction_frame = tpgd.scrape_hour_data(steem_or_args=steem_kwargs,
                                              current_datetime=current_datetime)
     prediction_frame = tppp.preprocess(prediction_frame)
