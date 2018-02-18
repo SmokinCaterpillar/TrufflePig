@@ -63,3 +63,21 @@ def vote_and_comment_on_topK(sorted_post_frame, steem_or_args, account, topN_per
             post.reply(body=reply, author=account)
         except PostDoesNotExist:
             logger.exception('Post not found of row {}'.format(row))
+
+
+def create_wallet(steem_or_args, password, posting_key):
+
+    if posting_key is None or password is None:
+        raise RuntimeError('Key or password are None!')
+
+    steem = tfgd.check_and_convert_steem(steem_or_args)
+
+    logger.info('Unlocking or creating wallet')
+    wallet = steem.wallet
+    wallet.unlock(pwd=password)
+    logger.info('Adding Posting Key')
+    try:
+        wallet.addPrivateKey(posting_key)
+    except ValueError:
+        logger.info('Key already present')
+    logger.info('Wallet is ready')

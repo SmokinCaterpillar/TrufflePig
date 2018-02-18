@@ -29,6 +29,8 @@ def main():
 
     steem_kwargs = dict(nodes=[config.NODE_URL], no_broadcast=True)
 
+    tppd.create_wallet(steem_kwargs, config.PASSWORD, config.POSTING_KEY)
+
     if not tpmo.model_exists(current_datetime, model_directoy):
         post_frame = tpgd.load_or_scrape_training_data(steem_kwargs, data_directory,
                                                        current_datetime=current_datetime,

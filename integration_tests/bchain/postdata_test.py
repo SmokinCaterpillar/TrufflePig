@@ -39,3 +39,8 @@ def test_test_top20_vote_and_comment(steem):
     account = config.ACCOUNT
 
     tbpd.vote_and_comment_on_topK(df, steem, account, 'laida')
+
+
+@pytest.mark.skipif(config.PASSWORD is None, reason="needs posting key")
+def test_create_wallet(steem):
+    tbpd.create_wallet(steem, config.PASSWORD, config.POSTING_KEY)
