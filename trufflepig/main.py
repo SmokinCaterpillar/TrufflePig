@@ -10,12 +10,24 @@ import trufflepig.bchain.getdata as tpgd
 import trufflepig.bchain.postdata as tppd
 import trufflepig.utils as tfut
 from trufflepig import config
+import argparse
+import time
 
 
 logger = logging.getLogger(__name__)
 
 
+def parse_args():
+    parser = argparse.ArgumentParser(description='TrufflePig Bot')
+    parser.add_argument('--broadcast', action="store_false",
+                        default=True)
+    args = parser.parse_args()
+    return args.broadcast
+
+
 def main():
+
+    no_broadcast = parse_args()
 
     current_datetime = pd.datetime.utcnow()
 
@@ -24,11 +36,16 @@ def main():
     logging.basicConfig(level=logging.INFO, format=format)
 
     logger.info('STARTING main script at {}'.format(current_datetime))
+    if no_broadcast:
+        logger.info('Run without broadcasting.')
+    else:
+        logger.info('ATTENTION I WILL BROADCAST TO STEEMIT!!!')
+    time.sleep(2)
 
     data_directory = os.path.join(config.PROJECT_DIRECTORY, 'scraped_data')
     model_directoy = os.path.join(config.PROJECT_DIRECTORY, 'trained_models')
 
-    steem_kwargs = dict(nodes=config.NODES, no_broadcast=True)
+    steem_kwargs = dict(nodes=config.NODES, no_broadcast=no_broadcast)
 
     tppd.create_wallet(steem_kwargs, config.PASSWORD, config.POSTING_KEY)
 
