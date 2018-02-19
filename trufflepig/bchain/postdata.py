@@ -46,7 +46,7 @@ def vote_and_comment_on_topK(sorted_post_frame, steem_or_args, account, topN_per
 
     logger.info('Voting and commenting on {} top truffles'.format(K))
     steem = tfgd.check_and_convert_steem(steem_or_args)
-    weight = min(900.0 / K, 100)
+    weight = min(840.0 / K, 100)
     topN_link = 'https://steemit.com/@{author}/{permalink}'.format(author=account,
                                                     permalink=topN_permalink)
 
