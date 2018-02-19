@@ -27,7 +27,7 @@ def main():
     data_directory = os.path.join(config.PROJECT_DIRECTORY, 'scraped_data')
     model_directoy = os.path.join(config.PROJECT_DIRECTORY, 'trained_models')
 
-    steem_kwargs = dict(nodes=[config.NODE_URL], no_broadcast=True)
+    steem_kwargs = dict(nodex=config.NODES, no_broadcast=True)
 
     tppd.create_wallet(steem_kwargs, config.PASSWORD, config.POSTING_KEY)
 

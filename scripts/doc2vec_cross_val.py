@@ -16,7 +16,7 @@ def main():
     logging.basicConfig(level=logging.INFO, format=format)
     directory = os.path.join(config.PROJECT_DIRECTORY, 'scraped_data')
 
-    steem = dict(nodes=[config.NODE_URL])
+    steem = dict(nodex=config.NODES)
     current_datetime = '2018-02-01'
 
     crossval_filename = os.path.join(directory, 'xval_{}.gz'.format(current_datetime))

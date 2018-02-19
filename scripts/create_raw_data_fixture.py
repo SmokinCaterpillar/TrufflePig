@@ -10,7 +10,7 @@ def main():
     directory = os.path.join(config.PROJECT_DIRECTORY, 'scraped_data')
 
 
-    frames = tpbg.load_or_scrape_training_data(dict(nodes=[config.NODE_URL]),
+    frames = tpbg.load_or_scrape_training_data(dict(nodex=config.NODES),
                                                directory,
                                                days=20,
                                                stop_after=100,

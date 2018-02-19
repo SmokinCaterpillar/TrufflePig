@@ -2,7 +2,7 @@ from steem import Steem
 from trufflepig import config
 
 def main():
-    kwargs = dict(nodes=[config.NODE_URL],
+    kwargs = dict(nodex=config.NODES,
                 no_broadcast=True)
 
     steem = Steem(**kwargs)
