@@ -66,9 +66,12 @@ def vote_and_comment_on_topK(sorted_post_frame, steem_or_args, account, topN_per
             # to pass around the no broadcast setting otherwise it is lost
             # see https://github.com/steemit/steem-python/issues/155
             post.commit.no_broadcast = steem.commit.no_broadcast
+
+            # Wait a bit Steemit nodes hate comments in quick succession
+            time.sleep(25)
+            
             post.upvote(weight=weight, voter=account)
             post.reply(body=reply, author=account)
-            time.sleep(25)
         except PostDoesNotExist:
             logger.exception('Post not found of row {}'.format(row))
         except RPCError:

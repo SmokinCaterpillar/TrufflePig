@@ -18,6 +18,9 @@ def test_test_top10post(steem):
 
     posts = random_data.create_n_random_posts(10)
     df = pd.DataFrame(posts)
+    df['predicted_reward'] = df.reward
+    df['predicted_votes'] = df.votes
+
     df = tppp.preprocess(df, ncores=1)
 
     date = pd.datetime.utcnow().date()
@@ -34,6 +37,9 @@ def test_test_top20_vote_and_comment(steem):
 
     posts = random_data.create_n_random_posts(10)
     df = pd.DataFrame(posts)
+    df['predicted_reward'] = df.reward
+    df['predicted_votes'] = df.votes
+
     df = tppp.preprocess(df, ncores=1)
 
     account = config.ACCOUNT
