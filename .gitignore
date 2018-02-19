@@ -106,3 +106,4 @@ ENV/
 # Data in general
 scraped_data
 trained_models
+logs

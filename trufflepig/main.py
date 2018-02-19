@@ -25,15 +25,31 @@ def parse_args():
     return args.broadcast
 
 
+def configure_logging(directory, current_datetime):
+    if not os.path.isdir(directory):
+        os.makedirs(directory)
+
+    filename = 'trufflepig_{time}.txt'.format(time=current_datetime.strftime('%Y-%m-%d'))
+    filename = os.path.join(directory, filename)
+
+    format=('%(asctime)s %(processName)s:%(name)s:'
+                  '%(funcName)s:%(lineno)s:%(levelname)s: %(message)s')
+    handlers = [logging.StreamHandler(), logging.FileHandler(filename)]
+    logging.basicConfig(level=logging.INFO, format=format,
+                        handlers=handlers)
+
+
 def main():
 
     no_broadcast = parse_args()
 
     current_datetime = pd.datetime.utcnow()
 
-    format=('%(asctime)s %(processName)s:%(name)s:'
-                  '%(funcName)s:%(lineno)s:%(levelname)s: %(message)s')
-    logging.basicConfig(level=logging.INFO, format=format)
+    data_directory = os.path.join(config.PROJECT_DIRECTORY, 'scraped_data')
+    model_directoy = os.path.join(config.PROJECT_DIRECTORY, 'trained_models')
+    log_directory =  os.path.join(config.PROJECT_DIRECTORY, 'logs')
+
+    configure_logging(log_directory, current_datetime)
 
     logger.info('STARTING main script at {}'.format(current_datetime))
     if no_broadcast:
@@ -41,9 +57,6 @@ def main():
     else:
         logger.info('ATTENTION I WILL BROADCAST TO STEEMIT!!!')
     time.sleep(2)
-
-    data_directory = os.path.join(config.PROJECT_DIRECTORY, 'scraped_data')
-    model_directoy = os.path.join(config.PROJECT_DIRECTORY, 'trained_models')
 
     steem_kwargs = dict(nodes=config.NODES, no_broadcast=no_broadcast)
 
@@ -93,6 +106,7 @@ def main():
     logger.info('Cleaning up after myself')
     tfut.clean_up_directory(model_directoy, keep_last=3)
     tfut.clean_up_directory(data_directory, keep_last=25)
+    tfut.clean_up_directory(log_directory, keep_last=14)
     logger.info('DONE at {}'.format(current_datetime))
 
 
