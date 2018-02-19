@@ -8,7 +8,7 @@ import trufflepig.bchain.getdata as tpbg
 
 logging.basicConfig(level=logging.INFO)
 
-steem = Steem(nodex=config.NODES)
+steem = Steem(nodes=config.NODES)
 
 now = pd.datetime.utcnow()
 end = now
