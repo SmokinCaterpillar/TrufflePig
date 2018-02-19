@@ -14,7 +14,6 @@ logger = logging.getLogger(__name__)
 PERMALINK_TEMPLATE = 'daily-truffle-picks-{date}'
 
 
-
 def post_topN_list(sorted_post_frame, steem_or_args, account, current_datetime, N=10):
     steem = tfgd.check_and_convert_steem(steem_or_args)
 
@@ -69,7 +68,7 @@ def vote_and_comment_on_topK(sorted_post_frame, steem_or_args, account, topN_per
 
             # Wait a bit Steemit nodes hate comments in quick succession
             time.sleep(25)
-            
+
             post.upvote(weight=weight, voter=account)
             post.reply(body=reply, author=account)
         except PostDoesNotExist:
