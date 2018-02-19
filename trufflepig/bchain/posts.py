@@ -20,8 +20,6 @@ I am `TrufflePig`, an Artificial Intelligence Bot that helps minnows and content
 Have a nice day and sincerely yours,
 {truffle_image_small}
 *`TrufflePig`*
-
-PS: Upvoting and resteeming my posts and comments will support paying for server costs and further development, thank you ;-)
     """
     post = TEST_STRING + post
 
