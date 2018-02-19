@@ -31,6 +31,8 @@ def post_topN_list(sorted_post_frame, steem_or_args, account, current_datetime, 
 
     permalink = PERMALINK_TEMPLATE.format(date=current_datetime.strftime('%Y-%m-%d'))
     logger.info('Posting top post with permalink: {}'.format(permalink))
+    logger.info(title)
+    logger.info(body)
     steem.commit.post(author=account,
                       title=title,
                       body=body,
@@ -61,6 +63,9 @@ def vote_and_comment_on_topK(sorted_post_frame, steem_or_args, account, topN_per
                                          rank=kdx + 1,
                                          topN_link=topN_link)
             post = Post('@{}/{}'.format(row.author, row.permalink), steem)
+            # to pass around the no broadcast setting otherwise it is lost
+            # see https://github.com/steemit/steem-python/issues/155
+            post.commit.no_broadcast = steem.commit.no_broadcast
             post.upvote(weight=weight, voter=account)
             post.reply(body=reply, author=account)
             time.sleep(25)

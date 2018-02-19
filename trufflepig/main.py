@@ -27,7 +27,7 @@ def main():
     data_directory = os.path.join(config.PROJECT_DIRECTORY, 'scraped_data')
     model_directoy = os.path.join(config.PROJECT_DIRECTORY, 'trained_models')
 
-    steem_kwargs = dict(nodes=[config.NODE_URL], no_broadcast=False)
+    steem_kwargs = dict(nodes=[config.NODE_URL], no_broadcast=True)
 
     tppd.create_wallet(steem_kwargs, config.PASSWORD, config.POSTING_KEY)
 
@@ -67,10 +67,10 @@ def main():
     permalink = tppd.post_topN_list(sorted_frame, steem_kwargs,
                                     account=account,
                                     current_datetime=current_datetime)
-    # tppd.vote_and_comment_on_topK(sorted_frame,
-    #                               steem_kwargs,
-    #                               topN_permalink=permalink,
-    #                               account=account)
+    tppd.vote_and_comment_on_topK(sorted_frame,
+                                  steem_kwargs,
+                                  topN_permalink=permalink,
+                                  account=account)
 
     logger.info('DONE at {}'.format(current_datetime))
 
