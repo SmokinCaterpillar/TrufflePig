@@ -8,6 +8,7 @@ import trufflepig.model as tpmo
 import trufflepig.preprocessing as tppp
 import trufflepig.bchain.getdata as tpgd
 import trufflepig.bchain.postdata as tppd
+import trufflepig.utils as tfut
 from trufflepig import config
 
 
@@ -60,7 +61,7 @@ def main():
     prediction_frame = tpgd.scrape_hour_data(steem_or_args=steem_kwargs,
                                              current_datetime=current_datetime,
                                              ncores=32)
-    prediction_frame = tppp.preprocess(prediction_frame)
+    prediction_frame = tppp.preprocess(prediction_frame, ncores=4)
 
     sorted_frame = tpmo.find_truffles(prediction_frame, pipeline)
     account = config.ACCOUNT
@@ -72,6 +73,9 @@ def main():
                                   topN_permalink=permalink,
                                   account=account)
 
+    logger.info('Cleaning up after myself')
+    tfut.clean_up_directory(model_directoy, keep_last=3)
+    tfut.clean_up_directory(data_directory, keep_last=25)
     logger.info('DONE at {}'.format(current_datetime))
 
 

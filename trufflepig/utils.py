@@ -1,8 +1,11 @@
 import datetime
 import logging
+import os
 
 import numpy as np
 
+
+logger = logging.getLogger(__name__)
 
 
 class _Progressbar(object):
@@ -196,3 +199,23 @@ def progressbar(index, total, percentage_step=10, logger='print', log_level=logg
     return _progressbar(index=index, total=total, percentage_step=percentage_step,
                         logger=logger, log_level=log_level, reprint=reprint,
                         time=time, length=length, fmt_string=fmt_string, reset=reset)
+
+
+def clean_up_directory(directory, keep_last=25):
+    filenames = os.listdir(directory)
+    filenames = [os.path.join(directory, x) for x in filenames]
+    filenames = sorted([x for x in filenames if os.path.isfile(x)])
+    nfiles = len(filenames)
+    if nfiles > keep_last:
+        until = nfiles - keep_last
+        logger.info('Founc {} files, will delete {} and keep '
+                    '{}'.format(nfiles, until, keep_last))
+        filenames = filenames[:until]
+        for kdx, filename in enumerate(filenames):
+            logger.info('Removing file {} ({}/{})'.format(filename,
+                                                          kdx + 1,
+                                                          keep_last))
+            os.remove(filename)
+    else:
+        logger.info('Found only {} files, less than the number to keep '
+                    '({})'.format(nfiles, keep_last))

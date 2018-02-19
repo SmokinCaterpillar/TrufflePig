@@ -7,13 +7,13 @@ TRUFFLE_IMAGE = '![trufflepig](https://raw.githubusercontent.com/SmokinCaterpill
 QUOTE_MAX_LENGTH=256
 TAGS = ['steemit', 'steem', 'minnowsupport', 'upvote', 'trufflepig']
 
-TEST_STRING = '**THIS IS A TRIAL RUN AND BETA TEST**\n\n'
+BODY_PREFIX = ''  # to announce tests etc.
 
 
 def truffle_comment(reward, votes, rank, topN_link, truffle_link=TRUFFLE_LINK, truffle_image_small=TRUFFLE_IMAGE_SMALL):
     post = """**Congratulations!** Your post has been selected as quality content that deserves more attention.
     
-I upvoted your contribution because to my mind your post is at least **{reward} SBD** worth and should receive **{votes} votes**. It's now up to the lovely Steemit community to make this come true. By the way, your post is listed on **rank {rank}** of all truffles found today! You can find the [top daily truffle picks here.]({topN_link})
+I upvoted your contribution because to my mind your post is at least **{reward} SBD** worth and should receive **{votes} votes**. It's now up to the lovely Steemit community to make this come true. By the way, your post is listed on **rank {rank}** of all truffles found today! You can find the [TOP DAILY TRUFFLE PICKS HERE.]({topN_link})
     
 I am `TrufflePig`, an Artificial Intelligence Bot that helps minnows and content curators using Machine Learning. If you are curious how I select content, [you can find an explanation here!]({truffle_link})
     
@@ -21,7 +21,7 @@ Have a nice day and sincerely yours,
 {truffle_image_small}
 *`TrufflePig`*
     """
-    post = TEST_STRING + post
+    post = BODY_PREFIX + post
 
     return post.format(reward=int(reward), votes=int(votes), topN_link=topN_link,
                        truffle_link=truffle_link, rank=rank,
@@ -97,5 +97,5 @@ Cheers,
     post = post.format(topN_truffles=topN_truffles,
                           truffle_image=truffle_image,
                           truffle_link=truffle_link)
-    post = TEST_STRING + post
+    post = BODY_PREFIX + post
     return title, post
