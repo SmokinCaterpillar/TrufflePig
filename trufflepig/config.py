@@ -1,7 +1,7 @@
 import os
 
 NODE_URL = os.environ.get('STEEM_NODE_URL', 'https://api.steemit.com')
-NODE_URL2 = os.environ.get('STEEM_NODE_URL2', 'https://steemd.pevo.science')
+NODE_URL2 = os.environ.get('STEEM_NODE_URL2', 'https://steemd.privex.io')
 NODE_URL3 = os.environ.get('STEEM_NODE_URL3', None)
 NODES = [x for x in (NODE_URL, NODE_URL2) if x]
 
