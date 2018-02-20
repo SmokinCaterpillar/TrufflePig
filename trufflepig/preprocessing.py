@@ -160,6 +160,9 @@ def preprocess(post_df, ncores=4, chunksize=500,
     logger.info('Filtered according to num words limits {} '
                 'kept {} posts.'.format(min_max_num_words, len(post_df)))
 
+    logger.info('Intermediate garbage collection.')
+    gc.collect()
+
     logger.info('Counting unique words')
     post_df['unique_words'] = post_df.tokens.apply(lambda x: len(set(x)))
     post_df['unique_ratio'] = post_df.unique_words / post_df.num_words
