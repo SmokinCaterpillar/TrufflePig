@@ -362,13 +362,15 @@ def load_or_train_pipeline(post_frame, directory, current_datetime=None,
 
 
 def find_truffles(post_frame, pipeline, min_max_reward=(1.0, 10), min_votes=5, k=10):
-    logger.info('Looking for truffles and filtering preprocessed data further. '
-                'min max reward {} and min votes {}'.format(min_max_reward, min_votes))
+    logger.info('Looking for truffles in frame of shape {} and filtering preprocessed data further. '
+                'min max reward {} and min votes '
+                '{}'.format(post_frame.shape, min_max_reward, min_votes))
     to_drop = post_frame.loc[(post_frame.reward < min_max_reward[0]) |
                                 (post_frame.reward > min_max_reward[1]) |
                                 (post_frame.votes < min_votes)]
 
     post_frame.drop(to_drop.index, inplace=True)
+    logger.info('Kept {} posts'.format(len(post_frame)))
 
     logger.info('Predicting truffles')
     predicted_rewards_and_votes = pipeline.predict(post_frame)
