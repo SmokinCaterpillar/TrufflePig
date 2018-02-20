@@ -163,13 +163,6 @@ def preprocess(post_df, ncores=4, chunksize=500,
     logger.info('Filtered according to punctuation limits {} '
                 'kept {} posts.'.format(min_max_average_punctuation, len(post_df)))
 
-    logger.info('Spell checking')
-    checker = tfsm.SpellErrorCounter()
-    post_df['num_spelling_errors'] = apply_parallel(checker.count_mistakes,
-                                              post_df.combined,
-                                              ncores=ncores,
-                                              chunksize=chunksize)
-
     logger.info('Detecting language')
     detector = tfsm.LanguageDetector(seed=detect_seed,
                                      max_length=detect_max_length)
@@ -199,6 +192,13 @@ def preprocess(post_df, ncores=4, chunksize=500,
     post_df.drop(to_drop.index, inplace=True)
     logger.info('Filtered according to grammar mistake limit {} per sentence '
                 'kept {} posts.'.format(max_grammar_errors_per_sentence, len(post_df)))
+
+    logger.info('Spell checking')
+    checker = tfsm.SpellErrorCounter()
+    post_df['num_spelling_errors'] = apply_parallel(checker.count_mistakes,
+                                              post_df.combined,
+                                              ncores=ncores,
+                                              chunksize=chunksize)
 
     logger.info('Tokenization')
     post_df['tokens'] = post_df.combined.apply(lambda x: x.split(' '))
