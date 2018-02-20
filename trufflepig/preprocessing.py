@@ -40,8 +40,9 @@ def apply_parallel(function, iterable, ncores, chunksize=1000):
         return results
 
 
-def preprocess(post_df, ncores=8, chunksize=1000,
+def preprocess(post_df, ncores=4, chunksize=500,
                detect_seed=42, detect_max_length=2000,
+               grammar_max_sentences=10,
                min_en_prob=0.9,
                min_max_body_length=(500, 25000),
                min_max_letter_ratio=(0.5, 0.85),
@@ -50,17 +51,18 @@ def preprocess(post_df, ncores=8, chunksize=1000,
                min_max_num_sentences=(5, 750),
                min_max_words_per_paragraph=(20, 500),
                max_erros_per_word=0.1,
+               max_grammar_errors_per_sentence=0.9,
                min_max_average_punctuation=(1.05, 5),
                min_max_average_sentence_length=(10, 300),
-               filter_tags = FILTER_TAGS,
-               ):
+               filter_tags = FILTER_TAGS):
     logger.info('Filtering duplicates of {} posts'.format(len(post_df)))
     post_df = filter_duplicates(post_df)
 
     logger.info('Filtering dodgy tags {}'.format(filter_tags))
     filter_tags = set(filter_tags)
     tag_filter = post_df.tags.apply(lambda x: tftf.is_in_filter_tags(x, filter_tags))
-    post_df = post_df.loc[~tag_filter]
+    to_drop = post_df.loc[tag_filter]
+    post_df.drop(to_drop.index, inplace=True)
     logger.info('Kept {} posts'.format(len(post_df)))
 
     logger.info('Filtering images')
@@ -86,24 +88,26 @@ def preprocess(post_df, ncores=8, chunksize=1000,
     logger.info('Counting paragraphs')
     post_df['num_paragraphs'] = post_df.filtered_body.apply(lambda x:
                                                         tfsm.count_paragraphs(x))
-    post_df = post_df.loc[(post_df.num_paragraphs >= min_max_num_paragraphs[0]) &
-                          (post_df.num_paragraphs <= min_max_num_paragraphs[1])]
+    to_drop = post_df.loc[~((post_df.num_paragraphs >= min_max_num_paragraphs[0]) &
+                          (post_df.num_paragraphs <= min_max_num_paragraphs[1]))]
+    post_df.drop(to_drop.index, inplace=True)
     logger.info('Filtered according to num paragraphs limits {} '
                 'kept {} posts.'.format(min_max_num_paragraphs, len(post_df)))
 
     logger.info('Calculating length')
     post_df['body_length'] = post_df.filtered_body.apply(lambda x: len(x))
-    post_df = post_df.loc[(post_df.body_length >= min_max_body_length[0]) &
-                          (post_df.body_length <= min_max_body_length[1]), :]
+    to_drop = post_df.loc[~((post_df.body_length >= min_max_body_length[0]) &
+                          (post_df.body_length <= min_max_body_length[1]))]
+    post_df.drop(to_drop.index, inplace=True)
     logger.info('Filtered according to body limits {} '
                 'kept {} posts.'.format(min_max_body_length, len(post_df)))
 
     logger.info('Counting letters')
-    post_df['letter_count'] = post_df.filtered_body.apply(lambda x:
-                                                                      tfsm.count_letters(x))
+    post_df['letter_count'] = post_df.filtered_body.apply(lambda x: tfsm.count_letters(x))
     post_df['letter_ratio'] = post_df.letter_count / post_df.body_length
-    post_df = post_df.loc[(post_df.letter_ratio >= min_max_letter_ratio[0]) &
-                          (post_df.letter_ratio <= min_max_letter_ratio[1])]
+    to_drop = post_df.loc[~((post_df.letter_ratio >= min_max_letter_ratio[0]) &
+                          (post_df.letter_ratio <= min_max_letter_ratio[1]))]
+    post_df.drop(to_drop.index, inplace=True)
     logger.info('Filtered according to letter ratio limits {} '
                 'kept {} posts.'.format(min_max_letter_ratio, len(post_df)))
 
@@ -111,17 +115,18 @@ def preprocess(post_df, ncores=8, chunksize=1000,
     post_df['filtered_sentences'] = post_df.filtered_body.apply(lambda x:
                                                             tfsm.split_into_sentences(x))
     post_df['num_sentences'] = post_df.filtered_sentences.apply(lambda x: len(x))
-    post_df = post_df.loc[(post_df.num_sentences >= min_max_num_sentences[0]) &
-                          (post_df.num_sentences <= min_max_num_sentences[1])]
+    to_drop = post_df.loc[~((post_df.num_sentences >= min_max_num_sentences[0]) &
+                          (post_df.num_sentences <= min_max_num_sentences[1]))]
+    post_df.drop(to_drop.index, inplace=True)
     logger.info('Filtered according to num sentences limits {} '
                 'kept {} posts.'.format(min_max_num_sentences, len(post_df)))
 
     logger.info('Computing average sentence length')
-    post_df['average_sentence_length'] =  \
-        post_df.filtered_sentences.apply(lambda x:
+    post_df['average_sentence_length'] =  post_df.filtered_sentences.apply(lambda x:
                                        tfsm.compute_average_sentence_length(x))
-    post_df = post_df.loc[(post_df.average_sentence_length >= min_max_average_sentence_length[0]) &
-                          (post_df.average_sentence_length <= min_max_average_sentence_length[1])]
+    to_drop = post_df.loc[~((post_df.average_sentence_length >= min_max_average_sentence_length[0]) &
+                          (post_df.average_sentence_length <= min_max_average_sentence_length[1]))]
+    post_df.drop(to_drop.index, inplace=True)
     logger.info('Filtered according to avg. sentences limits {} '
                 'kept {} posts.'.format(min_max_average_sentence_length, len(post_df)))
 
@@ -148,8 +153,9 @@ def preprocess(post_df, ncores=8, chunksize=1000,
     logger.info('Tokenization')
     post_df['tokens'] = post_df.combined.apply(lambda x: x.split(' '))
     post_df['num_words'] = post_df.tokens.apply(lambda x: len(x))
-    post_df = post_df.loc[(post_df.num_words >= min_max_num_words[0]) &
-                          (post_df.num_words <= min_max_num_words[1])]
+    to_drop = post_df.loc[~((post_df.num_words >= min_max_num_words[0]) &
+                          (post_df.num_words <= min_max_num_words[1]))]
+    post_df.drop(to_drop.index, inplace=True)
     logger.info('Filtered according to num words limits {} '
                 'kept {} posts.'.format(min_max_num_words, len(post_df)))
 
@@ -162,16 +168,18 @@ def preprocess(post_df, ncores=8, chunksize=1000,
 
     logger.info('Computing words per paragraph')
     post_df['words_per_paragraph'] = post_df.num_words / post_df.num_paragraphs
-    post_df = post_df.loc[(post_df.words_per_paragraph >= min_max_words_per_paragraph[0]) &
-                          (post_df.words_per_paragraph <= min_max_words_per_paragraph[1])]
+    to_drop = post_df.loc[~((post_df.words_per_paragraph >= min_max_words_per_paragraph[0]) &
+                          (post_df.words_per_paragraph <= min_max_words_per_paragraph[1]))]
+    post_df.drop(to_drop.index, inplace=True)
     logger.info('Filtered according to num words per paragraph limits {} '
                 'kept {} posts.'.format(min_max_words_per_paragraph, len(post_df)))
 
     logger.info('Computing average punctuation')
     post_df['average_punctuation'] = post_df.filtered_sentences.apply(lambda x:
                                                             tfsm.compute_average_puncitation(x))
-    post_df = post_df.loc[(post_df.average_punctuation >= min_max_average_punctuation[0]) &
-                          (post_df.average_punctuation <= min_max_average_punctuation[1])]
+    to_drop = post_df.loc[~((post_df.average_punctuation >= min_max_average_punctuation[0]) &
+                          (post_df.average_punctuation <= min_max_average_punctuation[1]))]
+    post_df.drop(to_drop.index, inplace=True)
     logger.info('Filtered according to punctuation limits {} '
                 'kept {} posts.'.format(min_max_average_punctuation, len(post_df)))
 
@@ -183,59 +191,73 @@ def preprocess(post_df, ncores=8, chunksize=1000,
                                                       ncores=ncores,
                                                       chunksize=chunksize)
     post_df['en_prob'] = post_df.languages.apply(lambda x: x.get('en', 0))
-    en_df = post_df.loc[post_df.en_prob >= min_en_prob, :]
-    logger.info('Found {} English posts with threshold {}'.format(len(en_df),
+    to_drop = post_df.loc[post_df.en_prob < min_en_prob]
+    post_df.drop(to_drop.index, inplace=True)
+    logger.info('Found {} English posts with threshold {}'.format(len(post_df),
                                                                   min_en_prob))
 
     logger.info('Counting connectors')
-    en_df['num_connectors'] = en_df.tokens.apply(lambda x: tfsm.count_connectors(x))
-    en_df['connectors_per_sentence'] = en_df.num_connectors / en_df.num_sentences
+    post_df['num_connectors'] = post_df.tokens.apply(lambda x: tfsm.count_connectors(x))
+    post_df['connectors_per_sentence'] = post_df.num_connectors / post_df.num_sentences
 
     logger.info('Counting pronouns')
-    en_df['num_pronouns'] = en_df.tokens.apply(lambda x: tfsm.count_pronouns(x))
-    en_df['pronouns_per_sentence'] = en_df.num_pronouns / en_df.num_sentences
+    post_df['num_pronouns'] = post_df.tokens.apply(lambda x: tfsm.count_pronouns(x))
+    post_df['pronouns_per_sentence'] = post_df.num_pronouns / post_df.num_sentences
 
     logger.info('Spell checking')
     checker = tfsm.SpellErrorCounter()
-    en_df['num_spelling_errors'] = apply_parallel(checker.count_mistakes,
-                                              en_df.combined,
+    post_df['num_spelling_errors'] = apply_parallel(checker.count_mistakes,
+                                              post_df.combined,
                                               ncores=ncores,
                                               chunksize=chunksize)
 
     logger.info('Computing mistakes per word')
-    en_df['errors_per_word'] = en_df.num_spelling_errors / en_df.num_words
-    en_df = en_df.loc[en_df.errors_per_word <= max_erros_per_word]
-    logger.info('Filtered according to spelling mistake limit {} per word'
-                'kept {} posts.'.format(max_erros_per_word, len(en_df)))
+    post_df['errors_per_word'] = post_df.num_spelling_errors / post_df.num_words
+    to_drop = post_df.loc[post_df.errors_per_word > max_erros_per_word]
+    post_df.drop(to_drop.index, inplace=True)
+    logger.info('Filtered according to spelling mistake limit {} per word '
+                'kept {} posts.'.format(max_erros_per_word, len(post_df)))
+
+    logger.info('Computing grammar mistakes per sentence with '
+                '{} max sentences'.format(grammar_max_sentences))
+    grammar_checker = tfsm.GrammarErrorCounter(max_sentences=grammar_max_sentences)
+    post_df['grammar_errors_per_sentence'] = apply_parallel(grammar_checker.count_mistakes_per_sentence,
+                                                 post_df.filtered_sentences,
+                                                 ncores=ncores,
+                                                 chunksize=chunksize)
+    to_drop = post_df.loc[post_df.grammar_errors_per_sentence > max_grammar_errors_per_sentence]
+    post_df.drop(to_drop.index, inplace=True)
+    logger.info('Filtered according to grammar mistake limit {} per sentence '
+                'kept {} posts.'.format(max_grammar_errors_per_sentence, len(post_df)))
 
     logger.info('Counting adverbs')
-    en_df['num_adverbs'] = en_df.tokens.apply(lambda x: tfsm.adverb_estimate(x))
-    en_df['adverbs_per_sentence'] = en_df.num_adverbs / en_df.num_sentences
+    post_df['num_adverbs'] = post_df.tokens.apply(lambda x: tfsm.adverb_estimate(x))
+    post_df['adverbs_per_sentence'] = post_df.num_adverbs / post_df.num_sentences
 
     logger.info('Calculating syllables')
     syllable_converter = tfsm.SyllableConverter()
-    en_df['token_syllables'] = en_df.tokens.apply(lambda x:
+    post_df['token_syllables'] = post_df.tokens.apply(lambda x:
                                                   syllable_converter.tokens2syllablses(x))
     logger.info('Computing features based on the syllables')
-    en_df['num_syllables'] = en_df.token_syllables.apply(lambda x: sum(x))
-    en_df['num_complex_words'] = en_df.token_syllables.apply(lambda x:
+    post_df['num_syllables'] = post_df.token_syllables.apply(lambda x: sum(x))
+    post_df['num_complex_words'] = post_df.token_syllables.apply(lambda x:
                                                              sum([y >= 3 for y in x]))
-    en_df['complex_word_ratio'] = en_df.num_complex_words / en_df.num_words
-    en_df['average_syllables'] = en_df.token_syllables.apply(lambda x: np.mean(x))
-    en_df['syllable_variance'] = en_df.token_syllables.apply(lambda x: np.var(x))
-    en_df['gunning_fog_index'] = tfsm.gunning_fog_index(num_words=en_df.num_words,
-                                                        num_complex_words=en_df.num_complex_words,
-                                                        num_sentences=en_df.num_sentences)
-    en_df['flesch_kincaid_index'] = tfsm.flesch_kincaid_index(num_syllables=en_df.num_syllables,
-                                                              num_words=en_df.num_words,
-                                                              num_sentences=en_df.num_sentences)
-    en_df['smog_index']= tfsm.smog_index(num_complex_words=en_df.num_complex_words,
-                                         num_sentences=en_df.num_sentences)
+    post_df['complex_word_ratio'] = post_df.num_complex_words / post_df.num_words
+    post_df['average_syllables'] = post_df.token_syllables.apply(lambda x: np.mean(x))
+    post_df['syllable_variance'] = post_df.token_syllables.apply(lambda x: np.var(x))
+    post_df['gunning_fog_index'] = tfsm.gunning_fog_index(num_words=post_df.num_words,
+                                                        num_complex_words=post_df.num_complex_words,
+                                                        num_sentences=post_df.num_sentences)
+    post_df['flesch_kincaid_index'] = tfsm.flesch_kincaid_index(num_syllables=post_df.num_syllables,
+                                                              num_words=post_df.num_words,
+                                                              num_sentences=post_df.num_sentences)
+    post_df['smog_index']= tfsm.smog_index(num_complex_words=post_df.num_complex_words,
+                                         num_sentences=post_df.num_sentences)
 
-    final_df = en_df.dropna()
-    logger.info('Final data set has {} shape'.format(final_df.shape))
+    post_df.dropna(inplace=True)
+    logger.info('Final data set has {} shape'.format(post_df.shape))
 
-    return final_df
+    return post_df
 
 
 def load_or_preprocess(post_frame, filename, *args, overwrite=False, store=True,
@@ -253,5 +275,3 @@ def load_or_preprocess(post_frame, filename, *args, overwrite=False, store=True,
             logger.info('Storing file {} to disk'.format(filename))
             post_frame.to_pickle(filename, compression='gzip')
     return post_frame
-
-

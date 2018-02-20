@@ -65,7 +65,7 @@ def main():
     if not tpmo.model_exists(current_datetime, model_directoy):
         post_frame = tpgd.load_or_scrape_training_data(steem_kwargs, data_directory,
                                                        current_datetime=current_datetime,
-                                                       days=9,
+                                                       days=7,
                                                        offset_days=8,
                                                        ncores=32)
 
@@ -91,7 +91,7 @@ def main():
     prediction_frame = tpgd.scrape_hour_data(steem_or_args=steem_kwargs,
                                              current_datetime=current_datetime,
                                              ncores=32)
-    prediction_frame = tppp.preprocess(prediction_frame, ncores=4)
+    prediction_frame = tppp.preprocess(prediction_frame)
 
     sorted_frame = tpmo.find_truffles(prediction_frame, pipeline)
     account = config.ACCOUNT

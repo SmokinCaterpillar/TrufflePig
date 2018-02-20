@@ -86,3 +86,10 @@ def test_flesch_kincaid_index():
 def test_adverb_estimate():
     result = tpsm.adverb_estimate(['i', 'am', 'heavily', 'in', 'use'])
     assert result == 1
+
+
+def test_grammar_errors():
+    counter = tpsm.GrammarErrorCounter()
+    sentences = ['She earn moneyt', 'I did nothing wrogn', 'He go in Colorado.']
+    matches = counter.count_mistakes_per_sentence(sentences)
+    assert matches == 2/ 3

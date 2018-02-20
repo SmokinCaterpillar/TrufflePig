@@ -30,6 +30,7 @@ def filter_formatting(text):
     text = re.sub('aligncenter', '', text)
     text = re.sub('styletextalign', '', text)
     text = re.sub('href', '', text)
+    text = re.sub('h[1-5]', '', text)
     return text
 
 
@@ -48,4 +49,3 @@ def is_in_filter_tags(tags, filter_tags):
         logger.exception('Could not identify tags {}, '
                          'will return True anyway'.format(tags))
         return True
-
