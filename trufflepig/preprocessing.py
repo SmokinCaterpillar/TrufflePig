@@ -30,7 +30,7 @@ def apply_parallel(function, iterable, ncores, chunksize=1000):
     if ncores == 1:
         return [function(x) for x in iterable]
     else:
-        ctx = mp.get_context('spawn')
+        ctx = mp.get_context('forkserver')
         pool = ctx.Pool(ncores)
 
         results = [x for x in pool.imap(function, iterable, chunksize)]
