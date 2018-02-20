@@ -30,7 +30,7 @@ def apply_parallel(function, iterable, ncores, chunksize=1000):
     if ncores == 1:
         return [function(x) for x in iterable]
     else:
-        ctx = mp.get_context('forkserver')
+        ctx = mp.get_context('spawn')
         pool = ctx.Pool(ncores)
 
         results = [x for x in pool.imap(function, iterable, chunksize)]
@@ -131,6 +131,9 @@ def preprocess(post_df, ncores=4, chunksize=500,
     logger.info('Filtered according to avg. sentences limits {} '
                 'kept {} posts.'.format(min_max_average_sentence_length, len(post_df)))
 
+    logger.info('Intermediate garbage collection.')
+    gc.collect()
+
     logger.info('Computing sentence length variance')
     post_df['sentence_length_variance'] =  \
         post_df.filtered_sentences.apply(lambda x:
@@ -151,33 +154,6 @@ def preprocess(post_df, ncores=4, chunksize=500,
     logger.info('Replacing new lines')
     post_df['combined'] = post_df.combined.apply(lambda x: tftf.replace_newlines(x))
 
-    logger.info('Tokenization')
-    post_df['tokens'] = post_df.combined.apply(lambda x: x.split(' '))
-    post_df['num_words'] = post_df.tokens.apply(lambda x: len(x))
-    to_drop = post_df.loc[(post_df.num_words < min_max_num_words[0]) |
-                          (post_df.num_words > min_max_num_words[1])]
-    post_df.drop(to_drop.index, inplace=True)
-    logger.info('Filtered according to num words limits {} '
-                'kept {} posts.'.format(min_max_num_words, len(post_df)))
-
-    logger.info('Counting unique words')
-    post_df['unique_words'] = post_df.tokens.apply(lambda x: len(set(x)))
-    post_df['unique_ratio'] = post_df.unique_words / post_df.num_words
-
-    logger.info('Computing characters per word')
-    post_df['chars_per_word'] = post_df.body_length / post_df.num_words
-
-    logger.info('Computing words per paragraph')
-    post_df['words_per_paragraph'] = post_df.num_words / post_df.num_paragraphs
-    to_drop = post_df.loc[(post_df.words_per_paragraph < min_max_words_per_paragraph[0]) |
-                          (post_df.words_per_paragraph > min_max_words_per_paragraph[1])]
-    post_df.drop(to_drop.index, inplace=True)
-    logger.info('Filtered according to num words per paragraph limits {} '
-                'kept {} posts.'.format(min_max_words_per_paragraph, len(post_df)))
-
-    logger.info('Intermediate garbage collection.')
-    gc.collect()
-
     logger.info('Computing average punctuation')
     post_df['average_punctuation'] = post_df.filtered_sentences.apply(lambda x:
                                                             tfsm.compute_average_puncitation(x))
@@ -193,16 +169,6 @@ def preprocess(post_df, ncores=4, chunksize=500,
                                               post_df.combined,
                                               ncores=ncores,
                                               chunksize=chunksize)
-    post_df.drop('combined', axis=1, inplace=True)
-    logger.info('Intermediate garbage collection.')
-    gc.collect()
-
-    logger.info('Computing mistakes per word')
-    post_df['errors_per_word'] = post_df.num_spelling_errors / post_df.num_words
-    to_drop = post_df.loc[post_df.errors_per_word > max_erros_per_word]
-    post_df.drop(to_drop.index, inplace=True)
-    logger.info('Filtered according to spelling mistake limit {} per word '
-                'kept {} posts.'.format(max_erros_per_word, len(post_df)))
 
     logger.info('Detecting language')
     detector = tfsm.LanguageDetector(seed=detect_seed,
@@ -228,10 +194,50 @@ def preprocess(post_df, ncores=4, chunksize=500,
     logger.info('Intermediate garbage collection.')
     gc.collect()
 
+    logger.info('Grammar mistake filtering')
     to_drop = post_df.loc[post_df.grammar_errors_per_sentence > max_grammar_errors_per_sentence]
     post_df.drop(to_drop.index, inplace=True)
     logger.info('Filtered according to grammar mistake limit {} per sentence '
                 'kept {} posts.'.format(max_grammar_errors_per_sentence, len(post_df)))
+
+    logger.info('Tokenization')
+    post_df['tokens'] = post_df.combined.apply(lambda x: x.split(' '))
+    post_df.drop('combined', axis=1, inplace=True)
+    logger.info('Intermediate garbage collection.')
+    gc.collect()
+
+    logger.info('Computing number of words')
+    post_df['num_words'] = post_df.tokens.apply(lambda x: len(x))
+    to_drop = post_df.loc[(post_df.num_words < min_max_num_words[0]) |
+                          (post_df.num_words > min_max_num_words[1])]
+    post_df.drop(to_drop.index, inplace=True)
+    logger.info('Filtered according to num words limits {} '
+                'kept {} posts.'.format(min_max_num_words, len(post_df)))
+
+    logger.info('Computing words per paragraph')
+    post_df['words_per_paragraph'] = post_df.num_words / post_df.num_paragraphs
+    to_drop = post_df.loc[(post_df.words_per_paragraph < min_max_words_per_paragraph[0]) |
+                          (post_df.words_per_paragraph > min_max_words_per_paragraph[1])]
+    post_df.drop(to_drop.index, inplace=True)
+    logger.info('Filtered according to num words per paragraph limits {} '
+                'kept {} posts.'.format(min_max_words_per_paragraph, len(post_df)))
+
+    logger.info('Computing mistakes per word')
+    post_df['errors_per_word'] = post_df.num_spelling_errors / post_df.num_words
+    to_drop = post_df.loc[post_df.errors_per_word > max_erros_per_word]
+    post_df.drop(to_drop.index, inplace=True)
+    logger.info('Filtered according to spelling mistake limit {} per word '
+                'kept {} posts.'.format(max_erros_per_word, len(post_df)))
+
+    logger.info('Intermediate garbage collection.')
+    gc.collect()
+
+    logger.info('Counting unique words')
+    post_df['unique_words'] = post_df.tokens.apply(lambda x: len(set(x)))
+    post_df['unique_ratio'] = post_df.unique_words / post_df.num_words
+
+    logger.info('Computing characters per word')
+    post_df['chars_per_word'] = post_df.body_length / post_df.num_words
 
     logger.info('Counting connectors')
     post_df['num_connectors'] = post_df.tokens.apply(lambda x: tfsm.count_connectors(x))
