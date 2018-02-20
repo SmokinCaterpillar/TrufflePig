@@ -42,7 +42,7 @@ def apply_parallel(function, iterable, ncores, chunksize=1000):
 
 def preprocess(post_df, ncores=4, chunksize=500,
                detect_seed=42, detect_max_length=2000,
-               grammar_max_sentences=10,
+               grammar_max_sentences=5,
                min_en_prob=0.9,
                min_max_body_length=(500, 25000),
                min_max_letter_ratio=(0.5, 0.85),
