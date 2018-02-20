@@ -25,7 +25,9 @@ def test_pipeline_model():
 
     topic_kwargs = dict(num_topics=50, no_below=5, no_above=0.7)
 
-    post_frame = tppp.preprocess(post_frame, ncores=4, chunksize=50)
+    post_frame = tppp.preprocess(post_frame, ncores=4, chunksize=50,
+                                 max_grammar_errors_per_sentence=10,
+                                 grammar_max_sentences=2)
     pipe = tpmo.train_pipeline(post_frame, topic_kwargs=topic_kwargs,
                                     regressor_kwargs=regressor_kwargs)
 
@@ -43,7 +45,9 @@ def test_train_test_pipeline():
 
     topic_kwargs = dict(num_topics=50, no_below=5, no_above=0.7)
 
-    post_frame = tppp.preprocess(post_frame, ncores=4, chunksize=50)
+    post_frame = tppp.preprocess(post_frame, ncores=4, chunksize=50,
+                                 max_grammar_errors_per_sentence=10,
+                                 grammar_max_sentences=2)
     tpmo.train_test_pipeline(post_frame, topic_kwargs=topic_kwargs,
                                     regressor_kwargs=regressor_kwargs)
 
@@ -60,7 +64,9 @@ def test_load_or_train(temp_dir):
 
     topic_kwargs = dict(num_topics=50, no_below=5, no_above=0.7)
 
-    post_frame = tppp.preprocess(post_frame, ncores=4, chunksize=50)
+    post_frame = tppp.preprocess(post_frame, ncores=4, chunksize=50,
+                                 max_grammar_errors_per_sentence=10,
+                                 grammar_max_sentences=2)
 
     pipe = tpmo.load_or_train_pipeline(post_frame, temp_dir,
                                        current_datetime=cdt,
@@ -87,7 +93,9 @@ def test_Doc2Vec_KNN():
 
     post_frame = pd.DataFrame(posts)
 
-    post_frame = tppp.preprocess(post_frame, ncores=4, chunksize=30)
+    post_frame = tppp.preprocess(post_frame, ncores=4, chunksize=30,
+                                 max_grammar_errors_per_sentence=10,
+                                 grammar_max_sentences=2)
 
     pipe = tpmo.create_pure_doc2vec_pipeline(dict(epochs=2, size=16))
 
@@ -107,7 +115,9 @@ def test_crossval():
 
     topic_kwargs = dict(num_topics=50, no_below=5, no_above=0.7)
 
-    post_frame = tppp.preprocess(post_frame, ncores=4, chunksize=20)
+    post_frame = tppp.preprocess(post_frame, ncores=4, chunksize=20,
+                                 max_grammar_errors_per_sentence=10,
+                                 grammar_max_sentences=2)
 
     param_grid = {
         'feature_generation__topic_model__no_above':[0.2, 0.3],
@@ -129,14 +139,18 @@ def test_find_truffles():
 
     topic_kwargs = dict(num_topics=50, no_below=5, no_above=0.7)
 
-    post_frame = tppp.preprocess(post_frame, ncores=4, chunksize=50)
+    post_frame = tppp.preprocess(post_frame, ncores=4, chunksize=50,
+                                 max_grammar_errors_per_sentence=10,
+                                 grammar_max_sentences=2)
     pipeline = tpmo.train_pipeline(post_frame, topic_kwargs=topic_kwargs,
                                     regressor_kwargs=regressor_kwargs)
 
     posts = create_n_random_posts(50)
 
     post_frame = pd.DataFrame(posts)
-    post_frame = tppp.preprocess(post_frame, ncores=4, chunksize=50)
+    post_frame = tppp.preprocess(post_frame, ncores=4, chunksize=50,
+                                 max_grammar_errors_per_sentence=10,
+                                 grammar_max_sentences=2)
     truffles = tpmo.find_truffles(post_frame, pipeline, min_max_reward=(0,100))
 
     assert truffles.iloc[0].reward_difference == truffles.reward_difference.max()

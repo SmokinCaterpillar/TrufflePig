@@ -69,7 +69,7 @@ def main():
                                                        offset_days=8,
                                                        ncores=32)
 
-        post_frame = tppp.preprocess(post_frame)
+        post_frame = tppp.preprocess(post_frame, ncores=2)
         logger.info('Garbage collecting')
         gc.collect()
     else:
@@ -91,7 +91,7 @@ def main():
     prediction_frame = tpgd.scrape_hour_data(steem_or_args=steem_kwargs,
                                              current_datetime=current_datetime,
                                              ncores=32)
-    prediction_frame = tppp.preprocess(prediction_frame)
+    prediction_frame = tppp.preprocess(prediction_frame, ncores=4)
 
     sorted_frame = tpmo.find_truffles(prediction_frame, pipeline)
     account = config.ACCOUNT
