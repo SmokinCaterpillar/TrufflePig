@@ -160,23 +160,6 @@ def preprocess(post_df, ncores=4, chunksize=500,
     logger.info('Filtered according to num words limits {} '
                 'kept {} posts.'.format(min_max_num_words, len(post_df)))
 
-    logger.info('Spell checking')
-    checker = tfsm.SpellErrorCounter()
-    post_df['num_spelling_errors'] = apply_parallel(checker.count_mistakes,
-                                              post_df.combined,
-                                              ncores=ncores,
-                                              chunksize=chunksize)
-    post_df.drop('combined', axis=1, inplace=True)
-    logger.info('Intermediate garbage collection.')
-    gc.collect()
-
-    logger.info('Computing mistakes per word')
-    post_df['errors_per_word'] = post_df.num_spelling_errors / post_df.num_words
-    to_drop = post_df.loc[post_df.errors_per_word > max_erros_per_word]
-    post_df.drop(to_drop.index, inplace=True)
-    logger.info('Filtered according to spelling mistake limit {} per word '
-                'kept {} posts.'.format(max_erros_per_word, len(post_df)))
-
     logger.info('Counting unique words')
     post_df['unique_words'] = post_df.tokens.apply(lambda x: len(set(x)))
     post_df['unique_ratio'] = post_df.unique_words / post_df.num_words
@@ -200,6 +183,23 @@ def preprocess(post_df, ncores=4, chunksize=500,
     post_df.drop(to_drop.index, inplace=True)
     logger.info('Filtered according to punctuation limits {} '
                 'kept {} posts.'.format(min_max_average_punctuation, len(post_df)))
+
+    logger.info('Spell checking')
+    checker = tfsm.SpellErrorCounter()
+    post_df['num_spelling_errors'] = apply_parallel(checker.count_mistakes,
+                                              post_df.combined,
+                                              ncores=ncores,
+                                              chunksize=chunksize)
+    post_df.drop('combined', axis=1, inplace=True)
+    logger.info('Intermediate garbage collection.')
+    gc.collect()
+
+    logger.info('Computing mistakes per word')
+    post_df['errors_per_word'] = post_df.num_spelling_errors / post_df.num_words
+    to_drop = post_df.loc[post_df.errors_per_word > max_erros_per_word]
+    post_df.drop(to_drop.index, inplace=True)
+    logger.info('Filtered according to spelling mistake limit {} per word '
+                'kept {} posts.'.format(max_erros_per_word, len(post_df)))
 
     logger.info('Detecting language')
     detector = tfsm.LanguageDetector(seed=detect_seed,
