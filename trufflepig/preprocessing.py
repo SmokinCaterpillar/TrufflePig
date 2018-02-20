@@ -221,6 +221,10 @@ def preprocess(post_df, ncores=4, chunksize=500,
                                                  post_df.filtered_sentences,
                                                  ncores=ncores,
                                                  chunksize=chunksize)
+    post_df.drop('filtered_sentences', axis=1, inplace=True)
+    logger.info('Intermediate garbage collection.')
+    gc.collect()
+
     to_drop = post_df.loc[post_df.grammar_errors_per_sentence > max_grammar_errors_per_sentence]
     post_df.drop(to_drop.index, inplace=True)
     logger.info('Filtered according to grammar mistake limit {} per sentence '
