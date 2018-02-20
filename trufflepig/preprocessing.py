@@ -1,6 +1,7 @@
 import logging
 import os
 import multiprocessing as mp
+import gc
 
 import pandas as pd
 import numpy as np
@@ -159,6 +160,23 @@ def preprocess(post_df, ncores=4, chunksize=500,
     logger.info('Filtered according to num words limits {} '
                 'kept {} posts.'.format(min_max_num_words, len(post_df)))
 
+    logger.info('Spell checking')
+    checker = tfsm.SpellErrorCounter()
+    post_df['num_spelling_errors'] = apply_parallel(checker.count_mistakes,
+                                              post_df.combined,
+                                              ncores=ncores,
+                                              chunksize=chunksize)
+    post_df.drop('combined', axis=1, inplace=True)
+    logger.info('Intermediate garbage collection.')
+    gc.collect()
+
+    logger.info('Computing mistakes per word')
+    post_df['errors_per_word'] = post_df.num_spelling_errors / post_df.num_words
+    to_drop = post_df.loc[post_df.errors_per_word > max_erros_per_word]
+    post_df.drop(to_drop.index, inplace=True)
+    logger.info('Filtered according to spelling mistake limit {} per word '
+                'kept {} posts.'.format(max_erros_per_word, len(post_df)))
+
     logger.info('Counting unique words')
     post_df['unique_words'] = post_df.tokens.apply(lambda x: len(set(x)))
     post_df['unique_ratio'] = post_df.unique_words / post_df.num_words
@@ -196,28 +214,6 @@ def preprocess(post_df, ncores=4, chunksize=500,
     logger.info('Found {} English posts with threshold {}'.format(len(post_df),
                                                                   min_en_prob))
 
-    logger.info('Counting connectors')
-    post_df['num_connectors'] = post_df.tokens.apply(lambda x: tfsm.count_connectors(x))
-    post_df['connectors_per_sentence'] = post_df.num_connectors / post_df.num_sentences
-
-    logger.info('Counting pronouns')
-    post_df['num_pronouns'] = post_df.tokens.apply(lambda x: tfsm.count_pronouns(x))
-    post_df['pronouns_per_sentence'] = post_df.num_pronouns / post_df.num_sentences
-
-    logger.info('Spell checking')
-    checker = tfsm.SpellErrorCounter()
-    post_df['num_spelling_errors'] = apply_parallel(checker.count_mistakes,
-                                              post_df.combined,
-                                              ncores=ncores,
-                                              chunksize=chunksize)
-
-    logger.info('Computing mistakes per word')
-    post_df['errors_per_word'] = post_df.num_spelling_errors / post_df.num_words
-    to_drop = post_df.loc[post_df.errors_per_word > max_erros_per_word]
-    post_df.drop(to_drop.index, inplace=True)
-    logger.info('Filtered according to spelling mistake limit {} per word '
-                'kept {} posts.'.format(max_erros_per_word, len(post_df)))
-
     logger.info('Computing grammar mistakes per sentence with '
                 '{} max sentences'.format(grammar_max_sentences))
     grammar_checker = tfsm.GrammarErrorCounter(max_sentences=grammar_max_sentences)
@@ -229,6 +225,14 @@ def preprocess(post_df, ncores=4, chunksize=500,
     post_df.drop(to_drop.index, inplace=True)
     logger.info('Filtered according to grammar mistake limit {} per sentence '
                 'kept {} posts.'.format(max_grammar_errors_per_sentence, len(post_df)))
+
+    logger.info('Counting connectors')
+    post_df['num_connectors'] = post_df.tokens.apply(lambda x: tfsm.count_connectors(x))
+    post_df['connectors_per_sentence'] = post_df.num_connectors / post_df.num_sentences
+
+    logger.info('Counting pronouns')
+    post_df['num_pronouns'] = post_df.tokens.apply(lambda x: tfsm.count_pronouns(x))
+    post_df['pronouns_per_sentence'] = post_df.num_pronouns / post_df.num_sentences
 
     logger.info('Counting adverbs')
     post_df['num_adverbs'] = post_df.tokens.apply(lambda x: tfsm.adverb_estimate(x))
