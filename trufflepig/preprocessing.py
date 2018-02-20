@@ -9,6 +9,7 @@ import numpy as np
 import trufflepig.filters.stylemeasures as tfsm
 import trufflepig.filters.textfilters as tftf
 
+
 logger = logging.getLogger(__name__)
 
 
@@ -163,6 +164,10 @@ def preprocess(post_df, ncores=4, chunksize=500,
     logger.info('Filtered according to punctuation limits {} '
                 'kept {} posts.'.format(min_max_average_punctuation, len(post_df)))
 
+    post_df.drop('filtered_sentences', axis=1, inplace=True)
+    logger.info('Intermediate garbage collection.')
+    gc.collect()
+
     logger.info('Detecting language')
     detector = tfsm.LanguageDetector(seed=detect_seed,
                                      max_length=detect_max_length)
@@ -175,23 +180,6 @@ def preprocess(post_df, ncores=4, chunksize=500,
     post_df.drop(to_drop.index, inplace=True)
     logger.info('Found {} English posts with threshold {}'.format(len(post_df),
                                                                   min_en_prob))
-
-    logger.info('Computing grammar mistakes per sentence with '
-                '{} max sentences'.format(grammar_max_sentences))
-    grammar_checker = tfsm.GrammarErrorCounter(max_sentences=grammar_max_sentences)
-    post_df['grammar_errors_per_sentence'] = apply_parallel(grammar_checker.count_mistakes_per_sentence,
-                                                 post_df.filtered_sentences,
-                                                 ncores=ncores,
-                                                 chunksize=chunksize)
-    post_df.drop('filtered_sentences', axis=1, inplace=True)
-    logger.info('Intermediate garbage collection.')
-    gc.collect()
-
-    logger.info('Grammar mistake filtering')
-    to_drop = post_df.loc[post_df.grammar_errors_per_sentence > max_grammar_errors_per_sentence]
-    post_df.drop(to_drop.index, inplace=True)
-    logger.info('Filtered according to grammar mistake limit {} per sentence '
-                'kept {} posts.'.format(max_grammar_errors_per_sentence, len(post_df)))
 
     logger.info('Spell checking')
     checker = tfsm.SpellErrorCounter()

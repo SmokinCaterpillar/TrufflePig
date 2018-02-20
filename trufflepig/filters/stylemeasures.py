@@ -3,7 +3,6 @@ import string
 
 import numpy as np
 import langdetect
-import language_check
 import pyphen
 from enchant.checker import SpellChecker
 
@@ -163,21 +162,6 @@ class SpellErrorCounter(object):
         self.checker.set_text(text)
         nerrors = len([x for x in self.checker])
         return nerrors
-
-
-class GrammarErrorCounter(object):
-    def __init__(self, language='en-US', max_sentences=20):
-        self.max_sentences = max_sentences
-        self.tool = language_check.LanguageTool(language=language)
-        self.tool.disable_spellchecking()
-
-    def count_mistakes_per_sentence(self, sentences):
-        if self.max_sentences:
-            sentences = sentences[:self.max_sentences]
-        nerrors = 0
-        for sentence in sentences:
-            nerrors += len(self.tool.check(sentence))
-        return nerrors / len(sentences)
 
 
 class LanguageDetector(object):
