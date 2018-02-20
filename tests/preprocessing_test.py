@@ -9,7 +9,9 @@ import trufflepig.preprocessing as tppp
 def test_preprocessing():
     post_frame = pd.DataFrame(POSTS)
     filtered = tppp.preprocess(post_frame, ncores=1, min_en_prob=0.8,
-                               max_erros_per_word=0.5)
+                               max_erros_per_word=0.5,
+                                max_grammar_errors_per_sentence=10,
+                                grammar_max_sentences=2)
 
     assert len(filtered)
 
