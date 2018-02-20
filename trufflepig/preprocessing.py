@@ -88,16 +88,16 @@ def preprocess(post_df, ncores=4, chunksize=500,
     logger.info('Counting paragraphs')
     post_df['num_paragraphs'] = post_df.filtered_body.apply(lambda x:
                                                         tfsm.count_paragraphs(x))
-    to_drop = post_df.loc[~((post_df.num_paragraphs >= min_max_num_paragraphs[0]) &
-                          (post_df.num_paragraphs <= min_max_num_paragraphs[1]))]
+    to_drop = post_df.loc[(post_df.num_paragraphs < min_max_num_paragraphs[0]) |
+                          (post_df.num_paragraphs > min_max_num_paragraphs[1])]
     post_df.drop(to_drop.index, inplace=True)
     logger.info('Filtered according to num paragraphs limits {} '
                 'kept {} posts.'.format(min_max_num_paragraphs, len(post_df)))
 
     logger.info('Calculating length')
     post_df['body_length'] = post_df.filtered_body.apply(lambda x: len(x))
-    to_drop = post_df.loc[~((post_df.body_length >= min_max_body_length[0]) &
-                          (post_df.body_length <= min_max_body_length[1]))]
+    to_drop = post_df.loc[(post_df.body_length < min_max_body_length[0]) |
+                          (post_df.body_length > min_max_body_length[1])]
     post_df.drop(to_drop.index, inplace=True)
     logger.info('Filtered according to body limits {} '
                 'kept {} posts.'.format(min_max_body_length, len(post_df)))
@@ -105,8 +105,8 @@ def preprocess(post_df, ncores=4, chunksize=500,
     logger.info('Counting letters')
     post_df['letter_count'] = post_df.filtered_body.apply(lambda x: tfsm.count_letters(x))
     post_df['letter_ratio'] = post_df.letter_count / post_df.body_length
-    to_drop = post_df.loc[~((post_df.letter_ratio >= min_max_letter_ratio[0]) &
-                          (post_df.letter_ratio <= min_max_letter_ratio[1]))]
+    to_drop = post_df.loc[(post_df.letter_ratio < min_max_letter_ratio[0]) |
+                          (post_df.letter_ratio > min_max_letter_ratio[1])]
     post_df.drop(to_drop.index, inplace=True)
     logger.info('Filtered according to letter ratio limits {} '
                 'kept {} posts.'.format(min_max_letter_ratio, len(post_df)))
@@ -115,8 +115,8 @@ def preprocess(post_df, ncores=4, chunksize=500,
     post_df['filtered_sentences'] = post_df.filtered_body.apply(lambda x:
                                                             tfsm.split_into_sentences(x))
     post_df['num_sentences'] = post_df.filtered_sentences.apply(lambda x: len(x))
-    to_drop = post_df.loc[~((post_df.num_sentences >= min_max_num_sentences[0]) &
-                          (post_df.num_sentences <= min_max_num_sentences[1]))]
+    to_drop = post_df.loc[(post_df.num_sentences < min_max_num_sentences[0]) |
+                          (post_df.num_sentences > min_max_num_sentences[1])]
     post_df.drop(to_drop.index, inplace=True)
     logger.info('Filtered according to num sentences limits {} '
                 'kept {} posts.'.format(min_max_num_sentences, len(post_df)))
@@ -124,8 +124,8 @@ def preprocess(post_df, ncores=4, chunksize=500,
     logger.info('Computing average sentence length')
     post_df['average_sentence_length'] =  post_df.filtered_sentences.apply(lambda x:
                                        tfsm.compute_average_sentence_length(x))
-    to_drop = post_df.loc[~((post_df.average_sentence_length >= min_max_average_sentence_length[0]) &
-                          (post_df.average_sentence_length <= min_max_average_sentence_length[1]))]
+    to_drop = post_df.loc[(post_df.average_sentence_length < min_max_average_sentence_length[0]) |
+                          (post_df.average_sentence_length > min_max_average_sentence_length[1])]
     post_df.drop(to_drop.index, inplace=True)
     logger.info('Filtered according to avg. sentences limits {} '
                 'kept {} posts.'.format(min_max_average_sentence_length, len(post_df)))
@@ -153,8 +153,8 @@ def preprocess(post_df, ncores=4, chunksize=500,
     logger.info('Tokenization')
     post_df['tokens'] = post_df.combined.apply(lambda x: x.split(' '))
     post_df['num_words'] = post_df.tokens.apply(lambda x: len(x))
-    to_drop = post_df.loc[~((post_df.num_words >= min_max_num_words[0]) &
-                          (post_df.num_words <= min_max_num_words[1]))]
+    to_drop = post_df.loc[(post_df.num_words < min_max_num_words[0]) |
+                          (post_df.num_words > min_max_num_words[1])]
     post_df.drop(to_drop.index, inplace=True)
     logger.info('Filtered according to num words limits {} '
                 'kept {} posts.'.format(min_max_num_words, len(post_df)))
@@ -168,8 +168,8 @@ def preprocess(post_df, ncores=4, chunksize=500,
 
     logger.info('Computing words per paragraph')
     post_df['words_per_paragraph'] = post_df.num_words / post_df.num_paragraphs
-    to_drop = post_df.loc[~((post_df.words_per_paragraph >= min_max_words_per_paragraph[0]) &
-                          (post_df.words_per_paragraph <= min_max_words_per_paragraph[1]))]
+    to_drop = post_df.loc[(post_df.words_per_paragraph < min_max_words_per_paragraph[0]) |
+                          (post_df.words_per_paragraph > min_max_words_per_paragraph[1])]
     post_df.drop(to_drop.index, inplace=True)
     logger.info('Filtered according to num words per paragraph limits {} '
                 'kept {} posts.'.format(min_max_words_per_paragraph, len(post_df)))
@@ -177,8 +177,8 @@ def preprocess(post_df, ncores=4, chunksize=500,
     logger.info('Computing average punctuation')
     post_df['average_punctuation'] = post_df.filtered_sentences.apply(lambda x:
                                                             tfsm.compute_average_puncitation(x))
-    to_drop = post_df.loc[~((post_df.average_punctuation >= min_max_average_punctuation[0]) &
-                          (post_df.average_punctuation <= min_max_average_punctuation[1]))]
+    to_drop = post_df.loc[(post_df.average_punctuation < min_max_average_punctuation[0]) |
+                          (post_df.average_punctuation > min_max_average_punctuation[1])]
     post_df.drop(to_drop.index, inplace=True)
     logger.info('Filtered according to punctuation limits {} '
                 'kept {} posts.'.format(min_max_average_punctuation, len(post_df)))

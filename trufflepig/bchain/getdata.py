@@ -367,7 +367,9 @@ def load_or_scrape_training_data(steem_or_args, directory,
                                         store=True, stop_after=stop_after,
                                         ncores=ncores)
         frames.append(frame)
-    return pd.concat(frames, axis=0)
+    frame = pd.concat(frames, axis=0)
+    frame.reset_index(inplace=True, drop=True)
+    return frame
 
 
 def scrape_hour_data(steem_or_args, hours=24,
