@@ -29,7 +29,7 @@ def main():
 
     gc.collect()
 
-    regressor_kwargs = dict(n_estimators=256, max_leaf_nodes=4096,
+    regressor_kwargs = dict(n_estimators=256, max_leaf_nodes=10000,
                               max_features=0.2, n_jobs=-1, verbose=1,
                               random_state=42)
 

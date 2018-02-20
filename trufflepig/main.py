@@ -65,7 +65,7 @@ def main():
     if not tpmo.model_exists(current_datetime, model_directoy):
         post_frame = tpgd.load_or_scrape_training_data(steem_kwargs, data_directory,
                                                        current_datetime=current_datetime,
-                                                       days=7,
+                                                       days=8,
                                                        offset_days=8,
                                                        ncores=32)
 
@@ -75,7 +75,7 @@ def main():
     else:
         post_frame = None
 
-    regressor_kwargs = dict(n_estimators=256, max_leaf_nodes=4096,
+    regressor_kwargs = dict(n_estimators=256, max_leaf_nodes=10000,
                               max_features=0.2, n_jobs=-1, verbose=1,
                               random_state=42)
 
