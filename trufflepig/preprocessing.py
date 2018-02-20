@@ -33,7 +33,7 @@ def apply_parallel(function, iterable, ncores, chunksize=1000):
         ctx = mp.get_context('spawn')
         pool = ctx.Pool(ncores)
 
-        results = [x for x in pool.map(function, iterable, chunksize)]
+        results = [x for x in pool.imap(function, iterable, chunksize)]
 
         pool.close()
         pool.join()
