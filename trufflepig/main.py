@@ -65,7 +65,7 @@ def main():
     if not tpmo.model_exists(current_datetime, model_directoy):
         post_frame = tpgd.load_or_scrape_training_data(steem_kwargs, data_directory,
                                                        current_datetime=current_datetime,
-                                                       days=7,
+                                                       days=2,
                                                        offset_days=8,
                                                        ncores=32)
 
@@ -108,7 +108,6 @@ def main():
     tfut.clean_up_directory(data_directory, keep_last=25)
     tfut.clean_up_directory(log_directory, keep_last=14)
     logger.info('DONE at {}'.format(current_datetime))
-
 
 
 if __name__ == '__main__':
