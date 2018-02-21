@@ -28,8 +28,8 @@ Have a nice day and sincerely yours,
                        truffle_image_small=truffle_image_small)
 
 
-def topN_list(topN_authors, topN_permalinks, topN_titles, topN_filtered_bodies, topN_rewards, topN_votes,
-               quote_max_length):
+def topN_list(topN_authors, topN_permalinks, topN_titles, topN_filtered_bodies,
+              topN_rewards, topN_votes, quote_max_length, nstart=1):
 
     topN_entry="""{rank}. [{title}](https://steemit.com/@{author}/{permalink})  --  **by @{author} with an estimated worth of {reward:d} SBD and {votes:d} votes**
     
@@ -43,12 +43,32 @@ def topN_list(topN_authors, topN_permalinks, topN_titles, topN_filtered_bodies, 
                    topN_filtered_bodies, topN_rewards, topN_votes)
 
     for idx, (author, permalink, title, filtered_body, reward, votes) in enumerate(iterable):
-        rank = idx + 1
-        quote = '>' + filtered_body[:QUOTE_MAX_LENGTH].replace('\n', ' ') + '...'
+        rank = idx + nstart
+        quote = '>' + filtered_body[:quote_max_length].replace('\n', ' ') + '...'
         title = tftf.replace_newlines(title)
         title = tftf.filter_special_characters(title)
         entry = topN_entry.format(rank=rank, author=author, permalink=permalink,
                                    title=title, quote=quote, votes=int(votes),
+                                   reward=int(reward))
+        result_string += entry
+    return result_string
+
+
+def simple_topN_list(topN_authors, topN_permalinks, topN_titles,
+                     topN_rewards, topN_votes, nstart):
+    topN_entry="""\n {rank}: [{title}](https://steemit.com/@{author}/{permalink}) (by @{author}, {reward:d} SBD, {votes:d} votest)\n"""
+
+    result_string = ""
+
+    iterable = zip(topN_authors, topN_permalinks, topN_titles,
+                   topN_rewards, topN_votes)
+
+    for idx, (author, permalink, title, reward, votes) in enumerate(iterable):
+        rank = idx + nstart
+        title = tftf.replace_newlines(title)
+        title = tftf.filter_special_characters(title)
+        entry = topN_entry.format(rank=rank, author=author, permalink=permalink,
+                                   title=title, votes=int(votes),
                                    reward=int(reward))
         result_string += entry
     return result_string
@@ -99,3 +119,21 @@ Cheers,
                           truffle_link=truffle_link)
     post = BODY_PREFIX + post
     return title, post
+
+
+def topN_comment(topN_authors, topN_permalinks, topN_titles,
+                 topN_rewards, topN_votes, nstart=11):
+
+    post = """If you cannot get enough truffles, here are ranks 11 till 20:
+    
+{topN_truffles}
+    """
+
+    topN_truffles = simple_topN_list(topN_authors=topN_authors,
+                                     topN_permalinks=topN_permalinks,
+                                     topN_titles=topN_titles,
+                                     topN_votes=topN_votes,
+                                     topN_rewards=topN_rewards,
+                                     nstart=nstart)
+    post = post.format(topN_truffles=topN_truffles)
+    return post

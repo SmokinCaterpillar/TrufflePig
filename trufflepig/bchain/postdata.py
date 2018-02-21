@@ -1,7 +1,7 @@
 import logging
 import time
 
-from steem.post import Post, PostDoesNotExist
+from steem.post import Post, PostDoesNotExist, VotingInvalidOnArchivedPost
 from steembase.exceptions import RPCError
 
 import trufflepig.bchain.posts as tfbp
@@ -42,6 +42,29 @@ def post_topN_list(sorted_post_frame, steem_or_args, account, current_datetime, 
     return permalink
 
 
+def comment_on_own_top_list(sorted_post_frame, steem_or_args, account, topN_permalink,
+                            Kstart=10, Kend=20):
+    steem = tfgd.check_and_convert_steem(steem_or_args)
+
+    df = sorted_post_frame.iloc[Kstart: Kend, :]
+
+    comment = tfbp.topN_comment(topN_authors=df.author,
+                                topN_permalinks=df.permalink,
+                                topN_titles=df.title,
+                                topN_rewards=df.predicted_reward,
+                                topN_votes=df.predicted_votes,
+                                nstart=Kstart + 1)
+
+
+    logger.info('Commenting on top {} post with \n '
+                '{}'.format(topN_permalink, comment))
+    try:
+        post = Post('@{}/{}'.format(account, topN_permalink), steem)
+        post.reply(body=comment, author=account)
+    except PostDoesNotExist:
+        logger.exception('No broadcast, heh?')
+
+
 def vote_and_comment_on_topK(sorted_post_frame, steem_or_args, account, topN_permalink,
                              K=20):
 
@@ -73,8 +96,12 @@ def vote_and_comment_on_topK(sorted_post_frame, steem_or_args, account, topN_per
             post.reply(body=reply, author=account)
         except PostDoesNotExist:
             logger.exception('Post not found of row {}'.format(row))
+        except VotingInvalidOnArchivedPost:
+            logger.exception('Post archived of row {}'.format(row))
         except RPCError:
             logger.exception('Could not post row {}'.format(row))
+        except Exception:
+            logger.exception('W00t? row: {}'.format(row))
 
 
 def create_wallet(steem_or_args, password, posting_key):

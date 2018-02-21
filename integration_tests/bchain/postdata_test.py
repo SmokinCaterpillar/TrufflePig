@@ -27,7 +27,8 @@ def test_test_top10post(steem):
 
     account = config.ACCOUNT
 
-    tbpd.post_topN_list(df, steem, account, date)
+    permalink = tbpd.post_topN_list(df, steem, account, date)
+    tbpd.comment_on_own_top_list(df, steem, account, permalink)
 
 
 @pytest.mark.skipif(config.PASSWORD is None, reason="needs posting key")

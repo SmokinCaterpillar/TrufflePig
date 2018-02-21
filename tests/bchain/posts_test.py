@@ -34,3 +34,17 @@ def test_topN_post():
 
     assert post
     assert title
+
+
+def test_topN_comment():
+    posts = random_data.create_n_random_posts(10)
+    df = pd.DataFrame(posts)
+    df = tppp.preprocess(df, ncores=1)
+
+    post = tbpo.topN_comment(topN_authors=df.author,
+                             topN_permalinks=df.permalink,
+                             topN_titles=df.title,
+                             topN_votes=df.votes,
+                             topN_rewards=df.reward)
+
+    assert post

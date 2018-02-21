@@ -106,6 +106,11 @@ def main():
     permalink = tppd.post_topN_list(sorted_frame, steem_kwargs,
                                     account=account,
                                     current_datetime=current_datetime)
+
+    tppd.comment_on_own_top_list(sorted_frame, steem_kwargs,
+                                 account=account,
+                                 topN_permalink=permalink)
+
     tppd.vote_and_comment_on_topK(sorted_frame,
                                   steem_kwargs,
                                   topN_permalink=permalink,
