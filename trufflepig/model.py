@@ -361,7 +361,7 @@ def load_or_train_pipeline(post_frame, directory, current_datetime=None,
     return pipeline
 
 
-def find_truffles(post_frame, pipeline, min_max_reward=(1.0, 10), min_votes=5,
+def find_truffles(post_frame, pipeline, min_max_reward=(1.0, 10), min_votes=10,
                   max_errors_per_sentence=0.2, k=10, ncores=2, chunksize=500):
     logger.info('Looking for truffles in frame of shape {} and filtering preprocessed data further. '
                 'min max reward {} and min votes '
