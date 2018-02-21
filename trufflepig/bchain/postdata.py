@@ -32,18 +32,19 @@ def post_topN_list(sorted_post_frame, steem_or_args, account, current_datetime, 
     logger.info('Posting top post with permalink: {}'.format(permalink))
     logger.info(title)
     logger.info(body)
-    steem.commit.post(author=account,
-                      title=title,
-                      body=body,
-                      permlink=permalink,
-                      self_vote=True,
-                      tags=tfbp.TAGS)
+    # steem.commit.post(author=account,
+    #                   title=title,
+    #                   body=body,
+    #                   permlink=permalink,
+    #                   self_vote=True,
+    #                   tags=tfbp.TAGS)
 
     return permalink
 
 
 def comment_on_own_top_list(sorted_post_frame, steem_or_args, account, topN_permalink,
                             Kstart=10, Kend=20):
+
     steem = tfgd.check_and_convert_steem(steem_or_args)
 
     df = sorted_post_frame.iloc[Kstart: Kend, :]
@@ -58,6 +59,7 @@ def comment_on_own_top_list(sorted_post_frame, steem_or_args, account, topN_perm
 
     logger.info('Commenting on top {} post with \n '
                 '{}'.format(topN_permalink, comment))
+    time.sleep(25)
     try:
         post = Post('@{}/{}'.format(account, topN_permalink), steem)
         post.reply(body=comment, author=account)
