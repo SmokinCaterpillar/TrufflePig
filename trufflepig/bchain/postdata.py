@@ -32,12 +32,12 @@ def post_topN_list(sorted_post_frame, steem_or_args, account, current_datetime, 
     logger.info('Posting top post with permalink: {}'.format(permalink))
     logger.info(title)
     logger.info(body)
-    # steem.commit.post(author=account,
-    #                   title=title,
-    #                   body=body,
-    #                   permlink=permalink,
-    #                   self_vote=True,
-    #                   tags=tfbp.TAGS)
+    steem.commit.post(author=account,
+                      title=title,
+                      body=body,
+                      permlink=permalink,
+                      self_vote=True,
+                      tags=tfbp.TAGS)
 
     return permalink
 
