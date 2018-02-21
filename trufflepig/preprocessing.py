@@ -44,7 +44,6 @@ def apply_parallel(function, iterable, ncores, chunksize=1000):
 
 def preprocess(post_df, ncores=4, chunksize=500,
                detect_seed=42, detect_max_length=2000,
-               grammar_max_sentences=5,
                min_en_prob=0.9,
                min_max_body_length=(500, 25000),
                min_max_letter_ratio=(0.5, 0.85),
@@ -53,7 +52,6 @@ def preprocess(post_df, ncores=4, chunksize=500,
                min_max_num_sentences=(5, 750),
                min_max_words_per_paragraph=(20, 500),
                max_erros_per_word=0.1,
-               max_grammar_errors_per_sentence=0.9,
                min_max_average_punctuation=(1.05, 5),
                min_max_average_sentence_length=(10, 300),
                filter_tags = FILTER_TAGS):
@@ -136,9 +134,8 @@ def preprocess(post_df, ncores=4, chunksize=500,
     gc.collect()
 
     logger.info('Computing sentence length variance')
-    post_df['sentence_length_variance'] =  \
-        post_df.filtered_sentences.apply(lambda x:
-                                       tfsm.compute_sentence_length_variance(x))
+    post_df['sentence_length_variance'] = post_df.filtered_sentences.apply(lambda x:
+                                          tfsm.compute_sentence_length_variance(x))
 
     logger.info('Combining Body and Title')
     post_df['combined'] = (post_df.title.apply(lambda x: x.lower()) + ' '

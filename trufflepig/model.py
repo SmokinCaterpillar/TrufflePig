@@ -1,6 +1,5 @@
 import logging
 import os
-import random
 
 import numpy as np
 import pandas as pd
@@ -17,6 +16,8 @@ from gensim.matutils import corpus2dense
 import gensim.models.doc2vec as d2v
 
 from trufflepig.utils import progressbar
+from trufflepig.preprocessing import apply_parallel
+import trufflepig.filters.stylemeasures as tfsm
 
 
 logger = logging.getLogger(__name__)
@@ -360,7 +361,8 @@ def load_or_train_pipeline(post_frame, directory, current_datetime=None,
     return pipeline
 
 
-def find_truffles(post_frame, pipeline, min_max_reward=(1.0, 10), min_votes=5, k=10):
+def find_truffles(post_frame, pipeline, min_max_reward=(1.0, 10), min_votes=5,
+                  max_errors_per_sentence=0.5, k=10, ncores=2, chunksize=500):
     logger.info('Looking for truffles in frame of shape {} and filtering preprocessed data further. '
                 'min max reward {} and min votes '
                 '{}'.format(post_frame.shape, min_max_reward, min_votes))
@@ -368,6 +370,17 @@ def find_truffles(post_frame, pipeline, min_max_reward=(1.0, 10), min_votes=5, k
                                 (post_frame.reward > min_max_reward[1]) |
                                 (post_frame.votes < min_votes)]
 
+    post_frame.drop(to_drop.index, inplace=True)
+    logger.info('Kept {} posts'.format(len(post_frame)))
+
+    logger.info('Filtering according to grammar check')
+    checker = tfsm.GrammarErrorCounter()
+    errors_per_character = apply_parallel(checker.count_mistakes_per_character,
+                                          post_frame.filtered_body,
+                                          ncores=ncores,
+                                          chunksize=chunksize)
+    errors_per_sentence = errors_per_character * post_frame.body_length / post_frame.num_sentences
+    to_drop = post_frame.loc[errors_per_sentence > max_errors_per_sentence]
     post_frame.drop(to_drop.index, inplace=True)
     logger.info('Kept {} posts'.format(len(post_frame)))
 

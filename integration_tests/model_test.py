@@ -139,18 +139,15 @@ def test_find_truffles():
 
     topic_kwargs = dict(num_topics=50, no_below=5, no_above=0.7)
 
-    post_frame = tppp.preprocess(post_frame, ncores=4, chunksize=50,
-                                 max_grammar_errors_per_sentence=10,
-                                 grammar_max_sentences=2)
+    post_frame = tppp.preprocess(post_frame, ncores=4, chunksize=50)
     pipeline = tpmo.train_pipeline(post_frame, topic_kwargs=topic_kwargs,
                                     regressor_kwargs=regressor_kwargs)
 
     posts = create_n_random_posts(50)
 
     post_frame = pd.DataFrame(posts)
-    post_frame = tppp.preprocess(post_frame, ncores=4, chunksize=50,
-                                 max_grammar_errors_per_sentence=10,
-                                 grammar_max_sentences=2)
-    truffles = tpmo.find_truffles(post_frame, pipeline, min_max_reward=(0,100))
+    post_frame = tppp.preprocess(post_frame, ncores=4, chunksize=50)
+    truffles = tpmo.find_truffles(post_frame, pipeline, min_max_reward=(0,100),
+                                  max_errors_per_sentence=5)
 
     assert truffles.iloc[0].reward_difference == truffles.reward_difference.max()

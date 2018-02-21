@@ -21,8 +21,9 @@ def parse_args():
     parser = argparse.ArgumentParser(description='TrufflePig Bot')
     parser.add_argument('--broadcast', action="store_false",
                         default=True)
+    parser.add_argument('--now', action='store', default=None)
     args = parser.parse_args()
-    return args.broadcast
+    return args.broadcast, args.now
 
 
 def configure_logging(directory, current_datetime):
@@ -41,9 +42,12 @@ def configure_logging(directory, current_datetime):
 
 def main():
 
-    no_broadcast = parse_args()
+    no_broadcast, current_datetime = parse_args()
 
-    current_datetime = pd.datetime.utcnow()
+    if current_datetime is None:
+        current_datetime = pd.datetime.utcnow()
+    else:
+        current_datetime = pd.to_datetime(current_datetime)
 
     data_directory = os.path.join(config.PROJECT_DIRECTORY, 'scraped_data')
     model_directoy = os.path.join(config.PROJECT_DIRECTORY, 'trained_models')

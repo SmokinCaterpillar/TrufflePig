@@ -19,9 +19,7 @@ def test_load_or_preproc(temp_dir):
     assert len(os.listdir(temp_dir)) == 1
 
     frame2 = tppp.load_or_preprocess(post_frame, filename,
-                                    ncores=5, chunksize=20,
-                                    max_grammar_errors_per_sentence=10,
-                                    grammar_max_sentences=2)
+                                    ncores=5, chunksize=20)
 
     assert len(os.listdir(temp_dir)) == 1
     assert_frame_equal(frame, frame2)
