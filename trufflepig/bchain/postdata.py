@@ -43,7 +43,7 @@ def post_topN_list(sorted_post_frame, steem_or_args, account, current_datetime, 
 
 
 def comment_on_own_top_list(sorted_post_frame, steem_or_args, account, topN_permalink,
-                            Kstart=10, Kend=20):
+                            Kstart=10, Kend=25):
 
     steem = tfgd.check_and_convert_steem(steem_or_args)
 
@@ -68,7 +68,7 @@ def comment_on_own_top_list(sorted_post_frame, steem_or_args, account, topN_perm
 
 
 def vote_and_comment_on_topK(sorted_post_frame, steem_or_args, account, topN_permalink,
-                             K=20):
+                             K=25):
 
     logger.info('Voting and commenting on {} top truffles'.format(K))
     steem = tfgd.check_and_convert_steem(steem_or_args)

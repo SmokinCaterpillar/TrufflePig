@@ -37,7 +37,7 @@ def test_topN_post():
 
 
 def test_topN_comment():
-    posts = random_data.create_n_random_posts(10)
+    posts = random_data.create_n_random_posts(25)
     df = pd.DataFrame(posts)
     df = tppp.preprocess(df, ncores=1)
 
