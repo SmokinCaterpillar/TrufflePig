@@ -58,6 +58,9 @@ STEEMIT_WORDS = (
         'ripple',
         'steem',
         'steemit',
+        'resteem',
+        'upvote',
+        'downvote',
 )
 
 def split_into_sentences(text):
