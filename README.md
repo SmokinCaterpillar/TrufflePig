@@ -1,4 +1,5 @@
-## *TrufflePig*: A Steemit Curation Bot based on Natural Language Processing and  Machine Learning
+# *TrufflePig*:
+## A Steemit Curation Bot based on Natural Language Processing and  Machine Learning
 
 ![test](https://travis-ci.org/SmokinCaterpillar/TrufflePig.svg?branch=master)
 [![Coverage Status](https://coveralls.io/repos/github/SmokinCaterpillar/TrufflePig/badge.svg?branch=master)](https://coveralls.io/github/SmokinCaterpillar/TrufflePig?branch=master)
