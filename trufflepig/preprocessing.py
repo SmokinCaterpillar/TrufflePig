@@ -15,7 +15,7 @@ logger = logging.getLogger(__name__)
 
 FILTER_TAGS = ('mitnebcurationtrail', 'informationwar', 'truth', 'conspiracy',
                'vaccines', 'contest', 'giveaway', 'deutsch', 'kr', 'kr-newbie',
-               'bible', 'christianity', 'nsfw', 'sex')
+               'nsfw', 'sex')
 
 
 def filter_duplicates(frame):
