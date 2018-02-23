@@ -17,7 +17,7 @@ The general idea of this bot is the following:
 
 3. Next, we can compare the predicted payout with the actual payouts of recent Steemit posts (between 24 and 48 hours old). If the Machine Learning model predicts a huge reward, but the post was merely paid at all, we classify this contribution as an overlooked truffle.
 
-The bot is trained on posts that are older than 7 days and, therefore, have already been paid. Features include style measures such as spelling errors, number of words, readability scores. Moreover, a post's content is modelled as a [Latent Semantic Indexing](https://de.wikipedia.org/wiki/Latent_Semantic_Analysis) projection. The final regressor is simply a multi-output [Random Fores](http://scikit-learn.org/stable/modules/generated/sklearn.ensemble.RandomForestRegressor.html).
+The bot is trained on posts that are older than 7 days and, therefore, have already been paid. Features include style measures such as spelling errors, number of words, readability scores. Moreover, a post's content is modelled as a [Latent Semantic Indexing](https://de.wikipedia.org/wiki/Latent_Semantic_Analysis) projection. The final regressor is simply a multi-output [Random Forest](http://scikit-learn.org/stable/modules/generated/sklearn.ensemble.RandomForestRegressor.html).
 
 To scrape data from the steemit blockchain and to post a toplist of the daily found truffles the bot uses the official [Steem Python](https://github.com/steemit/steem-python) library.
 
