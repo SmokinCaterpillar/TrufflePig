@@ -34,7 +34,8 @@ def test_get_headers(steem, bchain):
     offset = bchain.get_current_block_num()
     now = pd.datetime.utcnow()
     minutes_ago = now - pd.Timedelta(minutes=3)
-    headers = tpbg.get_block_headers_between_offset_start(minutes_ago, now, offset, steem)
+    headers = tpbg.get_block_headers_between_offset_start(minutes_ago, now,
+                                                          offset, steem)
     assert headers
 
 
