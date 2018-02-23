@@ -8,7 +8,7 @@
 
 However, this user based curation also has its merits, of course. You can become fortunate and your nice posts get traction and the recognition they deserve. Maybe there is a way to support the Steemit content curators such that high quality content does not go unnoticed anymore. In fact, I developed a curation bot called `TrufflePig` to do exactly this with the help of Natural Language Processing and Machine Learning. The deployed bot can be found here: https://steemit.com/@trufflepig
 
-#### The Concept
+### The Concept
 
 The basic idea is to use well paid posts of the past as training examples to teach a Machine Learning Regressor (MLR) how high quality Steemit content looks like. In turn, the trained MLR can be used to identify posts of high quality that were missed by the curation community and did receive much less payment than they deserved. We call this posts *truffles*.
 
