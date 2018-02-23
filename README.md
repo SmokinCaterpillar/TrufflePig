@@ -25,4 +25,7 @@ The bot works as follows: First older data is scraped from the blockchain (see `
 
 The bot is open source and can be freely used for **non-commercial** (!) purposes. Please, check the LICENSE file.
 
+![trufflepig](https://raw.githubusercontent.com/SmokinCaterpillar/TrufflePig/master/img/trufflepig17_small.png)
+
+*`TrufflePig`*
 
