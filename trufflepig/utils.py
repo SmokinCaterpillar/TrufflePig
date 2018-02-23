@@ -14,6 +14,8 @@ class _Progressbar(object):
     This class is supposed to be a singleton. Do not
     import the class itself but use the `progressbar` function from this module.
 
+    Borrowed from pypet (https://github.com/SmokinCaterpillar/pypet).
+
     """
     def __init__(self):
         self._start_time = None   # Time of start/reset
@@ -202,6 +204,12 @@ def progressbar(index, total, percentage_step=10, logger='print', log_level=logg
 
 
 def clean_up_directory(directory, keep_last=25):
+    """ Removes files in `directory`
+
+    Sorts files lexicographically and removes all except
+    the `keep_last` ones.
+
+    """
     filenames = os.listdir(directory)
     filenames = [os.path.join(directory, x) for x in filenames]
     filenames = sorted([x for x in filenames if os.path.isfile(x)])

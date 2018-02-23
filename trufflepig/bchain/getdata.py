@@ -20,11 +20,8 @@ MIN_CHARACTERS = 500
 FILENAME_TEMPLATE = 'steemit_posts__{time}.gz'
 
 
-def steem2bchain(steem):
-    return Blockchain(steem)
-
-
 def check_and_convert_steem(steem_or_args_kwargs):
+    """Turns arguments into steem or just leaves steem as it is"""
     if isinstance(steem_or_args_kwargs, dict):
         return Steem(**steem_or_args_kwargs)
     elif isinstance(steem_or_args_kwargs, (list, tuple)):
@@ -36,6 +33,8 @@ def check_and_convert_steem(steem_or_args_kwargs):
 def get_block_headers_between_offset_start(start_datetime, end_datetime,
                                            end_offset_num, steem):
     """ Returns block headers between a date range
+
+    NOT used in production!
 
     Parameters
     ----------
@@ -96,7 +95,7 @@ def find_nearest_block_num(target_datetime, steem,
 
     """
     if latest_block_num is None:
-        latest_block_num = steem2bchain(steem).get_current_block_num()
+        latest_block_num = Blockchain(steem).get_current_block_num()
 
     current_block_num = latest_block_num
     best_largest_block_num = latest_block_num
@@ -143,6 +142,7 @@ def get_block_headers_between(start_datetime, end_datetime, steem):
 
 
 def extract_authors_and_permalinks(operations):
+    """Takes a list of ops and returns a set of author and permalink tuples"""
     authors_and_permalinks = set()
     for operation in operations:
         op = operation['op']
@@ -175,6 +175,27 @@ def extract_authors_and_permalinks(operations):
 
 
 def get_post_data(authors_and_permalinks, steem):
+    """ Queries posts from `steem`
+
+    Parameters
+    ----------
+    authors_and_permalinks: set of tuples of authors and permalink strings
+    steem: Steem object
+
+    Returns
+    -------
+    List of dict
+        posts are kept as dicts with
+            * author
+            * permalink
+            * title
+            * body
+            * reward
+            * votes
+            * created
+            * tags
+
+    """
     posts = []
     for kdx, (author, permalink) in enumerate(authors_and_permalinks):
         try:
@@ -205,6 +226,20 @@ def get_post_data(authors_and_permalinks, steem):
 
 def get_all_posts_from_block(block_num, steem,
                              exclude_authors_and_permalinks=None):
+    """ Gets all posts from one block
+
+    Parameters
+    ----------
+    block_num: int
+    steem: Steem
+    exclude_authors_and_permalinks: set of tuples of strings
+        Exclude these authors and permalinks to get less duplicates
+
+    Returns
+    -------
+    List of post dicts and set of authors and permalinks
+
+    """
     operations = steem.get_ops_in_block(block_num, False)
     if operations:
         authors_and_permalinks = extract_authors_and_permalinks(operations)
@@ -221,6 +256,21 @@ def get_all_posts_from_block(block_num, steem,
 
 def get_all_posts_between(start_datetime, end_datetime, steem,
                           stop_after=None):
+    """ Queries all posts found in blocks between start and end
+
+    Parameters
+    ----------
+    start_datetime: datetime
+    end_datetime: datetime
+    steem: Steem
+    stop_after: int or None
+        For debugging and shorter tests, stop after only a few iterations
+
+    Returns
+    -------
+    List of dicts of posts
+
+    """
     start_num, block_start_datetime = find_nearest_block_num(start_datetime, steem)
     end_num, block_end_datetime = find_nearest_block_num(end_datetime, steem)
 
@@ -249,8 +299,14 @@ def get_all_posts_between(start_datetime, end_datetime, steem,
     return posts
 
 
+def _config_mp_logging(level=logging.INFO):
+    """Helper function to log in multiproc environment"""
+    logging.basicConfig(level=level)
+
+
 def _get_all_posts_for_blocks_parallel(block_nums, steem_args,
                                        stop_after=None):
+    """Helper wrapper for multiprocessing"""
     steem = check_and_convert_steem(steem_args)
     posts = []
     exclude_authors_and_permalinks = set()
@@ -267,7 +323,11 @@ def _get_all_posts_for_blocks_parallel(block_nums, steem_args,
 
 def get_all_posts_between_parallel(start_datetime, end_datetime, steem_args,
                                    stop_after=None, ncores=8,
-                                   chunksize=20, timeout=3600):
+                                   chunksize=20, timeout=1200):
+    """As above but in parallel with `ncores` jobs of `chunksize`.
+
+    Waits for posts unitl `timeout`.
+    """
     steem = check_and_convert_steem(steem_args)
     start_num, block_start_datetime = find_nearest_block_num(start_datetime, steem)
     end_num, block_end_datetime = find_nearest_block_num(end_datetime, steem)
@@ -283,7 +343,7 @@ def get_all_posts_between_parallel(start_datetime, end_datetime, steem_args,
                 for irun in range(0, len(block_nums), chunksize)]
 
     ctx = mp.get_context('spawn')
-    pool = ctx.Pool(ncores, initializer=config_mp_logging)
+    pool = ctx.Pool(ncores, initializer=_config_mp_logging)
 
     async_results = []
     for idx, chunk in enumerate(chunks):
@@ -313,6 +373,29 @@ def get_all_posts_between_parallel(start_datetime, end_datetime, steem_args,
 
 def load_or_scrape_full_day(date, steem_or_args, directory, overwrite=False,
                             store=True, stop_after=None, ncores=1):
+    """ Loads posts of a full day or queries them from steem blockchain
+
+    Parameters
+    ----------
+    date: datetime.date
+        The date to load or scrape in UTC
+    steem_or_args: kwargs or Steem object
+    directory: str
+        Directory to load posts from
+    overwrite: bool
+        If stored posts should be replaced
+    store: bool
+        If posts should be stored after scraping
+    stop_after: int or None
+        For debugging purposes to stop early
+    ncores: int
+        Number of jobs to parallelize scraping
+
+    Returns
+    -------
+    DataFrame
+
+    """
     start_datetime = pd.to_datetime(date)
     end_datetime = start_datetime + pd.Timedelta(days=1)
     if not os.path.isdir(directory):
@@ -342,16 +425,32 @@ def load_or_scrape_full_day(date, steem_or_args, directory, overwrite=False,
     return post_frame
 
 
-def config_mp_logging(level=logging.INFO):
-    logging.basicConfig(level=level)
-
-
 def load_or_scrape_training_data(steem_or_args, directory,
                                  days=20, offset_days=8,
                                  ncores=8,
                                  current_datetime=None,
                                  stop_after=None):
+    """ Loads full set of days from file or blockchain
 
+    Parameters
+    ----------
+    steem_or_args: kwargs or Steem object
+    directory: str
+    days: int
+        Number of consecutive days to load or scrape
+    offset_days: int
+        offset between current_datetime and days to load
+    ncores: int
+    current_datetime: datetime
+        If None now is taken
+    stop_after: int or None
+        For debugging and testing to stop early
+
+    Returns
+    -------
+    DataFrame
+
+    """
     if current_datetime is None:
         current_datetime = pd.datetime.utcnow()
     else:
@@ -368,6 +467,8 @@ def load_or_scrape_training_data(steem_or_args, directory,
                                         ncores=ncores)
         frames.append(frame)
     frame = pd.concat(frames, axis=0)
+    # We need to reset the index because due to concatenation
+    # the defualt indices are duplicates!
     frame.reset_index(inplace=True, drop=True)
     return frame
 
@@ -376,6 +477,25 @@ def scrape_hour_data(steem_or_args, hours=24,
                      offset_hours=24,
                      current_datetime=None,
                      ncores=8, stop_after=None):
+    """ Scrapes data for consecutive hours
+
+    Parameters
+    ----------
+    steem_or_args: Steem or kwargs
+    hours: int
+        Number of consecutive hours to scrape
+    offset_hours: int
+        offset from current_datetime
+    current_datetime: datetime or None
+    ncores: int
+    stop_after: int or None
+        For debugging
+
+    Returns
+    -------
+    DataFrame
+
+    """
     if current_datetime is None:
         current_datetime = pd.datetime.utcnow()
     else:

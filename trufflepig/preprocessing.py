@@ -19,6 +19,19 @@ FILTER_TAGS = ('mitnebcurationtrail', 'informationwar', 'truth', 'conspiracy',
 
 
 def filter_duplicates(frame):
+    """ Filters out duplicate entries based on author and permalink
+
+    Filtering is inplace!
+
+    Parameters
+    ----------
+    frame: DataFrame
+
+    Returns
+    -------
+    DataFrame
+
+    """
     old_len = len(frame)
     frame.drop_duplicates(subset=['author', 'permalink'],
                                      keep='last', inplace=True)
@@ -29,6 +42,22 @@ def filter_duplicates(frame):
 
 
 def apply_parallel(function, iterable, ncores, chunksize=1000):
+    """ Applies a `function` in parallel on `ncores`.
+
+    Parameters
+    ----------
+    function: callable
+    iterable: list, tuple, etc.
+    ncores: int
+        The number of jobs started
+    chunksize: int
+        Size of chunk submitted to pool
+
+    Returns
+    -------
+    List of function outputs
+
+    """
     if ncores == 1:
         return [function(x) for x in iterable]
     else:
@@ -55,7 +84,59 @@ def preprocess(post_df, ncores=4, chunksize=500,
                max_erros_per_word=0.1,
                min_max_average_punctuation=(1.05, 5),
                min_max_average_sentence_length=(10, 300),
-               filter_tags = FILTER_TAGS):
+               filter_tags=FILTER_TAGS):
+    """ Preprocessing of raw steemit posts, filters and adds features
+
+    All filtering happening inplace!
+
+    Parameters
+    ----------
+    post_df: DataFrame
+        Raw steemit posts, needs to contain
+            * author
+            * permalink
+            * body
+            * title
+            * votes
+            * reward
+    ncores: int
+        Some stuff is executed in parallel, these are the number of jobs
+    chunksize: int
+        Size of multiprocessing chunk
+    detect_seed: int
+        Seed value for language detection
+    detect_max_length: int
+        Maximum character size for language detection
+    min_en_prob: float
+        0 < min_en_prob <= 1, Minimum detection probability to classify a
+        post as English
+    min_max_body_length: tuple of int
+        Boundaries for allowed (filtered) body length
+    min_max_letter_ratio: tuple of float
+        Boundaries for letters vs punctuation ratio
+    min_max_num_paragraphs: tuple of int
+        Boundaries for number of paragraphs
+    min_max_num_words: tuple of int
+        Boundaries for number of words
+    min_max_num_sentences: tuple of int
+        Boundaries of number of sentences
+    min_max_words_per_paragraph:
+        Boundaries for min max average words per paragraph
+    max_erros_per_word: float
+        Threshold of maximum spelling errors per word allowed
+    min_max_average_punctuation: tuple of float
+        Boundaries for average punctuation per sentence
+    min_max_average_sentence_length: tuple of float
+        Boundaries for average sentence length
+    filter_tags: tuple of string
+        Tags to be filtered like 'sex', 'nsfw' or controversial stuff like
+        'vaccines'.
+
+    Returns
+    -------
+    Filtered frame
+
+    """
     logger.info('Filtering duplicates of {} posts'.format(len(post_df)))
     post_df = filter_duplicates(post_df)
 
@@ -265,6 +346,27 @@ def preprocess(post_df, ncores=4, chunksize=500,
 
 def load_or_preprocess(post_frame, filename, *args, overwrite=False, store=True,
                        **kwargs):
+    """ Tries to load a preprocessed frame if not found preprocessing starts.
+
+    Parameters
+    ----------
+    post_frame: DataFrame
+    filename: str
+        Filename of data to load
+    args: *args
+        Arguments passed to normal preprocessing
+    overwrite: bool
+        If preprocessing should be started and overwrite existing file
+    store: bool
+        If preprocessed frame should be stored to file
+    kwargs: **kwargs
+        Arguments passed to preprocessing
+
+    Returns
+    -------
+    DataFrame
+
+    """
     if os.path.isfile(filename) and not overwrite:
         logger.info('Found file {} will load it'.format(filename))
         post_frame = pd.read_pickle(filename, compression='gzip')

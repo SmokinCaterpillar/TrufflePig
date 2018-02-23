@@ -23,6 +23,7 @@ import trufflepig.filters.stylemeasures as tfsm
 logger = logging.getLogger(__name__)
 
 
+# List of default features used besides topics
 FEATURES = ['body_length',
             'num_sentences',
             'num_paragraphs',
@@ -46,12 +47,19 @@ FEATURES = ['body_length',
             'syllable_variance',
             'adverbs_per_sentence']
 
+# output variables for regressor
 TARGETS = ['reward', 'votes']
 
+# Template for storing the trained model
 FILENAME_TEMPLATE = 'truffle_pipeline__{time}.gz'
 
 
 class Doc2VecModel(BaseEstimator, RegressorMixin):
+    """A Doc2Vec Model following the scikit pipeline API
+
+    NOT used in production!
+
+    """
     def __init__(self, alpha=0.25, min_alpha=0.01, size=32,
                  window=8, min_count=5, workers=4, sample=1e-4,
                  negative=5, epochs=5, infer_steps=10):
@@ -113,6 +121,11 @@ class Doc2VecModel(BaseEstimator, RegressorMixin):
 
 
 class KNNDoc2Vec(Doc2VecModel):
+    """A K-Nearest Neighbot Doc2Vec Regressor
+
+    Not used in production!
+
+    """
     def __init__(self, knn=5, alpha=0.25, min_alpha=0.01, size=32,
                  window=8, min_count=5, workers=4, sample=1e-4,
                  negative=5, epochs=5, infer_steps=10):
@@ -145,6 +158,18 @@ class KNNDoc2Vec(Doc2VecModel):
 
 
 class TopicModel(BaseEstimator):
+    """ Gensim Latent Semantic Indexing wrapper for scikit API
+
+    Parameters
+    ----------
+    no_below: int
+        Filters according to minimum number of times a token must appear
+    no_above: float
+        Filters that a token should occur in less than `no_above` documents
+    num_topics: int
+        Dimensionality of topic space
+
+    """
     def __init__(self, no_below, no_above, num_topics):
         self.num_topics = num_topics
         self.no_below = no_below
@@ -153,31 +178,79 @@ class TopicModel(BaseEstimator):
         self.disctionary = None
 
     def to_corpus(self, tokens):
+        """ Transfers a list of tokens into the Gensim corpus representation
+
+        Parameters
+        ----------
+        tokens: list of list of str
+            e.g. [['hi', 'ho'], ['my', 'name', ...], ...]
+
+        Returns
+        -------
+        list of Bag of Words representations
+
+        """
         return [self.dictionary.doc2bow(text) for text in tokens]
 
     def train(self, tokens):
+        """ Trains the LSI model
+
+        Parameters
+        ----------
+        tokens: list of list of str
+            e.g. [['hi', 'ho'], ['my', 'name', ...], ...]
+
+        """
         self.dictionary = corpora.Dictionary(tokens)
         self.dictionary.filter_extremes(self.no_below, self.no_above)
         corpus = self.to_corpus(tokens)
         self.lsi = LsiModel(corpus, num_topics=self.num_topics)
 
     def project(self, tokens):
+        """ Projects `tokens` into the N-dimensional LSI space
+
+        Parameters
+        ----------
+        tokens: list of list of str
+            e.g. [['hi', 'ho'], ['my', 'name', ...], ...]
+
+        Returns
+        -------
+        lsi projection
+
+        """
         corpus = self.to_corpus(tokens)
         return self.lsi[corpus]
 
     def project_dense(self, tokens):
+        """ Same as `project` but returns projection as numpy array """
         projection = self.project(tokens)
         result = corpus2dense(projection, self.num_topics).T
         return result
 
     def fit(self, data, y=None):
+        """Train in scikit API language"""
         self.train(data.tokens)
         return self
 
     def transform(self, data):
+        """Project in scikit API language"""
         return self.project_dense(data.tokens)
 
     def print_topics(self, n_best=10, n_words=7):
+        """ Returns a string of the best topics
+
+        Parameters
+        ----------
+        n_best: int
+            Number of topics to return
+        n_words: int
+            Number of words to show per topic
+
+        Returns
+        -------
+
+        """
         if n_best is None:
             n_best = self.num_topics
 
@@ -191,9 +264,9 @@ class TopicModel(BaseEstimator):
 
 
 class FeatureSelector(BaseEstimator):
+    """ Simply selects features from a pandas DataFrame """
     def __init__(self, features):
         self.features = features
-        #self.scaler = StandardScaler()
 
     def fit(self, data, y=None):
         return self
@@ -203,6 +276,10 @@ class FeatureSelector(BaseEstimator):
 
 
 def create_pure_doc2vec_pipeline(knn_doc2vec_kwargs):
+    """Returns a pipeline containing the KNNDoc2Vec
+
+    NOT used in production
+    """
     logger.info('Pure Doc2Vec Model')
     pipeline = Pipeline(
         steps=[('regressor', KNNDoc2Vec(**knn_doc2vec_kwargs))]
@@ -211,6 +288,24 @@ def create_pure_doc2vec_pipeline(knn_doc2vec_kwargs):
 
 
 def create_default_pipeline(topic_kwargs, regressor_kwargs, features=FEATURES):
+    """ The default pipeline used in production
+
+    Normal features + TopicModel
+
+    Parameters
+    ----------
+    topic_kwargs: dict
+        Passed to the TopicModel
+    regressor_kwargs: dict
+        Passed to the regressor
+    features: list of str
+        The features taken from the preprocessed post frame
+
+    Returns
+    -------
+    scikit pipeline
+
+    """
     logger.info('Using features {}'.format(features))
     feature_generation = FeatureUnion(
         transformer_list=[
@@ -229,11 +324,47 @@ def create_default_pipeline(topic_kwargs, regressor_kwargs, features=FEATURES):
 
 
 def compute_log_vote_weights(target_frame):
+    """ Creates training sample weights
+
+    Weight is based on the number of votes:
+
+        1 + np.log(1 + votes)
+
+    Parameters
+    ----------
+    target_frame: DataFrame
+        Frame containing the target values, must contain *votes*
+
+    Returns
+    -------
+    Series of weights
+
+    """
     logger.info('Computing sample weights')
     return 1 + np.log(1 + target_frame.votes)
 
 
-def train_pipeline(post_frame, pipeline=None, sample_weight_function='default', **kwargs):
+def train_pipeline(post_frame, pipeline=None,
+                   sample_weight_function='default', **kwargs):
+    """ Trains a scikit pipeline on preprocessed posts
+
+    Parameters
+    ----------
+    post_frame: DataFrame
+    pipeline: scikit pipeline of None
+        If None, default pipeline is created
+    sample_weight_function: Func or None or 'default'
+        A function that takes the target values and returns weights
+        If None, no function is used
+        If 'default' the log votes are used
+    kwargs: **kwargs
+        Passed onto the pipeline creation
+
+    Returns
+    -------
+    trained scikit pipeline
+
+    """
     targets = kwargs.pop('targets', TARGETS)
 
     logger.info('Training pipeline with targets {} and {} '
@@ -265,6 +396,13 @@ def train_pipeline(post_frame, pipeline=None, sample_weight_function='default', 
 def train_test_pipeline(post_frame, pipeline=None,
                         train_size=0.8, sample_weight_function='default',
                         **kwargs):
+    """ As above but splits into training and test set and computes test score
+
+    `train_size` is fraction of training vs test samples.
+
+    Returns pipeline AND testing frame
+
+    """
     train_frame, test_frame = train_test_split(post_frame,
                                                train_size=train_size)
     targets = kwargs.get('targets', TARGETS)
@@ -294,7 +432,32 @@ def cross_validate(post_frame, param_grid,
                    train_size=0.8, n_jobs=3,
                    cv=3, verbose=1,
                    n_iter=None, **kwargs):
+    """ Runs crossvalidation on post_frame
 
+    Parameters
+    ----------
+    post_frame: DataFrame
+    param_grid: nested dict
+        The pipeline parameters to explore
+    train_size: float
+        Ratio of training vs test samples
+    n_jobs: int
+        Number of cores for parallelization
+    cv: int
+        Number of crossvalidation folds
+    verbose: int
+        verbosity level
+    n_iter: None or int
+        If None than full grid search
+        else n iterations of randomized grid search
+    kwargs: **kwargs
+        Passed onto pipeline training
+
+    Returns
+    -------
+    Grid search object and testing frame
+
+    """
     targets = kwargs.pop('targets', TARGETS)
     logger.info('Crossvalidating with targets {}...'.format(targets))
 
@@ -323,22 +486,43 @@ def cross_validate(post_frame, param_grid,
 
     logger.info("FINAL TEST Score {} \n of best estimator:\n\n{}".format(score,
                                         best_estimator.get_params()))
+    return grid_search, test_frame
 
 
 def make_filename(current_datetime, directory):
+    """Creates the filename to store models from TEMPLATE"""
     filename = FILENAME_TEMPLATE.format(time=current_datetime.strftime('%Y-%U'))
-
     filename = os.path.join(directory,filename)
     return filename
 
 
 def model_exists(current_datetime, directory):
+    """Checks if model has been stored before"""
     filename = make_filename(current_datetime, directory)
     return os.path.isfile(filename)
 
 
 def load_or_train_pipeline(post_frame, directory, current_datetime=None,
                            overwrite=False, store=True, **kwargs):
+    """ Loads a model or trains a new one if not found
+
+    Parameters
+    ----------
+    post_frame: DataFrame
+    directory: str
+        Name of model directory
+    current_datetime: datetime
+    overwrite: bool
+        If stored model should be overwritten
+    store: bool
+        If trained model should be stored to file
+    kwargs
+
+    Returns
+    -------
+    trained scikit pipeline
+
+    """
     if current_datetime is None:
         current_datetime = pd.datetime.utcnow()
     else:
@@ -361,9 +545,42 @@ def load_or_train_pipeline(post_frame, directory, current_datetime=None,
     return pipeline
 
 
-def find_truffles(post_frame, pipeline, min_max_reward=(1.0, 10), min_votes=10,
-                  max_errors_per_sentence=0.2, k=10, ncores=2, chunksize=500):
-    logger.info('Looking for truffles in frame of shape {} and filtering preprocessed data further. '
+def find_truffles(post_frame, pipeline, min_max_reward=(1.0, 10),
+                  min_votes=10, max_grammar_errors_per_sentence=0.2, k=10,
+                  ncores=2, chunksize=500):
+    """ Digs for truffles, i.e. underpaid posts
+
+    Filtering happens in place
+
+    Parameters
+    ----------
+    post_frame: DataFrame
+        Prepocessed novel data
+    pipeline: trained scikit pipeline
+    min_max_reward: tuple of float
+        Min/Max Reward range truffles should be in
+    min_votes: int
+        Minimum number of votes a truffle needs to have
+    max_grammar_errors_per_sentence: float
+        Maximum number of grammar errors per sentence that a truffle is
+        allowed to have
+    k: int
+        Logs the first k truffles to console
+    ncores: int
+        For parallelization of grammar check
+        More than 2 or 3 makes no sense because grammar is checked
+        by LanguageTool Java Server process
+    chunksize: int
+        Multiprocessing chunk size
+
+    Returns
+    -------
+    Sorted (from best to worst) frame of truffles with
+    predicted votes and rewards
+
+    """
+    logger.info('Looking for truffles in frame of shape {} '
+                'and filtering preprocessed data further. '
                 'min max reward {} and min votes '
                 '{}'.format(post_frame.shape, min_max_reward, min_votes))
     to_drop = post_frame.loc[(post_frame.reward < min_max_reward[0]) |
@@ -380,7 +597,7 @@ def find_truffles(post_frame, pipeline, min_max_reward=(1.0, 10), min_votes=10,
                                           ncores=ncores,
                                           chunksize=chunksize)
     errors_per_sentence = errors_per_character * post_frame.body_length / post_frame.num_sentences
-    to_drop = post_frame.loc[errors_per_sentence > max_errors_per_sentence]
+    to_drop = post_frame.loc[errors_per_sentence > max_grammar_errors_per_sentence]
     post_frame.drop(to_drop.index, inplace=True)
     logger.info('Kept {} posts'.format(len(post_frame)))
 
@@ -402,9 +619,11 @@ def find_truffles(post_frame, pipeline, min_max_reward=(1.0, 10), min_votes=10,
                     '\n----------------------------------------------'
                     '--------------------------------------------------'
                     '\n############ {} ############'.format(row.title))
-        logger.info('https://steemit.com/@{}/{}'.format(row.author, row.permalink))
+        logger.info('https://steemit.com/@{}/{}'.format(row.author,
+                                                        row.permalink))
         logger.info('Estimated Reward: {} vs. {}; Estimated votes {} vs. '
-                    '{}'.format(row.predicted_reward, row.reward, row.predicted_votes, row.votes))
+                    '{}'.format(row.predicted_reward, row.reward,
+                                row.predicted_votes, row.votes))
         logger.info('\n-------------------------------------------------'
                     '---------------------------------------------------\n')
         logger.info(row.body[:1000])
@@ -414,11 +633,15 @@ def find_truffles(post_frame, pipeline, min_max_reward=(1.0, 10), min_votes=10,
     return post_frame
 
 
-def log_pipeline_info(pipeline):
+def log_pipeline_info(pipeline,  features=FEATURES, num_topics=256):
+    """Helper function to log model information to console"""
     topic_model = pipeline.named_steps['feature_generation'].transformer_list[1][1]
     logging.getLogger().info(topic_model.print_topics(n_best=None))
 
     feature_importance_string = 'Feature importances \n'
+    feature_names = features + ['topic_{:03d}'.format(x)
+                                for x in range(num_topics)]
     for kdx, importance in enumerate(pipeline.named_steps['regressor'].feature_importances_):
-        feature_importance_string += '{:03d}: {:.3f}\n'.format(kdx, importance)
+        name = feature_names[kdx]
+        feature_importance_string += '{:03d}{:>25}: {:.3f}\n'.format(kdx, name, importance)
     logger.info(feature_importance_string)

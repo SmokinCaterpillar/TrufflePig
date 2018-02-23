@@ -11,6 +11,7 @@ BODY_PREFIX = ''  # to announce tests etc.
 
 
 def truffle_comment(reward, votes, rank, topN_link, truffle_link=TRUFFLE_LINK, truffle_image_small=TRUFFLE_IMAGE_SMALL):
+    """Creates a comment made under an upvoted toplist post"""
     post = """**Congratulations!** Your post has been selected as a daily Steemit truffle! It is listed on **rank {rank}** of all contributions awarded today. You can find the [TOP DAILY TRUFFLE PICKS HERE.]({topN_link}) 
     
 I upvoted your contribution because to my mind your post is at least **{reward} SBD** worth and should receive **{votes} votes**. It's now up to the lovely Steemit community to make this come true.
@@ -30,7 +31,7 @@ Have a nice day and sincerely yours,
 
 def topN_list(topN_authors, topN_permalinks, topN_titles, topN_filtered_bodies,
               topN_rewards, topN_votes, quote_max_length, nstart=1):
-
+    """Creates a toplist string"""
     topN_entry="""{rank}. [{title}](https://steemit.com/@{author}/{permalink})  --  **by @{author} with an estimated worth of {reward:d} SBD and {votes:d} votes**
     
     {quote}
@@ -56,6 +57,7 @@ def topN_list(topN_authors, topN_permalinks, topN_titles, topN_filtered_bodies,
 
 def simple_topN_list(topN_authors, topN_permalinks, topN_titles,
                      topN_rewards, topN_votes, nstart):
+    """Creates a toplist for lower ranks"""
     topN_entry="""\n {rank}: [{title}](https://steemit.com/@{author}/{permalink}) (by @{author}, {reward:d} SBD, {votes:d} votest)\n"""
 
     result_string = ""
@@ -78,7 +80,7 @@ def topN_post(topN_authors, topN_permalinks, topN_titles,
                topN_filtered_bodies, topN_rewards, topN_votes, title_date,
                truffle_link=TRUFFLE_LINK, truffle_image=TRUFFLE_IMAGE,
                quote_max_length=QUOTE_MAX_LENGTH):
-
+    """Craetes the truffle pig daily toplist post"""
     title = """The daily Top 10 Truffle Picks: Find quality Posts that deserve more Attention! ({date})"""
 
     post=""" ## Daily Truffle Picks
@@ -123,7 +125,7 @@ Cheers,
 
 def topN_comment(topN_authors, topN_permalinks, topN_titles,
                  topN_rewards, topN_votes, nstart=11):
-
+    """Creates the toplist comment for lower ranks"""
     post = """If you cannot get enough truffles, here are ranks 11 till 25:
     
 {topN_truffles}

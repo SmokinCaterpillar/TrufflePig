@@ -14,7 +14,24 @@ logger = logging.getLogger(__name__)
 PERMALINK_TEMPLATE = 'daily-truffle-picks-{date}'
 
 
-def post_topN_list(sorted_post_frame, steem_or_args, account, current_datetime, N=10):
+def post_topN_list(sorted_post_frame, steem_or_args, account,
+                   current_datetime, N=10):
+    """ Post the toplist to the blockchain
+
+    Parameters
+    ----------
+    sorted_post_frame: DataFrame
+    steem_or_args: kwargs or Steem object
+    account: str
+    current_datetime: datetime
+    N: int
+        Size of top list
+
+    Returns
+    -------
+    permalink to new post
+
+    """
     steem = tfgd.check_and_convert_steem(steem_or_args)
 
     df = sorted_post_frame.iloc[:N, :]
@@ -42,9 +59,20 @@ def post_topN_list(sorted_post_frame, steem_or_args, account, current_datetime, 
     return permalink
 
 
-def comment_on_own_top_list(sorted_post_frame, steem_or_args, account, topN_permalink,
-                            Kstart=10, Kend=25):
+def comment_on_own_top_list(sorted_post_frame, steem_or_args, account,
+                            topN_permalink, Kstart=10, Kend=25):
+    """ Adds the more ranks as a comment
 
+    Parameters
+    ----------
+    sorted_post_frame: DataFrame
+    steem_or_args: kwargs or Steem object
+    account: str
+    topN_permalink: str
+    Kstart: int
+    Kend: int
+
+    """
     steem = tfgd.check_and_convert_steem(steem_or_args)
 
     df = sorted_post_frame.iloc[Kstart: Kend, :]
@@ -67,9 +95,20 @@ def comment_on_own_top_list(sorted_post_frame, steem_or_args, account, topN_perm
         logger.exception('No broadcast, heh?')
 
 
-def vote_and_comment_on_topK(sorted_post_frame, steem_or_args, account, topN_permalink,
-                             K=25):
+def vote_and_comment_on_topK(sorted_post_frame, steem_or_args, account,
+                             topN_permalink, K=25):
+    """
 
+    Parameters
+    ----------
+    sorted_post_frame: DataFrame
+    steem_or_args: kwargs or Steem object
+    account: str
+    topN_permalink: str
+    K: int
+        number of truffles to comment and upvote
+
+    """
     logger.info('Voting and commenting on {} top truffles'.format(K))
     steem = tfgd.check_and_convert_steem(steem_or_args)
     weight = min(840.0 / K, 100)
@@ -107,7 +146,17 @@ def vote_and_comment_on_topK(sorted_post_frame, steem_or_args, account, topN_per
 
 
 def create_wallet(steem_or_args, password, posting_key):
+    """ Creates a new wallet
 
+    Does nothing if wallet database entry already exists
+
+    Parameters
+    ----------
+    steem_or_args: kwargs or Steem object
+    password: str
+    posting_key: str
+
+    """
     if posting_key is None or password is None:
         raise RuntimeError('Key or password are None!')
 
