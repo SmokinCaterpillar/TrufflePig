@@ -21,7 +21,7 @@ The bot is trained on posts that are older than 7 days and, therefore, have alre
 
 To scrape data from the steemit blockchain and to post a toplist of the daily found truffles the bot uses the official [Steem Python](https://github.com/steemit/steem-python) library.
 
-The bot works as follows: First older data is scraped from the blockchain (see the `bchain.getdata.py`) or, if possible, loaded from disk. Next a model is trained (see `model.py`) or, if possible, loaded from disk. Next, more recent data is scraped and checked for truffles. Finally, the bot publishes a toplist, upvotes, and comments on the truffles (see `bchain.postdata.py`).
+The bot works as follows: First older data is scraped from the blockchain (see `bchain.getdata.py`) or, if possible, loaded from disk. Next, the scraped posts are filtered and preprocessed (see `preprocessing.py`). Subsequently, a model is trained on the processed data (see `model.py`) or, if possible, loaded from disk. Next, more recent data is scraped and checked for truffles. Finally, the bot publishes a toplist, upvotes, and comments on the truffles (see `bchain.postdata.py`).
 
 The bot is open source and can be freely used for **non-commercial** (!) purposes. Please, check the LICENSE file.
 
