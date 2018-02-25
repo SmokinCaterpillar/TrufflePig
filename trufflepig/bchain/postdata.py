@@ -90,6 +90,9 @@ def comment_on_own_top_list(sorted_post_frame, steem_or_args, account,
     time.sleep(25)
     try:
         post = Post('@{}/{}'.format(account, topN_permalink), steem)
+        # to pass around the no broadcast setting otherwise it is lost
+        # see https://github.com/steemit/steem-python/issues/155
+        post.commit.no_broadcast = steem.commit.no_broadcast
         post.reply(body=comment, author=account)
     except PostDoesNotExist:
         logger.exception('No broadcast, heh?')
