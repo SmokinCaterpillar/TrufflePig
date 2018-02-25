@@ -56,7 +56,7 @@ def test_find_offset(steem, bchain):
 
 def test_get_all_posts_between(steem):
     now = pd.datetime.utcnow()
-    end = now
+    end = now - pd.Timedelta(minutes=300)
     start = end - pd.Timedelta(minutes=10)
     posts = tpbg.get_all_posts_between(start, end, steem, stop_after=25)
     assert posts
