@@ -45,7 +45,7 @@ def large_mp_preprocess(directory, current_datetime, steem_kwargs, data_director
     configure_logging(directory, current_datetime)
     post_frame = tpgd.load_or_scrape_training_data(steem_kwargs, data_directory,
                                                        current_datetime=current_datetime,
-                                                       days=10,
+                                                       days=8,
                                                        offset_days=8,
                                                        ncores=16)
     return tppp.preprocess(post_frame, ncores=3)
