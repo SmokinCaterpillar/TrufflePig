@@ -18,7 +18,7 @@ The general idea of this bot is the following:
 
 2. Accordingly, the MLR should learn to predict potential payouts for new, beforehand unseen Steemit posts.
 
-3. Next, we can compare the predicted payout with the actual payouts of recent Steemit posts (between 24 and 48 hours old). If the Machine Learning model predicts a huge reward, but the post was merely paid at all, we classify this contribution as an overlooked truffle.
+3. Next, we can compare the predicted payout with the actual payouts of recent Steemit posts (between 1 and 24 hours old). If the Machine Learning model predicts a huge reward, but the post was merely paid at all, we classify this contribution as an overlooked truffle.
 
 ### The Implementation
 
@@ -28,9 +28,18 @@ To scrape data from the steemit blockchain and to post a toplist of the daily fo
 
 The bot works as follows: First older data is scraped from the blockchain (see `bchain.getdata.py`) or, if possible, loaded from disk. Next, the scraped posts are filtered and preprocessed (see `preprocessing.py`). Subsequently, a model is trained on the processed data (see `model.py`) or, if possible, loaded from disk. Next, more recent data is scraped and checked for truffles. Finally, the bot publishes a toplist, upvotes, and comments on the truffles (see `bchain.postdata.py`).
 
+### Installation and Execution
+
+Simply, `git clone https://github.com/SmokinCaterpillar/TrufflePig.git` and add the project directory to your `PYTHONPATH`. The bot can be started with `python main.py`.
+
+You can manually set the time the bot considers as `now` via `--now='2018-01-01-11:42:42'`. By default, the bot won't post to the blockchain. To enable posting use `--broadcast`. Moreover, the bot's account information needs to be set via environment variables: `STEEM_ACCOUNT`, `STEEM_POSTING_KEY`, and `STEEM_PASSWORD`. The latter is up to your choice and is only used to encrypt the wallet file. The password does not need to (and should not) be your Steemit masterpassword.
+
+### Open Source Usage
+
 The bot is open source and can be freely used for **non-commercial** (!) purposes. Please, check the LICENSE file.
 
 ![trufflepig](https://raw.githubusercontent.com/SmokinCaterpillar/TrufflePig/master/img/trufflepig17_small.png)
 
 *`TrufflePig`*
 
+(The bot's avatar has been created using https://robohash.org/)
