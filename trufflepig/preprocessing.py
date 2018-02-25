@@ -15,7 +15,12 @@ logger = logging.getLogger(__name__)
 
 FILTER_TAGS = ('mitnebcurationtrail', 'informationwar', 'truth', 'conspiracy',
                'vaccines', 'contest', 'giveaway', 'deutsch', 'kr', 'kr-newbie',
-               'nsfw', 'sex')
+               'nsfw', 'sex',
+               # Somehow religious texts do not work in combination with others
+               # maybe I need a bot just to rate spiritual content
+               # for simplicity let's ignore them for now,
+               # sorry, no releigious truffles in the near future!
+               'bible', 'faith', 'spiritual', 'christianity')
 
 
 def filter_duplicates(frame):
@@ -140,7 +145,7 @@ def preprocess(post_df, ncores=4, chunksize=500,
     logger.info('Filtering duplicates of {} posts'.format(len(post_df)))
     post_df = filter_duplicates(post_df)
 
-    logger.info('Filtering dodgy tags {}'.format(filter_tags))
+    logger.info('Filtering tags {}'.format(filter_tags))
     filter_tags = set(filter_tags)
     tag_filter = post_df.tags.apply(lambda x: tftf.is_in_filter_tags(x, filter_tags))
     to_drop = post_df.loc[tag_filter]
