@@ -29,20 +29,20 @@ def parse_args():
 
 
 def large_mp_preprocess(log_directory, current_datetime, steem_kwargs, data_directory,
-                        days, offset_days, ncores=16):
+                        days, offset_days):
     """Helper function to spawn in child process"""
     configure_logging(log_directory, current_datetime)
     post_frame = tpgd.load_or_scrape_training_data(steem_kwargs, data_directory,
                                                        current_datetime=current_datetime,
                                                        days=days,
                                                        offset_days=offset_days,
-                                                       ncores=ncores)
-    return tppp.preprocess(post_frame, ncores=3)
+                                                       ncores=16)
+    return tppp.preprocess(post_frame, ncores=8)
 
 
 def load_and_preprocess_2_frames(log_directory, current_datetime, steem_kwargs,
                                  data_directory, offset_days=8,
-                                 days=5, days2=5, ncores=16):
+                                 days=5, days2=5):
     """ Function to load and preprocess the time span split into 2
     for better memory footpring
 
@@ -70,16 +70,16 @@ def load_and_preprocess_2_frames(log_directory, current_datetime, steem_kwargs,
                                      current_datetime=current_datetime,
                                      steem_kwargs=steem_kwargs,
                                      data_directory=data_directory,
-                                     days=days, offset_days=offset_days,
-                                     ncores=ncores).result()
+                                     days=days,
+                                     offset_days=offset_days).result()
     with concurrent.futures.ProcessPoolExecutor(max_workers=1) as executor:
         post_frame2 = executor.submit(large_mp_preprocess,
                                      log_directory=log_directory,
                                      current_datetime=current_datetime,
                                      steem_kwargs=steem_kwargs,
                                      data_directory=data_directory,
-                                     days=days2, offset_days=8 + days,
-                                     ncores=ncores).result()
+                                     days=days2,
+                                     offset_days=8 + days).result()
 
     post_frame = pd.concat([post_frame, post_frame2], axis=0)
     # We need to reset the index because due to concatenation
