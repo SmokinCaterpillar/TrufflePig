@@ -18,7 +18,7 @@ The general idea of this bot is the following:
 
 2. Accordingly, the MLR should learn to predict potential payouts for new, beforehand unseen Steemit posts.
 
-3. Next, we can compare the predicted payout with the actual payouts of recent Steemit posts (between 1 and 24 hours old). If the Machine Learning model predicts a huge reward, but the post was merely paid at all, we classify this contribution as an overlooked truffle.
+3. Next, we can compare the predicted payout with the actual payouts of recent Steemit posts (between 2 and 26 hours old). If the Machine Learning model predicts a huge reward, but the post was merely paid at all, we classify this contribution as an overlooked truffle.
 
 ### The Implementation
 

@@ -545,7 +545,7 @@ def load_or_train_pipeline(post_frame, directory, current_datetime=None,
     return pipeline
 
 
-def find_truffles(post_frame, pipeline, min_max_reward=(1.0, 10),
+def find_truffles(post_frame, pipeline, min_max_reward=(0.5, 10),
                   min_votes=10, max_grammar_errors_per_sentence=0.2, k=10,
                   ncores=2, chunksize=500):
     """ Digs for truffles, i.e. underpaid posts
@@ -607,6 +607,10 @@ def find_truffles(post_frame, pipeline, min_max_reward=(1.0, 10),
     post_frame['predicted_reward'] = predicted_rewards_and_votes[:, 0]
     post_frame['predicted_votes'] = predicted_rewards_and_votes[:, 1]
     post_frame['reward_difference'] = post_frame.predicted_reward - post_frame.reward
+
+    to_drop = post_frame.loc[post_frame.reward_difference < 0]
+    logger.info('Dropping {} negative differences'.format(len(to_drop)))
+    post_frame.drop(to_drop.index, inplace=True)
 
     post_frame = post_frame.sort_values('reward_difference', ascending=False)
 
