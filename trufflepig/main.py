@@ -83,7 +83,7 @@ def load_and_preprocess_2_frames(log_directory, current_datetime, steem_kwargs,
 
     post_frame = pd.concat([post_frame, post_frame2], axis=0)
     # We need to reset the index because due to concatenation
-    # the defualt indices are duplicates!
+    # the default indices are duplicates!
     post_frame.reset_index(inplace=True, drop=True)
     logger.info('Combining 2 frames into 1')
     post_frame = tppp.filter_duplicates(post_frame)

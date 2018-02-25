@@ -520,7 +520,7 @@ def load_or_scrape_training_data(steem_or_args, directory,
         frames.append(frame)
     frame = pd.concat(frames, axis=0)
     # We need to reset the index because due to concatenation
-    # the defualt indices are duplicates!
+    # the default indices are duplicates!
     frame.reset_index(inplace=True, drop=True)
     return frame
 
