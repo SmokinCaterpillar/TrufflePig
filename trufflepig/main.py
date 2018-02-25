@@ -36,7 +36,7 @@ def large_mp_preprocess(log_directory, current_datetime, steem_kwargs, data_dire
                                                        current_datetime=current_datetime,
                                                        days=days,
                                                        offset_days=offset_days,
-                                                       ncores=32)
+                                                       ncores=20)
     return tppp.preprocess(post_frame, ncores=4)
 
 
