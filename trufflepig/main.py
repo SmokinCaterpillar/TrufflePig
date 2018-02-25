@@ -1,6 +1,7 @@
 import logging
 import os
 import gc
+import concurrent
 
 import pandas as pd
 
@@ -40,6 +41,11 @@ def configure_logging(directory, current_datetime):
                         handlers=handlers)
 
 
+def large_mp_preprocess(post_frame, directory, current_datetime):
+    configure_logging(directory, current_datetime)
+    return tppp.preprocess(post_frame, ncores=3)
+
+
 def main():
 
     no_broadcast, current_datetime = parse_args()
@@ -69,11 +75,15 @@ def main():
     if not tpmo.model_exists(current_datetime, model_directoy):
         post_frame = tpgd.load_or_scrape_training_data(steem_kwargs, data_directory,
                                                        current_datetime=current_datetime,
-                                                       days=9,
+                                                       days=10,
                                                        offset_days=8,
                                                        ncores=16)
-
-        post_frame = tppp.preprocess(post_frame, ncores=3)
+        # hack for better memory footprint,
+        # see https://stackoverflow.com/questions/15455048/releasing-memory-in-python
+        with concurrent.futures.ProcessPoolExecutor(max_workers=1) as executor:
+            post_frame = executor.submit(large_mp_preprocess,
+                                         post_frame, log_directory,
+                                         current_datetime).result()
         logger.info('Garbage collecting')
         gc.collect()
     else:
