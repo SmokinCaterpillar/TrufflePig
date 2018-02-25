@@ -227,3 +227,25 @@ def clean_up_directory(directory, keep_last=25):
     else:
         logger.info('Found only {} files, less than the number to keep '
                     '({})'.format(nfiles, keep_last))
+
+
+def configure_logging(directory, current_datetime):
+    """ Configures logging to stdout and file
+
+    Parameters
+    ----------
+    directory: str
+    current_datetime: datetime
+
+    """
+    if not os.path.isdir(directory):
+        os.makedirs(directory)
+
+    filename = 'trufflepig_{time}.txt'.format(time=current_datetime.strftime('%Y-%m-%d'))
+    filename = os.path.join(directory, filename)
+
+    format=('%(asctime)s %(processName)s:%(name)s:'
+                  '%(funcName)s:%(lineno)s:%(levelname)s: %(message)s')
+    handlers = [logging.StreamHandler(), logging.FileHandler(filename)]
+    logging.basicConfig(level=logging.INFO, format=format,
+                        handlers=handlers)
