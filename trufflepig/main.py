@@ -69,7 +69,7 @@ def main():
     if not tpmo.model_exists(current_datetime, model_directoy):
         post_frame = tpgd.load_or_scrape_training_data(steem_kwargs, data_directory,
                                                        current_datetime=current_datetime,
-                                                       days=7,
+                                                       days=14,
                                                        offset_days=8,
                                                        ncores=16)
 
