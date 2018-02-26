@@ -182,7 +182,6 @@ class GrammarErrorCounter(object):
 
 
 class LanguageDetector(object):
-
     def __init__(self, max_length=5000, seed=42):
         self.max_length = max_length
         self.factory = langdetect.DetectorFactory()
