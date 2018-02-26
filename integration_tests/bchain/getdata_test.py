@@ -90,7 +90,7 @@ def test_scrape_or_load_data_parallel(temp_dir, steem_kwargs):
 
 def test_scrape_recent_date(steem_kwargs):
     frame = tpbg.scrape_hour_data(steem_kwargs,
-                                  stop_after=10,
+                                  stop_after=50,
                                   ncores=1)
     assert len(frame)
 
