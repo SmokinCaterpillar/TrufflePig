@@ -17,10 +17,16 @@ def filter_images_and_links(text):
     return text
 
 
-def get_first_image_url(text):
-    image = re.search('!\[[-a-zA-Z0-9?@: %._\+~#=/()]*\]\([-a-zA-Z0-9?@:%._\+~#=/()]+\)|$', text).group()
-    image_url = re.sub('!\[[-a-zA-Z0-9?@: %._\+~#=/()]*\]\(([-a-zA-Z0-9?@:%._\+~#=/()]+)\)', '\g<1>', image)
-    return image_url
+def get_image_urls(text):
+    images = re.findall('!\[[-a-zA-Z0-9?@: %._\+~#=/()]*\]\([-a-zA-Z0-9?@:%._\+~#=/()]+\)|<img[^>]+src="[^">]+"[^>]*>', text)
+    image_urls = []
+    for image in images:
+        if image.startswith('<img'):
+            image_url = re.sub('<img[^>]+src="([^">]+)"[^>]*>',  '\g<1>', image)
+        else:
+            image_url = re.sub('!\[[-a-zA-Z0-9?@: %._\+~#=/()]*\]\(([-a-zA-Z0-9?@:%._\+~#=/()]+)\)', '\g<1>', image)
+        image_urls.append(image_url)
+    return image_urls
 
 
 def filter_urls(text):

@@ -2,11 +2,13 @@ import logging
 import os
 import gc
 
+import pandas as pd
 from steem import Steem
 
 import trufflepig.model as tpmo
 import trufflepig.preprocessing as tppp
 import trufflepig.bchain.getdata as tpgd
+import trufflepig.bchain.postdata as tppd
 from trufflepig import config
 
 
@@ -17,8 +19,8 @@ def main():
     logging.basicConfig(level=logging.INFO, format=format)
     directory = os.path.join(config.PROJECT_DIRECTORY, 'scraped_data')
 
-    steem = dict(nodes=config.NODES)
-    current_datetime = '2018-02-01'
+    steem = dict(nodes=config.NODES, no_broadcast=True)
+    current_datetime = pd.to_datetime('2018-02-01')
 
     crossval_filename = os.path.join(directory, 'xval_{}.gz'.format(current_datetime))
 
@@ -54,7 +56,8 @@ def main():
 
     tpmo.log_pipeline_info(pipe)
 
-    tpmo.find_truffles(test_frame, pipe)
+    tf=tpmo.find_truffles(test_frame, pipe)
+    tppd.post_topN_list(tf, steem, account='', current_datetime=current_datetime)
 
 
 if __name__ == '__main__':
