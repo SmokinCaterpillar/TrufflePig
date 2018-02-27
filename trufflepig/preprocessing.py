@@ -152,7 +152,7 @@ def preprocess(post_df, ncores=4, chunksize=500,
     post_df.drop(to_drop.index, inplace=True)
     logger.info('Kept {} posts'.format(len(post_df)))
 
-    logger.info('Filtering images')
+    logger.info('Filtering images and links')
     post_df['filtered_body'] = post_df.body.apply(lambda x:
                                                   tftf.filter_images_and_links(x))
 
