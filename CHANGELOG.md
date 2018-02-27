@@ -2,6 +2,7 @@
 
 * Better filtering of links
 * Num headings as new feature
+* New measures of sentence and syllable skew and kurtosis
 
 *0.2.0a* - 2018-02-25
 

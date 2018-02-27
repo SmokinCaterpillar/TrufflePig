@@ -37,6 +37,8 @@ FEATURES = ['body_length',
             'errors_per_word',
             'average_sentence_length',
             'sentence_length_variance',
+            'sentence_length_skew',
+            'sentence_length_kurtosis',
             'average_punctuation',
             'connectors_per_sentence',
             'pronouns_per_sentence',
@@ -46,6 +48,8 @@ FEATURES = ['body_length',
             'smog_index',
             'average_syllables',
             'syllable_variance',
+            'syllable_skew',
+            'syllable_kurtosis',
             'adverbs_per_sentence']
 
 # output variables for regressor

@@ -33,6 +33,16 @@ def test_compute_sentence_length_variance():
     assert result == 13.25
 
 
+def test_compute_sentence_length_skew():
+    result = tpsm.compute_sentence_length_skew(['huhuh.', 'sbbbasdsads', 'jj djdjd', '1'])
+    assert result == -0.37320606053983435
+
+
+def test_compute_sentence_length_kurtosis():
+    result = tpsm.compute_sentence_length_kurtosis(['huhuh.', 'sbbbasdsads', 'jj djdjd', '1'])
+    assert result == -1.1057315770736917
+
+
 def test_compute_average_punctiation():
     result = tpsm.compute_average_puncitation(['..jj', '..asdsad!!asdsd'])
     assert result == 3

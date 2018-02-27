@@ -5,6 +5,7 @@ import gc
 
 import pandas as pd
 import numpy as np
+import scipy.stats as spst
 
 import trufflepig.filters.stylemeasures as tfsm
 import trufflepig.filters.textfilters as tftf
@@ -230,6 +231,14 @@ def preprocess(post_df, ncores=4, chunksize=500,
     post_df['sentence_length_variance'] = post_df.filtered_sentences.apply(lambda x:
                                           tfsm.compute_sentence_length_variance(x))
 
+    logger.info('Computing sentence length skew')
+    post_df['sentence_length_skew'] = post_df.filtered_sentences.apply(lambda x:
+                                          tfsm.compute_sentence_length_skew(x))
+
+    logger.info('Computing sentence length kurtosis')
+    post_df['sentence_length_kurtosis'] = post_df.filtered_sentences.apply(lambda x:
+                                          tfsm.compute_sentence_length_kurtosis(x))
+
     logger.info('Combining Body and Title')
     post_df['combined'] = (post_df.title.apply(lambda x: x.lower()) + ' '
                          + post_df.filtered_body.apply(lambda x: x.lower()))
@@ -340,6 +349,8 @@ def preprocess(post_df, ncores=4, chunksize=500,
     post_df['complex_word_ratio'] = post_df.num_complex_words / post_df.num_words
     post_df['average_syllables'] = post_df.token_syllables.apply(lambda x: np.mean(x))
     post_df['syllable_variance'] = post_df.token_syllables.apply(lambda x: np.var(x))
+    post_df['syllable_skew'] = post_df.token_syllables.apply(lambda x: spst.skew(x))
+    post_df['syllable_kurtosis'] = post_df.token_syllables.apply(lambda x: spst.kurtosis(x))
     post_df['gunning_fog_index'] = tfsm.gunning_fog_index(num_words=post_df.num_words,
                                                         num_complex_words=post_df.num_complex_words,
                                                         num_sentences=post_df.num_sentences)

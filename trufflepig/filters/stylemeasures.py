@@ -2,6 +2,7 @@ import re
 import string
 
 import numpy as np
+import scipy.stats as spst
 import langdetect
 import language_check
 import pyphen
@@ -111,6 +112,14 @@ def compute_sentence_length_variance(text_list):
     return np.var([len(x) for x in text_list])
 
 
+def compute_sentence_length_skew(text_list):
+    return spst.skew([len(x) for x in text_list])
+
+
+def compute_sentence_length_kurtosis(text_list):
+    return spst.kurtosis([len(x) for x in text_list])
+
+
 def compute_average_puncitation(text_list):
     punctuation = [sum(1 for x in sentence if x in set(string.punctuation) )
                          for sentence in text_list]
@@ -160,7 +169,6 @@ class SyllableConverter(object):
 
 
 class SpellErrorCounter(object):
-
     def __init__(self, language='en_US', pwl=STEEMIT_WORDS):
         self.checker = SpellChecker(language)
         for word in pwl:
