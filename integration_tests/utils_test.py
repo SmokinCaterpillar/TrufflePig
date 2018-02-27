@@ -1,4 +1,7 @@
 import os
+import logging
+
+import pandas as pd
 
 from integration_tests.bchain.getdata_test import temp_dir
 
@@ -21,3 +24,10 @@ def test_clean_up(temp_dir):
     assert filenames[1].endswith('test_4.txt')
 
 
+def test_logging_config(temp_dir):
+    assert len(os.listdir(temp_dir)) == 0
+
+    tfut.configure_logging(temp_dir, pd.datetime.utcnow())
+    logging.getLogger().info('foobar')
+
+    assert len(os.listdir(temp_dir)) == 1

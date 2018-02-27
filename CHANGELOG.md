@@ -1,8 +1,9 @@
-*0.2.1a` - 2018-02-21
+*0.2.1a*` - 2018-02-27
 
 * Better filtering of links
 * Num headings as new feature
 * New measures of sentence and syllable skew and kurtosis
+* Now two images from the post are shown next to the top entries
 
 *0.2.0a* - 2018-02-25
 

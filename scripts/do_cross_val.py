@@ -2,11 +2,13 @@ import logging
 import os
 import gc
 
+import pandas as pd
 from steem import Steem
 
 import trufflepig.model as tpmo
 import trufflepig.preprocessing as tppp
 import trufflepig.bchain.getdata as tpgd
+import trufflepig.bchain.postdata as tppd
 from trufflepig import config
 
 
@@ -17,14 +19,14 @@ def main():
     logging.basicConfig(level=logging.INFO, format=format)
     directory = os.path.join(config.PROJECT_DIRECTORY, 'scraped_data')
 
-    steem = dict(nodes=config.NODES)
-    current_datetime = '2018-02-01'
+    steem = dict(nodes=config.NODES, no_broadcast=True)
+    current_datetime = pd.to_datetime('2018-02-01')
 
     crossval_filename = os.path.join(directory, 'xval_{}.gz'.format(current_datetime))
 
     post_frame = tpgd.load_or_scrape_training_data(steem, directory,
                                                    current_datetime=current_datetime,
-                                                   days=7,
+                                                   days=12,
                                                    offset_days=0)
 
     gc.collect()
@@ -36,7 +38,7 @@ def main():
     topic_kwargs = dict(num_topics=128, no_below=5, no_above=0.1)
 
     post_frame = tppp.load_or_preprocess(post_frame, crossval_filename,
-                                         ncores=4, chunksize=500,
+                                         ncores=8, chunksize=500,
                                          min_en_prob=0.9)
     gc.collect()
     param_grid = {
@@ -52,10 +54,10 @@ def main():
     pipe, test_frame = tpmo.train_test_pipeline(post_frame,  topic_kwargs=topic_kwargs,
                          regressor_kwargs=regressor_kwargs, targets=['reward', 'votes'])
 
-    topic_model = pipe.named_steps['feature_generation'].transformer_list[1][1]
-    logging.getLogger().info(topic_model.print_topics(n_best=None))
+    tpmo.log_pipeline_info(pipe)
 
-    tpmo.find_truffles(test_frame, pipe, min_votes=5)
+    tf=tpmo.find_truffles(test_frame, pipe)
+    tppd.post_topN_list(tf, steem, account='', current_datetime=current_datetime)
 
 
 if __name__ == '__main__':

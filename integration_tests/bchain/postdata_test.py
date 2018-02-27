@@ -32,6 +32,29 @@ def test_test_top10post(steem):
 
 
 @pytest.mark.skipif(config.PASSWORD is None, reason="needs posting key")
+def test_test_all_top_with_real_data(steem_kwargs):
+
+    steem = tpbg.check_and_convert_steem(steem_kwargs)
+
+    steem.wallet.unlock(config.PASSWORD)
+
+    df = tpbg.scrape_hour_data(steem_kwargs, stop_after=10)
+
+    df = tppp.preprocess(df)
+
+    df['predicted_reward'] = df.reward
+    df['predicted_votes'] = df.votes
+
+    date = pd.datetime.utcnow().date()
+
+    account = config.ACCOUNT
+
+    permalink = tbpd.post_topN_list(df, steem, account, date)
+    tbpd.comment_on_own_top_list(df, steem, account, permalink)
+    tbpd.vote_and_comment_on_topK(df, steem, account, permalink, K=1)
+
+
+@pytest.mark.skipif(config.PASSWORD is None, reason="needs posting key")
 def test_test_top20_vote_and_comment(steem):
 
     steem.wallet.unlock(config.PASSWORD)

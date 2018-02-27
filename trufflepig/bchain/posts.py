@@ -4,7 +4,7 @@ import trufflepig.filters.textfilters as tftf
 TRUFFLE_LINK = 'https://steemit.com/steemit/@smcaterpillar/trufflepig-introducing-the-artificial-intelligence-for-content-curation-and-minnow-support'
 TRUFFLE_IMAGE_SMALL = '![trufflepig](https://raw.githubusercontent.com/SmokinCaterpillar/TrufflePig/master/img/trufflepig17_small.png)'
 TRUFFLE_IMAGE = '![trufflepig](https://raw.githubusercontent.com/SmokinCaterpillar/TrufflePig/master/img/trufflepig17.png)'
-QUOTE_MAX_LENGTH=256
+QUOTE_MAX_LENGTH = 400
 TAGS = ['steemit', 'steem', 'minnowsupport', 'upvote', 'community']
 
 BODY_PREFIX = ''  # to announce tests etc.
@@ -29,28 +29,34 @@ Have a nice day and sincerely yours,
                        truffle_image_small=truffle_image_small)
 
 
-def topN_list(topN_authors, topN_permalinks, topN_titles, topN_filtered_bodies,
+def topN_list(topN_authors, topN_permalinks, topN_titles,
+              topN_filtered_bodies, topN_image_urls,
               topN_rewards, topN_votes, quote_max_length, nstart=1):
     """Creates a toplist string"""
     topN_entry="""{rank}. [{title}](https://steemit.com/@{author}/{permalink})  --  **by @{author} with an estimated worth of {reward:d} SBD and {votes:d} votes**
     
-    {quote}
+    {images}{quote}
 
 """
 
     result_string = ""
 
     iterable = zip(topN_authors, topN_permalinks, topN_titles,
-                   topN_filtered_bodies, topN_rewards, topN_votes)
+                   topN_filtered_bodies, topN_image_urls,
+                   topN_rewards, topN_votes)
 
-    for idx, (author, permalink, title, filtered_body, reward, votes) in enumerate(iterable):
+    for idx, (author, permalink, title, filtered_body, img_urls, reward, votes) in enumerate(iterable):
         rank = idx + nstart
-        quote = '>' + filtered_body[:quote_max_length].replace('\n', ' ') + '...'
+        quote = '>' + filtered_body[:quote_max_length].replace('\n', ' ').replace('  ', ' ').replace('  ', ' ').replace('  ', ' ') + '...'
         title = tftf.replace_newlines(title)
         title = tftf.filter_special_characters(title)
+        if len(img_urls) >= 2:
+            imgstr = """<div class="pull-left"><div class="pull-left"><img src="{img1}" /></div><div class="pull-right"><img src="{img2}" /></div></div>\n\n    """.format(img1=img_urls[0], img2=img_urls[1])
+        else:
+            imgstr=''
         entry = topN_entry.format(rank=rank, author=author, permalink=permalink,
                                    title=title, quote=quote, votes=int(votes),
-                                   reward=int(reward))
+                                   reward=int(reward), images=imgstr)
         result_string += entry
     return result_string
 
@@ -77,9 +83,10 @@ def simple_topN_list(topN_authors, topN_permalinks, topN_titles,
 
 
 def topN_post(topN_authors, topN_permalinks, topN_titles,
-               topN_filtered_bodies, topN_rewards, topN_votes, title_date,
-               truffle_link=TRUFFLE_LINK, truffle_image=TRUFFLE_IMAGE,
-               quote_max_length=QUOTE_MAX_LENGTH):
+              topN_filtered_bodies, topN_image_urls,
+              topN_rewards, topN_votes, title_date,
+              truffle_link=TRUFFLE_LINK, truffle_image=TRUFFLE_IMAGE,
+              quote_max_length=QUOTE_MAX_LENGTH):
     """Craetes the truffle pig daily toplist post"""
     title = """The daily Top 10 Truffle Picks: Quality Steemit Posts that deserve more Attention! ({date})"""
 
@@ -108,12 +115,13 @@ Cheers,
     """
 
     topN_truffles = topN_list(topN_authors=topN_authors,
-                               topN_permalinks=topN_permalinks,
-                               topN_titles=topN_titles,
-                               topN_filtered_bodies=topN_filtered_bodies,
-                               topN_rewards=topN_rewards,
-                               topN_votes=topN_votes,
-                               quote_max_length=quote_max_length)
+                              topN_permalinks=topN_permalinks,
+                              topN_titles=topN_titles,
+                              topN_filtered_bodies=topN_filtered_bodies,
+                              topN_image_urls=topN_image_urls,
+                              topN_rewards=topN_rewards,
+                              topN_votes=topN_votes,
+                              quote_max_length=quote_max_length)
 
     title = title.format(date=title_date.strftime('%d.%m.%Y'))
     post = post.format(topN_truffles=topN_truffles,

@@ -590,7 +590,7 @@ def find_truffles(post_frame, pipeline, account='trufflepig',
     logger.info('Looking for truffles in frame of shape {} '
                 'and filtering preprocessed data further. '
                 'min max reward {} and min votes '
-                '{} and posts by myself'
+                '{} and posts by '
                 'myself'.format(post_frame.shape, min_max_reward, min_votes))
     to_drop = post_frame.loc[(post_frame.reward < min_max_reward[0]) |
                                 (post_frame.reward > min_max_reward[1]) |

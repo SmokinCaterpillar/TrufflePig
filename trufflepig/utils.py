@@ -225,8 +225,8 @@ def clean_up_directory(directory, keep_last=25):
                                                           keep_last))
             os.remove(filename)
     else:
-        logger.info('Found only {} files, less than the number to keep '
-                    '({})'.format(nfiles, keep_last))
+        logger.info('Found only {} files in `{}`, less than the number to keep '
+                    '({})'.format(nfiles, directory, keep_last))
 
 
 def configure_logging(directory, current_datetime):
