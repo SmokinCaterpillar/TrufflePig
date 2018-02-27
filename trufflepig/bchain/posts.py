@@ -4,7 +4,7 @@ import trufflepig.filters.textfilters as tftf
 TRUFFLE_LINK = 'https://steemit.com/steemit/@smcaterpillar/trufflepig-introducing-the-artificial-intelligence-for-content-curation-and-minnow-support'
 TRUFFLE_IMAGE_SMALL = '![trufflepig](https://raw.githubusercontent.com/SmokinCaterpillar/TrufflePig/master/img/trufflepig17_small.png)'
 TRUFFLE_IMAGE = '![trufflepig](https://raw.githubusercontent.com/SmokinCaterpillar/TrufflePig/master/img/trufflepig17.png)'
-QUOTE_MAX_LENGTH=256
+QUOTE_MAX_LENGTH = 360
 TAGS = ['steemit', 'steem', 'minnowsupport', 'upvote', 'community']
 
 BODY_PREFIX = ''  # to announce tests etc.
@@ -29,28 +29,34 @@ Have a nice day and sincerely yours,
                        truffle_image_small=truffle_image_small)
 
 
-def topN_list(topN_authors, topN_permalinks, topN_titles, topN_filtered_bodies,
+def topN_list(topN_authors, topN_permalinks, topN_titles,
+              topN_filtered_bodies, topN_fitst_images,
               topN_rewards, topN_votes, quote_max_length, nstart=1):
     """Creates a toplist string"""
     topN_entry="""{rank}. [{title}](https://steemit.com/@{author}/{permalink})  --  **by @{author} with an estimated worth of {reward:d} SBD and {votes:d} votes**
     
-    {quote}
+    {image}{quote}
 
 """
 
     result_string = ""
 
     iterable = zip(topN_authors, topN_permalinks, topN_titles,
-                   topN_filtered_bodies, topN_rewards, topN_votes)
+                   topN_filtered_bodies, topN_fitst_images,
+                   topN_rewards, topN_votes)
 
-    for idx, (author, permalink, title, filtered_body, reward, votes) in enumerate(iterable):
+    for idx, (author, permalink, title, filtered_body, img, reward, votes) in enumerate(iterable):
         rank = idx + nstart
         quote = '>' + filtered_body[:quote_max_length].replace('\n', ' ') + '...'
         title = tftf.replace_newlines(title)
         title = tftf.filter_special_characters(title)
+        if img:
+            imgstr = """<div class="pull-left"><div class="pull-right"><img src="{img}" /></div></div>\n\n    """.format(img=img)
+        else:
+            imgstr=''
         entry = topN_entry.format(rank=rank, author=author, permalink=permalink,
                                    title=title, quote=quote, votes=int(votes),
-                                   reward=int(reward))
+                                   reward=int(reward), image=imgstr)
         result_string += entry
     return result_string
 
@@ -77,7 +83,8 @@ def simple_topN_list(topN_authors, topN_permalinks, topN_titles,
 
 
 def topN_post(topN_authors, topN_permalinks, topN_titles,
-               topN_filtered_bodies, topN_rewards, topN_votes, title_date,
+               topN_filtered_bodies, topN_first_images,
+               topN_rewards, topN_votes, title_date,
                truffle_link=TRUFFLE_LINK, truffle_image=TRUFFLE_IMAGE,
                quote_max_length=QUOTE_MAX_LENGTH):
     """Craetes the truffle pig daily toplist post"""
@@ -111,6 +118,7 @@ Cheers,
                                topN_permalinks=topN_permalinks,
                                topN_titles=topN_titles,
                                topN_filtered_bodies=topN_filtered_bodies,
+                               topN_fitst_images=topN_first_images,
                                topN_rewards=topN_rewards,
                                topN_votes=topN_votes,
                                quote_max_length=quote_max_length)

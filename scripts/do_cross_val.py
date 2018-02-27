@@ -24,7 +24,7 @@ def main():
 
     post_frame = tpgd.load_or_scrape_training_data(steem, directory,
                                                    current_datetime=current_datetime,
-                                                   days=7,
+                                                   days=12,
                                                    offset_days=0)
 
     gc.collect()
@@ -36,7 +36,7 @@ def main():
     topic_kwargs = dict(num_topics=128, no_below=5, no_above=0.1)
 
     post_frame = tppp.load_or_preprocess(post_frame, crossval_filename,
-                                         ncores=4, chunksize=500,
+                                         ncores=8, chunksize=500,
                                          min_en_prob=0.9)
     gc.collect()
     param_grid = {
@@ -52,10 +52,9 @@ def main():
     pipe, test_frame = tpmo.train_test_pipeline(post_frame,  topic_kwargs=topic_kwargs,
                          regressor_kwargs=regressor_kwargs, targets=['reward', 'votes'])
 
-    topic_model = pipe.named_steps['feature_generation'].transformer_list[1][1]
-    logging.getLogger().info(topic_model.print_topics(n_best=None))
+    tpmo.log_pipeline_info(pipe)
 
-    tpmo.find_truffles(test_frame, pipe, min_votes=5)
+    tpmo.find_truffles(test_frame, pipe)
 
 
 if __name__ == '__main__':

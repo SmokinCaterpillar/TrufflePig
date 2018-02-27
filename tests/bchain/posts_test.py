@@ -4,6 +4,7 @@ from tests.fixtures import random_data
 
 import trufflepig.bchain.posts as tbpo
 import trufflepig.preprocessing as tppp
+import trufflepig.filters.textfilters as tptf
 
 
 def test_comment():
@@ -23,11 +24,13 @@ def test_topN_post():
     df = tppp.preprocess(df, ncores=1)
 
     date = pd.datetime.utcnow().date()
+    df.first_image_url = df.body.apply(lambda x: tptf.get_first_image_url(x))
 
     title, post = tbpo.topN_post(topN_authors=df.author,
                              topN_permalinks=df.permalink,
                              topN_titles=df.title,
                              topN_filtered_bodies=df.filtered_body,
+                             topN_first_images=df.first_image_url,
                              topN_votes=df.votes,
                              topN_rewards=df.reward,
                              title_date=date)

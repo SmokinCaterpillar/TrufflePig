@@ -6,6 +6,7 @@ from steembase.exceptions import RPCError
 
 import trufflepig.bchain.posts as tfbp
 import trufflepig.bchain.getdata as tfgd
+import trufflepig.filters.textfilters as tftf
 
 
 logger = logging.getLogger(__name__)
@@ -37,10 +38,12 @@ def post_topN_list(sorted_post_frame, steem_or_args, account,
     df = sorted_post_frame.iloc[:N, :]
 
     logger.info('Creating top {} post'.format(N))
+    df.first_image_url = df.body.apply(lambda x: tftf.get_first_image_url(x))
     title, body = tfbp.topN_post(topN_authors=df.author,
                              topN_permalinks=df.permalink,
                              topN_titles=df.title,
                              topN_filtered_bodies=df.filtered_body,
+                             topN_first_images=df.first_image_url,
                              topN_votes=df.predicted_votes,
                              topN_rewards=df.predicted_reward,
                              title_date=current_datetime)

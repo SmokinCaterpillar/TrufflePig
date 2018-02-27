@@ -12,6 +12,12 @@ def test_filter_images_and_links():
     assert result == 'Lookat , yes iii, and '
 
 
+def test_get_first_image_url():
+    result = tptf.get_first_image_url('Lookat ![j kjds](wehwjrkjewrk.de), yes [iii](jlkajddjsla), and '
+                        '![images (17).jpg](https://steemitimages.com/DQmQF5BxHtPdPu1yKipV67GpnRdzemPpEFCqB59kVXC6Ahy/images%20(17).jpg)')
+    assert result == 'wehwjrkjewrk.de'
+
+
 def test_filter_urls():
     result = tptf.filter_urls('I like www.pipes.com')
     assert result == 'I like '
