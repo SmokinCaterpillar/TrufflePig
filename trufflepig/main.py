@@ -149,7 +149,7 @@ def main():
 
     prediction_frame = tpgd.scrape_hour_data(steem_or_args=steem_kwargs,
                                              current_datetime=current_datetime,
-                                             ncores=16,
+                                             ncores=20,
                                              offset_hours=2)
     prediction_frame = tppp.preprocess(prediction_frame, ncores=3)
 
