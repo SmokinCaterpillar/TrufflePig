@@ -9,7 +9,7 @@ def test_filter_html_tags():
 def test_filter_images_and_links():
     result = tptf.filter_images_and_links('Lookat ![j kjds](wehwjrkjewrk.de), yes [iii](jlkajddjsla), and '
                         '![images (17).jpg](https://steemitimages.com/DQmQF5BxHtPdPu1yKipV67GpnRdzemPpEFCqB59kVXC6Ahy/images%20(17).jpg)')
-    assert result == 'Lookat , yes , and '
+    assert result == 'Lookat , yes iii, and '
 
 
 def test_filter_urls():
@@ -45,3 +45,23 @@ def test_is_in_tags():
 def test_is_in_tags_typerror():
     result = tptf.is_in_filter_tags(['hi', ['ho']], {'ha', 'hi'})
     assert result
+
+
+def test_filter_headdings():
+    text= """# heading nheadings
+heyho
+
+#### heading123213213232
+
+#################### dksajds
+    
+jdd
+<h4> lkjsdsak!"§$$ </h5>
+"""
+    new_text = tptf.filter_headings(text)
+    expected = """heyho
+
+#################### dksajds
+    
+jdd"""
+    assert new_text == expected

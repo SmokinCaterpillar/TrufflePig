@@ -95,6 +95,10 @@ def split_into_sentences(text):
     return sentences
 
 
+def count_headings(text):
+    return len(re.findall('(\n|^)(#{1,6}| *<h[1-6]>)[^\n#]*\n', text))
+
+
 def count_paragraphs(text):
     return text.count('\n\n') + 1
 

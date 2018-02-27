@@ -28,6 +28,7 @@ FEATURES = ['body_length',
             'num_sentences',
             'num_paragraphs',
             'num_words',
+            'num_headings',
             'unique_words',
             'unique_ratio',
             'num_spelling_errors',
@@ -546,7 +547,7 @@ def load_or_train_pipeline(post_frame, directory, current_datetime=None,
 
 
 def find_truffles(post_frame, pipeline, min_max_reward=(0.5, 10),
-                  min_votes=10, max_grammar_errors_per_sentence=0.4, k=10,
+                  min_votes=10, max_grammar_errors_per_sentence=0.33, k=10,
                   ncores=2, chunksize=500):
     """ Digs for truffles, i.e. underpaid posts
 
@@ -614,7 +615,7 @@ def find_truffles(post_frame, pipeline, min_max_reward=(0.5, 10),
 
     post_frame = post_frame.sort_values('reward_difference', ascending=False)
 
-    for irun in range(k):
+    for irun in range(min(k, len(post_frame))):
         row = post_frame.iloc[irun]
         logger.info('\n\n----------------------------------------------'
                     '--------------------------------------------------'

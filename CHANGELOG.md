@@ -1,3 +1,8 @@
+*0.2.1a` - 2018-02-21
+
+* Better filtering of links
+* Num headings as new feature
+
 *0.2.0a* - 2018-02-25
 
 * Cheetah votes lead to an exclusion fo a post

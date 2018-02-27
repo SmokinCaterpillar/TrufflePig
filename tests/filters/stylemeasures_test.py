@@ -93,3 +93,18 @@ def test_grammar_errors():
     sentences = 'She earn moneyt. I did nothing wrogn. He go in Colorado.'
     matches = counter.count_mistakes_per_character(sentences)
     assert matches == 2 / len(sentences)
+
+
+def test_count_headdings():
+    text= """# heading 
+heyho
+
+#### heading123213213232
+
+#################### dksajds
+    
+jdd
+<h4> lkjsdsak!"§$$ </h5>
+    """
+    nheadings = tpsm.count_headings(text)
+    assert nheadings == 3

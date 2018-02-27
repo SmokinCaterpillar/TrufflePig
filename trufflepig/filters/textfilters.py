@@ -10,7 +10,11 @@ def filter_html_tags(text):
 
 
 def filter_images_and_links(text):
-    return re.sub('!?\[[-a-zA-Z0-9?@: %._\+~#=/()]*\]\([-a-zA-Z0-9?@:%._\+~#=/()]+\)', '', text)
+    # filter images altogether
+    text =  re.sub('!\[[-a-zA-Z0-9?@: %._\+~#=/()]*\]\([-a-zA-Z0-9?@:%._\+~#=/()]+\)', '', text)
+    # replace the links just with the name
+    text =  re.sub('\[([-a-zA-Z0-9?@: %._\+~#=/()]*)\]\([-a-zA-Z0-9?@:%._\+~#=/()]+\)', '\g<1>', text)
+    return text
 
 
 def filter_urls(text):
@@ -30,7 +34,7 @@ def filter_formatting(text):
     text = re.sub('aligncenter', '', text)
     text = re.sub('styletextalign', '', text)
     text = re.sub('href', '', text)
-    text = re.sub('h[1-5]', '', text)
+    text = re.sub('h[1-6]', '', text)
     return text
 
 
@@ -40,6 +44,10 @@ def replace_newlines(text):
 
 def filter_punctuation(text):
     return re.sub('[;,.?!]+', '', text)
+
+
+def filter_headings(text):
+    return re.sub('(\n|^)(#{1,6}| *<h[1-6]>)[^\n#]*\n', '', text)
 
 
 def is_in_filter_tags(tags, filter_tags):
