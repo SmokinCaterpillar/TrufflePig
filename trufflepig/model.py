@@ -547,7 +547,7 @@ def load_or_train_pipeline(post_frame, directory, current_datetime=None,
 
 
 def find_truffles(post_frame, pipeline, min_max_reward=(0.5, 10),
-                  min_votes=10, max_grammar_errors_per_sentence=0.33, k=10,
+                  min_votes=5, max_grammar_errors_per_sentence=0.5, k=10,
                   ncores=2, chunksize=500):
     """ Digs for truffles, i.e. underpaid posts
 
