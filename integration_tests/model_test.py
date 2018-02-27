@@ -136,7 +136,8 @@ def test_find_truffles():
 
     post_frame = pd.DataFrame(posts)
     post_frame = tppp.preprocess(post_frame, ncores=4, chunksize=50)
-    truffles = tpmo.find_truffles(post_frame, pipeline, min_max_reward=(0,100),
+    truffles = tpmo.find_truffles(post_frame, pipeline, account='aa',
+                                    min_max_reward=(0,100),
                                   max_grammar_errors_per_sentence=5)
 
     assert truffles.iloc[0].reward_difference == truffles.reward_difference.max()

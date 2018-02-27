@@ -153,7 +153,8 @@ def main():
                                              offset_hours=2)
     prediction_frame = tppp.preprocess(prediction_frame, ncores=3)
 
-    sorted_frame = tpmo.find_truffles(prediction_frame, pipeline)
+    sorted_frame = tpmo.find_truffles(prediction_frame, pipeline,
+                                      account=config.ACCOUNT)
     account = config.ACCOUNT
     permalink = tppd.post_topN_list(sorted_frame, steem_kwargs,
                                     account=account,

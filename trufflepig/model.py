@@ -546,7 +546,8 @@ def load_or_train_pipeline(post_frame, directory, current_datetime=None,
     return pipeline
 
 
-def find_truffles(post_frame, pipeline, min_max_reward=(0.5, 10),
+def find_truffles(post_frame, pipeline, account='trufflepig',
+                  min_max_reward=(0.5, 25),
                   min_votes=10, max_grammar_errors_per_sentence=0.4, k=10,
                   ncores=2, chunksize=500):
     """ Digs for truffles, i.e. underpaid posts
@@ -558,6 +559,8 @@ def find_truffles(post_frame, pipeline, min_max_reward=(0.5, 10),
     post_frame: DataFrame
         Prepocessed novel data
     pipeline: trained scikit pipeline
+    account: str
+        The name of the bot account (it should not list itself)
     min_max_reward: tuple of float
         Min/Max Reward range truffles should be in
     min_votes: int
@@ -583,10 +586,12 @@ def find_truffles(post_frame, pipeline, min_max_reward=(0.5, 10),
     logger.info('Looking for truffles in frame of shape {} '
                 'and filtering preprocessed data further. '
                 'min max reward {} and min votes '
-                '{}'.format(post_frame.shape, min_max_reward, min_votes))
+                '{} and posts by myself'
+                'myself'.format(post_frame.shape, min_max_reward, min_votes))
     to_drop = post_frame.loc[(post_frame.reward < min_max_reward[0]) |
                                 (post_frame.reward > min_max_reward[1]) |
-                                (post_frame.votes < min_votes)]
+                                (post_frame.votes < min_votes) |
+                                (post_frame.author == account)]
 
     post_frame.drop(to_drop.index, inplace=True)
     logger.info('Kept {} posts'.format(len(post_frame)))
