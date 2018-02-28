@@ -593,6 +593,21 @@ def grammar_score_step_function(x):
             return 0.1
 
 
+def spelling_error_step_function(x):
+    if x <= 0.01:
+        return 1.0
+    elif x <= 0.02:
+        return 0.95
+    elif x <= 0.03:
+        return 0.9
+    elif x <= 0.05:
+        return 0.85
+    elif x <= 0.075:
+        return 0.8
+    else:
+        return 0.7
+
+
 def vote_score_step_function(x):
     if x >= 20:
         return 1.0
@@ -625,6 +640,10 @@ def compute_rank_score(post_frame, min_max_tag_factor, ncores=2, chunksize=500):
     logger.info('Computing reward factor...')
     reward_factor = post_frame.reward.apply(lambda x: reward_score_step_function(x))
 
+    logger.info('Computing spelling mistake factor...')
+    spelling_errors_factor = post_frame.errors_per_word.apply(lambda x:
+                                                              spelling_error_step_function(x))
+
     logger.info('Applying grammar check...')
     checker = tfsm.GrammarErrorCounter()
     errors_per_character = apply_parallel(checker.count_mistakes_per_character,
@@ -637,7 +656,7 @@ def compute_rank_score(post_frame, min_max_tag_factor, ncores=2, chunksize=500):
 
     logger.info('...Done combining reward difference and factors')
     result = post_frame.reward_difference
-    final_factor = grammar_factor * reward_factor * vote_factor * tag_factor
+    final_factor = grammar_factor * reward_factor * vote_factor * tag_factor * spelling_errors_factor
     # increase negative values for low factors:
     final_factor.loc[result < 0] = 1.0 / final_factor.loc[result < 0]
     result = result * final_factor
