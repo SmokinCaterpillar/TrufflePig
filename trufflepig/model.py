@@ -551,21 +551,27 @@ def load_or_train_pipeline(post_frame, directory, current_datetime=None,
 
 
 def compute_tag_factor(post_frame, min_max_tag_factor):
-    avg_predicted_reward = post_frame.predicted_reward.mean()
     unique_tags = {x  for y in post_frame.tags for x in y}
     logger.info('...found {} unique tags...'.format(len(unique_tags)))
-    tag_factors = {}
+    tag_counts = {}
+
     for tag in unique_tags:
-        where = post_frame.tags.apply(lambda x: tag in x)
-        mean_value = post_frame.loc[where].predicted_reward.mean()
-        tag_factor = avg_predicted_reward/mean_value
+        tag_count = post_frame.tags.apply(lambda x: tag in x).sum()
+        tag_counts[tag] = tag_count
+
+    tag_factors = {}
+    average_tag_count = np.mean(list(tag_counts.values()))
+    logger.info('...average count per tag is {}...'.format(average_tag_count))
+    for tag in unique_tags:
+        tag_factor = average_tag_count / tag_counts[tag]
         if tag_factor < min_max_tag_factor[0]:
             tag_factor = min_max_tag_factor[0]
         elif tag_factor >= min_max_tag_factor[1]:
             tag_factor = min_max_tag_factor[1]
         tag_factors[tag] = tag_factor
 
-    return post_frame.tags.apply(lambda x: np.mean([tag_factors[y] for y in x]))
+    factors = post_frame.tags.apply(lambda x: np.mean([tag_factors[y] for y in x]))
+    return factors
 
 
 def grammar_score_step_function(x):

@@ -15,6 +15,6 @@ def test_tag_factor():
 
     post_frame['predicted_reward'] = post_frame.reward
 
-    tag_factor = tpmo.compute_tag_factor(post_frame)
+    tag_factor = tpmo.compute_tag_factor(post_frame, min_max_tag_factor=(0.5, 1.5))
 
     assert np.all(tag_factor > 0)
