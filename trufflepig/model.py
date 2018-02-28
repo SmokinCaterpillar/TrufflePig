@@ -639,7 +639,7 @@ def compute_rank_score(post_frame, min_max_tag_factor, ncores=2, chunksize=500):
 
 def find_truffles(post_frame, pipeline, account='trufflepig',
                   min_max_tag_factor=(0.5, 1.5),
-                  k=10, ncores=2, chunksize=500):
+                  k=25, ncores=2, chunksize=500):
     """ Digs for truffles, i.e. underpaid posts
 
     Filtering happens in place
