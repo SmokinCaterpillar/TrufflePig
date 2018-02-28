@@ -1,5 +1,6 @@
 import logging
 import os
+import operator
 
 import numpy as np
 import pandas as pd
@@ -550,44 +551,64 @@ def load_or_train_pipeline(post_frame, directory, current_datetime=None,
     return pipeline
 
 
-def compute_tag_factor(post_frame, min_max_tag_factor):
-    """ Computes adjustment factor for tags
+def compute_tag_measure(post_frame):
+    """ Computes adjustment measure for tags
 
     Parameters
     ----------
     post_frame: DataFrame
-    min_max_tag_factor: tuple of floats
 
     Returns
     -------
-    Each tag is weighted by its relative frequency and the tag factor is the
-    average of these factors
+    Each tag is weighted by its relative frequency compared to the most
+    popular tag, the tag meassure of a post is its average tag measure
 
     """
     unique_tags = {x  for y in post_frame.tags for x in y}
     logger.info('...found {} unique tags...'.format(len(unique_tags)))
     tag_counts = {}
 
-    # First get unique tags
+    # First get unique tags and frequency
     for tag in unique_tags:
         tag_count = post_frame.tags.apply(lambda x: tag in x).sum()
         tag_counts[tag] = tag_count
 
-    # Second compute the frequency and correction facto for each tag
+    # Second weigh frequency by most popular tag
     tag_factors = {}
-    average_tag_count = np.mean(list(tag_counts.values()))
-    logger.info('...average count per tag is {}...'.format(average_tag_count))
+    max_tag, max_tag_count = max(tag_counts.items(), key=operator.itemgetter(1))
+    logger.info('...most popular tag is {} with count is '
+                '{}...'.format(max_tag, max_tag_count))
     for tag in unique_tags:
-        tag_factor = average_tag_count / tag_counts[tag]
-        if tag_factor < min_max_tag_factor[0]:
-            tag_factor = min_max_tag_factor[0]
-        elif tag_factor > min_max_tag_factor[1]:
-            tag_factor = min_max_tag_factor[1]
+        tag_factor = tag_counts[tag] / max_tag_count
         tag_factors[tag] = tag_factor
 
-    # The tag factor of a post is the average of the factors of its tags
-    factors = post_frame.tags.apply(lambda x: np.mean([tag_factors[y] for y in x]))
-    return factors
+    # The tag measure of a post is the average of the relative freq of its tags
+    measure = post_frame.tags.apply(lambda x: np.mean([tag_factors[y] for y in x]))
+    return measure
+
+
+def tag_measure_step_function(x):
+    """Mapping from tag measure to correction factor"""
+    if x <= 0.01:
+        return 1.0
+    elif x <= 0.03:
+        return 0.95
+    elif x <= 0.05:
+        return 0.9
+    elif x <= 0.1:
+        return 0.85
+    elif x <= 0.2:
+        return 0.8
+    elif x <= 0.3:
+        return 0.75
+    elif x <= 0.4:
+        return 0.7
+    elif x <= 0.5:
+        return 0.65
+    elif x <= 0.6:
+        return 0.6
+    else:
+        return 0.5
 
 
 def grammar_score_step_function(x):
@@ -650,14 +671,12 @@ def reward_score_step_function(x):
         return 0.4
 
 
-def compute_rank_score(post_frame, min_max_tag_factor, ncores=2, chunksize=500):
+def compute_rank_score(post_frame, ncores=2, chunksize=500):
     """ Computes the ranks score too sort the truffles for the top list
 
     Parameters
     ----------
     post_frame: DataFrame
-    min_max_tag_factor: float tuple
-        Adjustment factors to favor less popular tags
     ncores: int
     chunksize: int
 
@@ -669,7 +688,8 @@ def compute_rank_score(post_frame, min_max_tag_factor, ncores=2, chunksize=500):
 
     """
     logger.info('Computing tag factor...')
-    tag_factor = compute_tag_factor(post_frame, min_max_tag_factor=min_max_tag_factor)
+    tag_measure = compute_tag_measure(post_frame)
+    tag_factor = tag_measure.apply(lambda x: tag_measure_step_function(x))
 
     logger.info('Computing vote factor...')
     vote_factor = post_frame.votes.apply(lambda x: vote_score_step_function(x))
@@ -702,7 +722,6 @@ def compute_rank_score(post_frame, min_max_tag_factor, ncores=2, chunksize=500):
 
 
 def find_truffles(post_frame, pipeline, account='trufflepig',
-                  min_max_tag_factor=(0.5, 2.0),
                   k=25, ncores=2, chunksize=500):
     """ Digs for truffles, i.e. underpaid posts
 
@@ -715,8 +734,6 @@ def find_truffles(post_frame, pipeline, account='trufflepig',
     pipeline: trained scikit pipeline
     account: str
         The name of the bot account (it should not list itself)
-    min_max_tag_factor: tuple of float
-        minimum and maximum bonus factors for scarce or often used tags
     k: int
         Logs the first k truffles to console
     ncores: int
@@ -748,8 +765,7 @@ def find_truffles(post_frame, pipeline, account='trufflepig',
     post_frame['reward_difference'] = post_frame.predicted_reward - post_frame.reward
 
     logger.info('Computing rank score')
-    post_frame = compute_rank_score(post_frame, min_max_tag_factor=min_max_tag_factor,
-                                    ncores=ncores, chunksize=chunksize)
+    post_frame = compute_rank_score(post_frame, ncores=ncores, chunksize=chunksize)
 
     post_frame = post_frame.sort_values('rank_score', ascending=False)
 
