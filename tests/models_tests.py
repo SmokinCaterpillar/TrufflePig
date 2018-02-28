@@ -15,6 +15,6 @@ def test_tag_measure():
 
     post_frame['predicted_reward'] = post_frame.reward
 
-    tag_measure = tpmo.compute_tag_measure(post_frame)
+    tag_measure = tpmo.compute_tag_factor(post_frame.tags, tpmo.PUNISH_LIST)
 
     assert np.all(tag_measure > 0)

@@ -92,7 +92,7 @@ In the meantime **you can upvote, resteem, and comment on this and [my propositi
 
 WORDS = WORDS.split(' ')
 
-TAGS = ['hello', 'world', 'computers', 'crypto',
+TAGS = ['hello', 'world', 'computers', 'crypto', 'cryptocurrency',
         'maybecrypto', 'anothercrypto', 'moooorecrypto']
 
 

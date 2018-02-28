@@ -60,6 +60,17 @@ TARGETS = ['reward', 'votes']
 FILENAME_TEMPLATE = 'truffle_pipeline__{time}.gz'
 
 
+# tag factor punish list
+PUNISH_LIST=['steem',
+             'steemit',
+             'crypto-news',
+             'bitcoin',
+             'blockchain',
+             'cryptocurrency',
+             'crypto',
+             'dtube']
+
+
 class Doc2VecModel(BaseEstimator, RegressorMixin):
     """A Doc2Vec Model following the scikit pipeline API
 
@@ -551,64 +562,24 @@ def load_or_train_pipeline(post_frame, directory, current_datetime=None,
     return pipeline
 
 
-def compute_tag_measure(post_frame):
-    """ Computes adjustment measure for tags
+def compute_tag_factor(tags, punish_list):
+    """ Computes adjustment factor for tags
 
     Parameters
     ----------
-    post_frame: DataFrame
+    tags: Series
+        Contains the tags of the posts
 
     Returns
     -------
-    Each tag is weighted by its relative frequency compared to the most
-    popular tag, the tag meassure of a post is its average tag measure
+    For each tag found in the `punish_list` the factor is multiplied by 0.89
 
     """
-    unique_tags = {x  for y in post_frame.tags for x in y}
-    logger.info('...found {} unique tags...'.format(len(unique_tags)))
-    tag_counts = {}
-
-    # First get unique tags and frequency
-    for tag in unique_tags:
-        tag_count = post_frame.tags.apply(lambda x: tag in x).sum()
-        tag_counts[tag] = tag_count
-
-    # Second weigh frequency by most popular tag
-    tag_factors = {}
-    max_tag, max_tag_count = max(tag_counts.items(), key=operator.itemgetter(1))
-    logger.info('...most popular tag is {} with count is '
-                '{}...'.format(max_tag, max_tag_count))
-    for tag in unique_tags:
-        tag_factor = tag_counts[tag] / max_tag_count
-        tag_factors[tag] = tag_factor
-
-    # The tag measure of a post is the average of the relative freq of its tags
-    measure = post_frame.tags.apply(lambda x: np.mean([tag_factors[y] for y in x]))
-    return measure
-
-
-def tag_measure_step_function(x):
-    """Mapping from tag measure to correction factor"""
-    if x <= 0.1:
-        return 1.0
-    elif x <= 0.2:
-        return 0.95
-    elif x <= 0.3:
-        return 0.9
-    elif x <= 0.4:
-        return 0.85
-    elif x <= 0.5:
-        return 0.8
-    elif x <= 0.6:
-        return 0.7
-    elif x <= 0.7:
-        return 0.65
-    elif x <= 0.8:
-        return 0.6
-    elif x <= 0.9:
-        return 0.55
-    else:
-        return 0.5
+    tag_factor = tags.apply(lambda x: 1.0)
+    for to_punish in punish_list:
+        logger.info('...punishing {}...'.format(to_punish))
+        tag_factor *= tags.apply(lambda x: 1 if to_punish not in x else 0.89)
+    return tag_factor
 
 
 def grammar_score_step_function(x):
@@ -662,7 +633,7 @@ def vote_score_step_function(x):
 def reward_score_step_function(x):
     """Mapping of current reward to correction factor"""
     if x >= 10:
-        return 0.9
+        return 0.8
     elif x >= 1.0:
         return 1.0
     elif x >= 0.5:
@@ -671,12 +642,14 @@ def reward_score_step_function(x):
         return 0.4
 
 
-def compute_rank_score(post_frame, ncores=2, chunksize=500):
+def compute_rank_score(post_frame, punish_list=PUNISH_LIST, ncores=2, chunksize=500):
     """ Computes the ranks score too sort the truffles for the top list
 
     Parameters
     ----------
     post_frame: DataFrame
+    punish_list: List of str
+        tags that should be punished in ranking
     ncores: int
     chunksize: int
 
@@ -688,8 +661,7 @@ def compute_rank_score(post_frame, ncores=2, chunksize=500):
 
     """
     logger.info('Computing tag factor...')
-    tag_measure = compute_tag_measure(post_frame)
-    tag_factor = tag_measure.apply(lambda x: tag_measure_step_function(x))
+    tag_factor = compute_tag_factor(post_frame.tags, punish_list)
 
     logger.info('Computing vote factor...')
     vote_factor = post_frame.votes.apply(lambda x: vote_score_step_function(x))
@@ -722,6 +694,7 @@ def compute_rank_score(post_frame, ncores=2, chunksize=500):
 
 
 def find_truffles(post_frame, pipeline, account='trufflepig',
+                  punish_list=PUNISH_LIST,
                   k=25, ncores=2, chunksize=500):
     """ Digs for truffles, i.e. underpaid posts
 
@@ -734,6 +707,8 @@ def find_truffles(post_frame, pipeline, account='trufflepig',
     pipeline: trained scikit pipeline
     account: str
         The name of the bot account (it should not list itself)
+    punish_list: list of str
+        tags to be punished in ranking
     k: int
         Logs the first k truffles to console
     ncores: int
@@ -765,7 +740,8 @@ def find_truffles(post_frame, pipeline, account='trufflepig',
     post_frame['reward_difference'] = post_frame.predicted_reward - post_frame.reward
 
     logger.info('Computing rank score')
-    post_frame = compute_rank_score(post_frame, ncores=ncores, chunksize=chunksize)
+    post_frame = compute_rank_score(post_frame, punish_list=punish_list,
+                                    ncores=ncores, chunksize=chunksize)
 
     post_frame = post_frame.sort_values('rank_score', ascending=False)
 
