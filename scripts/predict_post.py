@@ -51,7 +51,7 @@ def main():
 
     post_frame = tppp.preprocess(posts)
 
-    tpmo.find_truffles(post_frame, pipeline, max_grammar_errors_per_sentence=0.9)
+    tpmo.find_truffles(post_frame, pipeline)
 
 
 

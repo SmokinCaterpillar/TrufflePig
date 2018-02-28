@@ -1,3 +1,7 @@
+*0.2.1a*` - 2018-02-28
+
+* New selection of truffle pigs based on ranking score
+
 *0.2.1a*` - 2018-02-27
 
 * Better filtering of links

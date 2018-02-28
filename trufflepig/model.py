@@ -550,10 +550,160 @@ def load_or_train_pipeline(post_frame, directory, current_datetime=None,
     return pipeline
 
 
+def compute_tag_factor(post_frame, min_max_tag_factor):
+    """ Computes adjustment factor for tags
+
+    Parameters
+    ----------
+    post_frame: DataFrame
+    min_max_tag_factor: tuple of floats
+
+    Returns
+    -------
+    Each tag is weighted by its relative frequency and the tag factor is the
+    average of these factors
+
+    """
+    unique_tags = {x  for y in post_frame.tags for x in y}
+    logger.info('...found {} unique tags...'.format(len(unique_tags)))
+    tag_counts = {}
+
+    # First get unique tags
+    for tag in unique_tags:
+        tag_count = post_frame.tags.apply(lambda x: tag in x).sum()
+        tag_counts[tag] = tag_count
+
+    # Second compute the frequency and correction facto for each tag
+    tag_factors = {}
+    average_tag_count = np.mean(list(tag_counts.values()))
+    logger.info('...average count per tag is {}...'.format(average_tag_count))
+    for tag in unique_tags:
+        tag_factor = average_tag_count / tag_counts[tag]
+        if tag_factor < min_max_tag_factor[0]:
+            tag_factor = min_max_tag_factor[0]
+        elif tag_factor > min_max_tag_factor[1]:
+            tag_factor = min_max_tag_factor[1]
+        tag_factors[tag] = tag_factor
+
+    # The tag factor of a post is the average of the factors of its tags
+    factors = post_frame.tags.apply(lambda x: np.mean([tag_factors[y] for y in x]))
+    return factors
+
+
+def grammar_score_step_function(x):
+    """Mapping from grammar errors per sentence to correction factor"""
+    if x <= 0.05:
+        return 1
+    elif x <= 0.1:
+        return 0.95
+    elif x <= 0.2:
+        return 0.9
+    elif x <= 0.3:
+        return 0.85
+    elif x <= 0.4:
+        return 0.8
+    elif x <= 0.5:
+        return 0.5
+    elif x <=1:
+        return 0.25
+    else:
+        return 0.1
+
+
+def spelling_error_step_function(x):
+    """Mapping of spelling error per word to correction factor"""
+    if x <= 0.01:
+        return 1.0
+    elif x <= 0.02:
+        return 0.95
+    elif x <= 0.03:
+        return 0.9
+    elif x <= 0.05:
+        return 0.85
+    elif x <= 0.075:
+        return 0.8
+    else:
+        return 0.7
+
+
+def vote_score_step_function(x):
+    """Mapping of current votes to correction factor"""
+    if x >= 20:
+        return 1.0
+    elif x >= 10:
+        return 0.95
+    elif x >= 5:
+        return 0.9
+    else:
+        return 0.5
+
+
+def reward_score_step_function(x):
+    """Mapping of current reward to correction factor"""
+    if x >= 10:
+        return 0.9
+    elif x >= 1.0:
+        return 1.0
+    elif x >= 0.5:
+        return 0.9
+    else:
+        return 0.4
+
+
+def compute_rank_score(post_frame, min_max_tag_factor, ncores=2, chunksize=500):
+    """ Computes the ranks score too sort the truffles for the top list
+
+    Parameters
+    ----------
+    post_frame: DataFrame
+    min_max_tag_factor: float tuple
+        Adjustment factors to favor less popular tags
+    ncores: int
+    chunksize: int
+
+    Returns
+    -------
+    Series of ranks score
+        The score is reward_difference * adjustment
+        and adjustment=tag_factor*vote_factor*reward_factor*spelling_errors_factor*grammar_factor
+
+    """
+    logger.info('Computing tag factor...')
+    tag_factor = compute_tag_factor(post_frame, min_max_tag_factor=min_max_tag_factor)
+
+    logger.info('Computing vote factor...')
+    vote_factor = post_frame.votes.apply(lambda x: vote_score_step_function(x))
+
+    logger.info('Computing reward factor...')
+    reward_factor = post_frame.reward.apply(lambda x: reward_score_step_function(x))
+
+    logger.info('Computing spelling mistake factor...')
+    spelling_errors_factor = post_frame.errors_per_word.apply(lambda x:
+                                                              spelling_error_step_function(x))
+
+    logger.info('Applying grammar check...')
+    checker = tfsm.GrammarErrorCounter()
+    errors_per_character = apply_parallel(checker.count_mistakes_per_character,
+                                          post_frame.filtered_body,
+                                          ncores=ncores,
+                                          chunksize=chunksize)
+    gramma_errors_per_sentence = errors_per_character * post_frame.body_length / post_frame.num_sentences
+    post_frame['grammar_errors_per_sentence'] = gramma_errors_per_sentence
+    grammar_factor = gramma_errors_per_sentence.apply(lambda x: grammar_score_step_function(x))
+
+    logger.info('...Done combining reward difference and factors')
+    result = post_frame.reward_difference
+    final_factor = grammar_factor * reward_factor * vote_factor * tag_factor * spelling_errors_factor
+    # increase negative values for low factors:
+    final_factor.loc[result < 0] = 1.0 / final_factor.loc[result < 0]
+    result = result * final_factor
+    post_frame['rank_score'] = result
+    return post_frame
+
+
 def find_truffles(post_frame, pipeline, account='trufflepig',
-                  min_max_reward=(0.5, 25),
-                  min_votes=10, max_grammar_errors_per_sentence=0.4, k=10,
-                  ncores=2, chunksize=500):
+                  min_max_tag_factor=(0.5, 2.0),
+                  k=25, ncores=2, chunksize=500):
     """ Digs for truffles, i.e. underpaid posts
 
     Filtering happens in place
@@ -565,13 +715,8 @@ def find_truffles(post_frame, pipeline, account='trufflepig',
     pipeline: trained scikit pipeline
     account: str
         The name of the bot account (it should not list itself)
-    min_max_reward: tuple of float
-        Min/Max Reward range truffles should be in
-    min_votes: int
-        Minimum number of votes a truffle needs to have
-    max_grammar_errors_per_sentence: float
-        Maximum number of grammar errors per sentence that a truffle is
-        allowed to have
+    min_max_tag_factor: tuple of float
+        minimum and maximum bonus factors for scarce or often used tags
     k: int
         Logs the first k truffles to console
     ncores: int
@@ -588,26 +733,10 @@ def find_truffles(post_frame, pipeline, account='trufflepig',
 
     """
     logger.info('Looking for truffles in frame of shape {} '
-                'and filtering preprocessed data further. '
-                'min max reward {} and min votes '
-                '{} and posts by '
-                'myself'.format(post_frame.shape, min_max_reward, min_votes))
-    to_drop = post_frame.loc[(post_frame.reward < min_max_reward[0]) |
-                                (post_frame.reward > min_max_reward[1]) |
-                                (post_frame.votes < min_votes) |
-                                (post_frame.author == account)]
+                'and filtering osts by '
+                'myself'.format(post_frame.shape))
+    to_drop = post_frame.loc[post_frame.author == account]
 
-    post_frame.drop(to_drop.index, inplace=True)
-    logger.info('Kept {} posts'.format(len(post_frame)))
-
-    logger.info('Filtering according to grammar check')
-    checker = tfsm.GrammarErrorCounter()
-    errors_per_character = apply_parallel(checker.count_mistakes_per_character,
-                                          post_frame.filtered_body,
-                                          ncores=ncores,
-                                          chunksize=chunksize)
-    errors_per_sentence = errors_per_character * post_frame.body_length / post_frame.num_sentences
-    to_drop = post_frame.loc[errors_per_sentence > max_grammar_errors_per_sentence]
     post_frame.drop(to_drop.index, inplace=True)
     logger.info('Kept {} posts'.format(len(post_frame)))
 
@@ -618,31 +747,34 @@ def find_truffles(post_frame, pipeline, account='trufflepig',
     post_frame['predicted_votes'] = predicted_rewards_and_votes[:, 1]
     post_frame['reward_difference'] = post_frame.predicted_reward - post_frame.reward
 
-    to_drop = post_frame.loc[post_frame.reward_difference < 0]
-    logger.info('Dropping {} negative differences'.format(len(to_drop)))
-    post_frame.drop(to_drop.index, inplace=True)
+    logger.info('Computing rank score')
+    post_frame = compute_rank_score(post_frame, min_max_tag_factor=min_max_tag_factor,
+                                    ncores=ncores, chunksize=chunksize)
 
-    post_frame = post_frame.sort_values('reward_difference', ascending=False)
+    post_frame = post_frame.sort_values('rank_score', ascending=False)
 
     for irun in range(min(k, len(post_frame))):
         row = post_frame.iloc[irun]
-        logger.info('\n\n----------------------------------------------'
+        truffle_str = ('\n\n----------------------------------------------'
                     '--------------------------------------------------'
                     '\n----------------------------------------------'
                     '--------------------------------------------------'
                     '\n----------------------------------------------'
                     '--------------------------------------------------'
                     '\n############ {} ############'.format(row.title))
-        logger.info('https://steemit.com/@{}/{}'.format(row.author,
-                                                        row.permalink))
-        logger.info('Estimated Reward: {} vs. {}; Estimated votes {} vs. '
-                    '{}'.format(row.predicted_reward, row.reward,
-                                row.predicted_votes, row.votes))
-        logger.info('\n-------------------------------------------------'
+        truffle_str += '\nhttps://steemit.com/@{}/{}'.format(row.author,
+                                                        row.permalink)
+        truffle_str +=('\nEstimated Reward: {:.2f} vs. {:.2f}; Estimated votes {:d} vs. '
+                    '{:d} and a rank score of '
+                    '{:.2f}'.format(row.predicted_reward, row.reward,
+                                int(row.predicted_votes), int(row.votes),
+                                row.rank_score))
+        truffle_str += ('\n\n-------------------------------------------------'
+                    '---------------------------------------------------\n\n')
+        truffle_str += row.body[:1000]
+        truffle_str += ('\n\n-------------------------------------------------'
                     '---------------------------------------------------\n')
-        logger.info(row.body[:1000])
-        logger.info('\n-------------------------------------------------'
-                    '---------------------------------------------------\n')
+        logger.info(truffle_str)
 
     return post_frame
 

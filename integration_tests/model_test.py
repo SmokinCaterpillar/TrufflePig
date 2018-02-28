@@ -1,11 +1,14 @@
 import os
 
 import pandas as pd
+import numpy as np
 import pytest
 
 from tests.fixtures.random_data import create_n_random_posts
 import trufflepig.model as tpmo
 import trufflepig.preprocessing as tppp
+import trufflepig.bchain.getdata as tpbg
+from integration_tests.bchain.getdata_test import steem_kwargs
 
 
 @pytest.fixture
@@ -136,8 +139,24 @@ def test_find_truffles():
 
     post_frame = pd.DataFrame(posts)
     post_frame = tppp.preprocess(post_frame, ncores=4, chunksize=50)
-    truffles = tpmo.find_truffles(post_frame, pipeline, account='aa',
-                                    min_max_reward=(0,100),
-                                  max_grammar_errors_per_sentence=5)
+    truffles = tpmo.find_truffles(post_frame, pipeline, account='aa')
 
-    assert truffles.iloc[0].reward_difference == truffles.reward_difference.max()
+    assert truffles.iloc[0].rank_score == truffles.rank_score.max()
+
+
+class MockPipeline(object):
+    def predict(self, df):
+        predicted_reward = (df.reward * (0.5 + np.random.rand(len(df)))).values
+        predicted_votes = (df.votes * (0.5 + np.random.rand(len(df)))).values
+        return np.concatenate([predicted_reward[:, np.newaxis],
+                               predicted_votes[:, np.newaxis]], axis=1)
+
+
+def test_find_truffles_with_real_data(steem_kwargs):
+    df = tpbg.scrape_hour_data(steem_kwargs, stop_after=20)
+
+    df = tppp.preprocess(df)
+
+    sorted = tpmo.find_truffles(df, MockPipeline())
+
+    assert sorted.rank_score.iloc[0] == sorted.rank_score.max()

@@ -87,7 +87,7 @@ def preprocess(post_df, ncores=4, chunksize=500,
                min_max_num_words=(100, 7500),
                min_max_num_sentences=(5, 750),
                min_max_words_per_paragraph=(20, 500),
-               max_erros_per_word=0.1,
+               max_errors_per_word=0.1,
                min_max_average_punctuation=(1.05, 5),
                min_max_average_sentence_length=(10, 300),
                filter_tags=FILTER_TAGS):
@@ -128,7 +128,7 @@ def preprocess(post_df, ncores=4, chunksize=500,
         Boundaries of number of sentences
     min_max_words_per_paragraph:
         Boundaries for min max average words per paragraph
-    max_erros_per_word: float
+    max_errors_per_word: float
         Threshold of maximum spelling errors per word allowed
     min_max_average_punctuation: tuple of float
         Boundaries for average punctuation per sentence
@@ -311,10 +311,10 @@ def preprocess(post_df, ncores=4, chunksize=500,
 
     logger.info('Computing mistakes per word')
     post_df['errors_per_word'] = post_df.num_spelling_errors / post_df.num_words
-    to_drop = post_df.loc[post_df.errors_per_word > max_erros_per_word]
+    to_drop = post_df.loc[post_df.errors_per_word > max_errors_per_word]
     post_df.drop(to_drop.index, inplace=True)
     logger.info('Filtered according to spelling mistake limit {} per word '
-                'kept {} posts.'.format(max_erros_per_word, len(post_df)))
+                'kept {} posts.'.format(max_errors_per_word, len(post_df)))
 
     logger.info('Intermediate garbage collection.')
     gc.collect()
