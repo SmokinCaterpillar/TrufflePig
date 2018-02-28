@@ -56,7 +56,7 @@ def main():
     # topic_model = pipe.named_steps['feature_generation'].transformer_list[1][1]
     # logging.getLogger().info(topic_model.print_topics(n_best=None))
 
-    tpmo.find_truffles(test_frame, pipe, min_votes=5)
+    tpmo.find_truffles(test_frame, pipe)
 
 
 if __name__ == '__main__':

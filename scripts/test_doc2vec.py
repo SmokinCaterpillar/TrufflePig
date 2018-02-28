@@ -48,7 +48,7 @@ def main():
                          regressor_kwargs=regressor_kwargs, targets=['reward', 'votes'])
 
 
-    tpmo.find_truffles(test_frame, pipe, min_votes=0)
+    tpmo.find_truffles(test_frame, pipe)
 
 
 if __name__ == '__main__':
