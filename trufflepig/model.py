@@ -566,7 +566,7 @@ def compute_tag_factor(post_frame, min_max_tag_factor):
         tag_factor = average_tag_count / tag_counts[tag]
         if tag_factor < min_max_tag_factor[0]:
             tag_factor = min_max_tag_factor[0]
-        elif tag_factor >= min_max_tag_factor[1]:
+        elif tag_factor > min_max_tag_factor[1]:
             tag_factor = min_max_tag_factor[1]
         tag_factors[tag] = tag_factor
 
@@ -646,7 +646,7 @@ def compute_rank_score(post_frame, min_max_tag_factor, ncores=2, chunksize=500):
 
 
 def find_truffles(post_frame, pipeline, account='trufflepig',
-                  min_max_tag_factor=(0.5, 1.5),
+                  min_max_tag_factor=(0.5, 2.0),
                   k=25, ncores=2, chunksize=500):
     """ Digs for truffles, i.e. underpaid posts
 
