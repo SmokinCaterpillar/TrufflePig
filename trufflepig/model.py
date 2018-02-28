@@ -589,24 +589,24 @@ def compute_tag_measure(post_frame):
 
 def tag_measure_step_function(x):
     """Mapping from tag measure to correction factor"""
-    if x <= 0.01:
+    if x <= 0.1:
         return 1.0
-    elif x <= 0.03:
-        return 0.95
-    elif x <= 0.05:
-        return 0.9
-    elif x <= 0.1:
-        return 0.85
     elif x <= 0.2:
-        return 0.8
+        return 0.95
     elif x <= 0.3:
-        return 0.75
+        return 0.9
     elif x <= 0.4:
-        return 0.7
+        return 0.85
     elif x <= 0.5:
-        return 0.65
+        return 0.8
     elif x <= 0.6:
+        return 0.7
+    elif x <= 0.7:
+        return 0.65
+    elif x <= 0.8:
         return 0.6
+    elif x <= 0.9:
+        return 0.55
     else:
         return 0.5
 
