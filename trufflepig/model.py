@@ -630,8 +630,10 @@ def compute_rank_score(post_frame, min_max_tag_factor, ncores=2, chunksize=500):
     grammar_factor = gramma_errors_per_sentence.apply(lambda x: grammar_score_step_function(x))
 
     logger.info('...Done combining reward difference and factors')
-    result = post_frame.reward_difference - post_frame.reward_difference.min()
+    result = post_frame.reward_difference
     final_factor = grammar_factor * reward_factor * vote_factor * tag_factor
+    # increase negative values for low factors:
+    final_factor.loc[result < 0] = 1.0 / final_factor.loc[result < 0]
     result = result * final_factor
     post_frame['rank_score'] = result
     return post_frame
