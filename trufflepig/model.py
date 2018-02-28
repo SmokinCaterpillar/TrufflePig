@@ -551,14 +551,29 @@ def load_or_train_pipeline(post_frame, directory, current_datetime=None,
 
 
 def compute_tag_factor(post_frame, min_max_tag_factor):
+    """ Computes adjustment factor for tags
+
+    Parameters
+    ----------
+    post_frame: DataFrame
+    min_max_tag_factor: tuple of floats
+
+    Returns
+    -------
+    Each tag is weighted by its relative frequency and the tag factor is the
+    average of these factors
+
+    """
     unique_tags = {x  for y in post_frame.tags for x in y}
     logger.info('...found {} unique tags...'.format(len(unique_tags)))
     tag_counts = {}
 
+    # First get unique tags
     for tag in unique_tags:
         tag_count = post_frame.tags.apply(lambda x: tag in x).sum()
         tag_counts[tag] = tag_count
 
+    # Second compute the frequency and correction facto for each tag
     tag_factors = {}
     average_tag_count = np.mean(list(tag_counts.values()))
     logger.info('...average count per tag is {}...'.format(average_tag_count))
@@ -570,30 +585,33 @@ def compute_tag_factor(post_frame, min_max_tag_factor):
             tag_factor = min_max_tag_factor[1]
         tag_factors[tag] = tag_factor
 
+    # The tag factor of a post is the average of the factors of its tags
     factors = post_frame.tags.apply(lambda x: np.mean([tag_factors[y] for y in x]))
     return factors
 
 
 def grammar_score_step_function(x):
-        if x <= 0.05:
-            return 1
-        elif x <= 0.1:
-            return 0.95
-        elif x <= 0.2:
-            return 0.9
-        elif x <= 0.3:
-            return 0.85
-        elif x <= 0.4:
-            return 0.8
-        elif x <= 0.5:
-            return 0.5
-        elif x <=1:
-            return 0.25
-        else:
-            return 0.1
+    """Mapping from grammar errors per sentence to correction factor"""
+    if x <= 0.05:
+        return 1
+    elif x <= 0.1:
+        return 0.95
+    elif x <= 0.2:
+        return 0.9
+    elif x <= 0.3:
+        return 0.85
+    elif x <= 0.4:
+        return 0.8
+    elif x <= 0.5:
+        return 0.5
+    elif x <=1:
+        return 0.25
+    else:
+        return 0.1
 
 
 def spelling_error_step_function(x):
+    """Mapping of spelling error per word to correction factor"""
     if x <= 0.01:
         return 1.0
     elif x <= 0.02:
@@ -609,6 +627,7 @@ def spelling_error_step_function(x):
 
 
 def vote_score_step_function(x):
+    """Mapping of current votes to correction factor"""
     if x >= 20:
         return 1.0
     elif x >= 10:
@@ -620,6 +639,7 @@ def vote_score_step_function(x):
 
 
 def reward_score_step_function(x):
+    """Mapping of current reward to correction factor"""
     if x >= 10:
         return 0.9
     elif x >= 1.0:
@@ -631,6 +651,23 @@ def reward_score_step_function(x):
 
 
 def compute_rank_score(post_frame, min_max_tag_factor, ncores=2, chunksize=500):
+    """ Computes the ranks score too sort the truffles for the top list
+
+    Parameters
+    ----------
+    post_frame: DataFrame
+    min_max_tag_factor: float tuple
+        Adjustment factors to favor less popular tags
+    ncores: int
+    chunksize: int
+
+    Returns
+    -------
+    Series of ranks score
+        The score is reward_difference * adjustment
+        and adjustment=tag_factor*vote_factor*reward_factor*spelling_errors_factor*grammar_factor
+
+    """
     logger.info('Computing tag factor...')
     tag_factor = compute_tag_factor(post_frame, min_max_tag_factor=min_max_tag_factor)
 
