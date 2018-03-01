@@ -51,7 +51,7 @@ def topN_list(topN_authors, topN_permalinks, topN_titles,
         title = tftf.replace_newlines(title)
         title = tftf.filter_special_characters(title)
         if len(img_urls) >= 1:
-            imgstr = """ <div class="pull-left"><img src="{img}" /></div>\n\n    """.format(img=img_urls[0])
+            imgstr = """ <div class="pull-right"><img src="{img}" /></div>\n\n    """.format(img=img_urls[0])
         else:
             imgstr=''
         entry = topN_entry.format(rank=rank, author=author, permalink=permalink,
