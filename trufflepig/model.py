@@ -572,13 +572,13 @@ def compute_tag_factor(tags, punish_list):
 
     Returns
     -------
-    For each tag found in the `punish_list` the factor is multiplied by 0.89
+    For each tag found in the `punish_list` the factor is multiplied by 0.85
 
     """
     tag_factor = tags.apply(lambda x: 1.0)
     for to_punish in punish_list:
         logger.info('...punishing {}...'.format(to_punish))
-        tag_factor *= tags.apply(lambda x: 1 if to_punish not in x else 0.89)
+        tag_factor *= tags.apply(lambda x: 1 if to_punish not in x else 0.85)
     return tag_factor
 
 
@@ -627,13 +627,13 @@ def vote_score_step_function(x):
     elif x >= 5:
         return 0.9
     else:
-        return 0.5
+        return 0.4
 
 
 def reward_score_step_function(x):
     """Mapping of current reward to correction factor"""
     if x >= 10:
-        return 0.8
+        return 0.85
     elif x >= 1.0:
         return 1.0
     elif x >= 0.5:
