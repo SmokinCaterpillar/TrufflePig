@@ -743,8 +743,16 @@ def find_truffles(post_frame, pipeline, account='trufflepig',
     post_frame = compute_rank_score(post_frame, punish_list=punish_list,
                                     ncores=ncores, chunksize=chunksize)
 
-    post_frame = post_frame.sort_values('rank_score', ascending=False)
+    post_frame.sort_values('rank_score', ascending=False, inplace=True)
 
+    log_truffle_info(post_frame, k)
+
+    return post_frame
+
+
+def log_truffle_info(post_frame, k):
+    """ Helper function to log found truffles to console """
+    logger.info('\n\nDETAILED TRUFFLE INFO\n')
     for irun in range(min(k, len(post_frame))):
         row = post_frame.iloc[irun]
         truffle_str = ('\n\n----------------------------------------------'
@@ -753,7 +761,8 @@ def find_truffles(post_frame, pipeline, account='trufflepig',
                     '--------------------------------------------------'
                     '\n----------------------------------------------'
                     '--------------------------------------------------'
-                    '\n############ {} ############'.format(row.title))
+                    '\n############ RANK {}: {} ############'.format(irun + 1 ,
+                                                                     row.title))
         truffle_str += '\nhttps://steemit.com/@{}/{}'.format(row.author,
                                                         row.permalink)
         truffle_str +=('\nEstimated Reward: {:.2f} vs. {:.2f}; Estimated votes {:d} vs. '
@@ -768,7 +777,17 @@ def find_truffles(post_frame, pipeline, account='trufflepig',
                     '---------------------------------------------------\n')
         logger.info(truffle_str)
 
-    return post_frame
+    logger.info('\n\nTRUFFLE SUMMARY\n')
+    for irun in range(min(k, len(post_frame))):
+        truffle_str = '\n\n### RANK {}: {}'.format(irun + 1 , row.title)
+        truffle_str += '\nhttps://steemit.com/@{}/{}'.format(row.author,
+                                                        row.permalink)
+        truffle_str +=('\nEstimated Reward: {:.2f} vs. {:.2f}; Estimated votes {:d} vs. '
+                    '{:d} and a rank score of '
+                       '{:.2f}'.format(row.predicted_reward, row.reward,
+                                int(row.predicted_votes), int(row.votes),
+                                row.rank_score))
+        logger.info(truffle_str)
 
 
 def log_pipeline_info(pipeline,  features=FEATURES, num_topics=256):
