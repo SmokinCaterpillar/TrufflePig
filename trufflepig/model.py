@@ -779,6 +779,7 @@ def log_truffle_info(post_frame, k):
 
     logger.info('\n\nTRUFFLE SUMMARY\n')
     for irun in range(min(k, len(post_frame))):
+        row = post_frame.iloc[irun]
         truffle_str = '\n\n### RANK {}: {}'.format(irun + 1 , row.title)
         truffle_str += '\nhttps://steemit.com/@{}/{}'.format(row.author,
                                                         row.permalink)
