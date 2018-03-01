@@ -22,6 +22,9 @@ EXCLUSION_VOTERS_SET = {'cheetah'}
 FILENAME_TEMPLATE = 'steemit_posts__{time}.gz'
 
 
+################################### Block Utils #################################
+
+
 def check_and_convert_steem(steem_or_args_kwargs):
     """Turns arguments into steem or just leaves steem as it is"""
     if isinstance(steem_or_args_kwargs, dict):
@@ -141,6 +144,9 @@ def get_block_headers_between(start_datetime, end_datetime, steem):
     return get_block_headers_between_offset_start(start_datetime, end_datetime,
                                                   steem=steem,
                                                   end_offset_num=end_offset_num)
+
+
+################################### Post Data #################################
 
 
 def extract_authors_and_permalinks(operations):
@@ -581,3 +587,33 @@ def scrape_hour_data(steem_or_args,
                 'window, but before {}'.format(len(to_drop), start_datetime))
     post_frame.drop(to_drop.index, inplace=True)
     return post_frame
+
+
+################################ Comment Data #################################
+
+
+def extract_parent_authors_and_permalinks(operations, account, steem):
+    """Takes a list of ops and returns a set of author and permalink tuples"""
+    authors_and_permalinks = set()
+    for operation in operations:
+        op = operation['op']
+        if op[0] == 'comment':
+            body = op[1]['body']
+            if body == '@' + account:
+                comment_author = op[1]['author']
+                comment_permalink = op[1]['permlink']
+                comment = Post('@{}/{}'.format(comment_author, comment_permalink), steem)
+                replies = comment.steemd.get_content_replies(comment.author,
+                                                             comment.permlink)
+                if any(reply['author'] == account for reply in replies):
+                    continue
+
+                parent_author = comment.parent_author
+                parent_permalink = comment.parent_permlink
+
+                post
+
+
+            #authors_and_permalinks.add((author, permalink))
+    return authors_and_permalinks
+

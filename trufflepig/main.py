@@ -44,7 +44,7 @@ def load_and_preprocess_2_frames(log_directory, current_datetime, steem_kwargs,
                                  data_directory, offset_days=8,
                                  days=5, days2=5):
     """ Function to load and preprocess the time span split into 2
-    for better memory footpring
+    for better memory footprint
 
     Parameters
     ----------
