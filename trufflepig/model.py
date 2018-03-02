@@ -191,8 +191,8 @@ class TopicModel(BaseEstimator):
         Maximum number of elements kept after filtering
 
     """
-    def __init__(self, no_below, no_above, num_topics, prune_at=2000000,
-                 keep_n=2000000):
+    def __init__(self, no_below, no_above, num_topics,
+                 prune_at=2000000, keep_n=200000):
         self.num_topics = num_topics
         self.no_below = no_below
         self.no_above = no_above
@@ -310,6 +310,7 @@ def create_ngrams(tokens, n):
 
 
 def create_skip_bigrams(tokens, s):
+    """Creates skip grams, not used in production"""
     if s == -1:
         return tokens
     end = s + 2
@@ -320,7 +321,7 @@ class NGramTopicModel(TopicModel):
     """ Gensim Latent Semantic Indexing wrapper for scikit API
 
     Augments the standard model by increasing the token list by
-    ngram tokens up to n.
+    ngram tokens.
 
     Parameters
     ----------
@@ -330,12 +331,16 @@ class NGramTopicModel(TopicModel):
         Filters that a token should occur in less than `no_above` documents
     num_topics: int
         Dimensionality of topic space
-    n : int
-        Maximum ngram size
+    prune_at: int
+        Maximum dict size during construction
+    keep_n: int
+        Maximum dict size after filtering
+    ngrams : tuple of int
+        The ngrams to use e.g. (1,2) for normal tokens and bigrams
 
     """
     def __init__(self, no_below, no_above, num_topics, prune_at=5000000,
-                 keep_n=400000, ngrams=(1,2)):
+                 keep_n=300000, ngrams=(1,2)):
         super().__init__(no_below=no_below,
                          no_above=no_above,
                          num_topics=num_topics,
@@ -354,7 +359,7 @@ class NGramTopicModel(TopicModel):
 
         Returns
         -------
-        iterator over ngrams
+        list of generators over ngrams
 
         """
         logger.info('Computing {} Grams'.format(self.ngrams))
@@ -393,56 +398,6 @@ class NGramTopicModel(TopicModel):
         """
         ngram_tokens = self.add_ngrams(tokens)
         return super().fill_dictionary(ngram_tokens)
-
-
-# class SkipBiGramTopicModel(NGramTopicModel):
-#     """ Gensim Latent Semantic Indexing wrapper for scikit API
-#
-#     Augments the standard model by increasing the token list by
-#     ngram tokens up to n.
-#
-#     Parameters
-#     ----------
-#     no_below: int
-#         Filters according to minimum number of times a token must appear
-#     no_above: float
-#         Filters that a token should occur in less than `no_above` documents
-#     num_topics: int
-#         Dimensionality of topic space
-#     n : int
-#         Maximum ngram size
-#
-#     """
-#     def __init__(self, no_below, no_above, num_topics, prune_at=5000000,
-#                  keep_n=250000, s=2):
-#         super().__init__(no_below=no_below,
-#                          no_above=no_above,
-#                          num_topics=num_topics,
-#                          keep_n=keep_n,
-#                          prune_at=prune_at,
-#                          n=None)
-#         self.s = s
-#
-#     def add_ngrams(self, tokens):
-#         """ Appends ngram tokens to the original ones
-#
-#         Parameters
-#         ----------
-#         tokens list of str
-#
-#         Returns
-#         -------
-#         iterator over ngrams
-#
-#         """
-#         logger.info('Computing Skip-N-Grams with up to {} skips'.format(self.s))
-#         result_tokens = []
-#         for doc_tokens in tokens:
-#             ngrams = []
-#             for irun in range(0, self.s + 1):
-#                 ngrams.append(create_skip_bigrams(doc_tokens, irun))
-#             result_tokens.append(itertools.chain(*ngrams))
-#         return result_tokens
 
 
 class FeatureSelector(BaseEstimator):

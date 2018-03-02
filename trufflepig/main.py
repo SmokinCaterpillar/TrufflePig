@@ -134,7 +134,8 @@ def main():
                               max_features=0.2, n_jobs=-1, verbose=1,
                               random_state=42)
 
-    topic_kwargs = dict(num_topics=128, no_below=7, no_above=0.1)
+    topic_kwargs = dict(num_topics=128, no_below=7, no_above=0.1,
+                        ngrams=(1,2), keep_n=300000)
 
     pipeline = tpmo.load_or_train_pipeline(post_frame, model_directoy,
                                            current_datetime,
