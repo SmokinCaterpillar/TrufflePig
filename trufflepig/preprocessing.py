@@ -24,6 +24,10 @@ FILTER_TAGS = ('mitnebcurationtrail', 'informationwar', 'truth', 'conspiracy',
                'bible', 'faith', 'spiritual', 'christianity')
 
 
+# Stay out of the whale wars!
+FILTER_AUTHORS = ('haejin',)
+
+
 def filter_duplicates(frame):
     """ Filters out duplicate entries based on author and permalink
 
@@ -90,7 +94,8 @@ def preprocess(post_df, ncores=4, chunksize=500,
                max_errors_per_word=0.1,
                min_max_average_punctuation=(1.05, 5),
                min_max_average_sentence_length=(10, 300),
-               filter_tags=FILTER_TAGS):
+               filter_tags=FILTER_TAGS,
+               filter_authors=FILTER_AUTHORS):
     """ Preprocessing of raw steemit posts, filters and adds features
 
     All filtering happening inplace!
@@ -137,6 +142,8 @@ def preprocess(post_df, ncores=4, chunksize=500,
     filter_tags: tuple of string
         Tags to be filtered like 'sex', 'nsfw' or controversial stuff like
         'vaccines'.
+    filter_authors: tuple of string
+        Authors to be filtered...
 
     Returns
     -------
@@ -145,6 +152,13 @@ def preprocess(post_df, ncores=4, chunksize=500,
     """
     logger.info('Filtering duplicates of {} posts'.format(len(post_df)))
     post_df = filter_duplicates(post_df)
+
+    logger.info('Filtering authors {}'.format(filter_authors))
+    filter_authors = set(filter_authors)
+    author_filter = post_df.author.apply(lambda x: x in filter_authors)
+    to_drop = post_df.loc[author_filter]
+    post_df.drop(to_drop.index, inplace=True)
+    logger.info('Kept {} posts'.format(len(post_df)))
 
     logger.info('Filtering tags {}'.format(filter_tags))
     filter_tags = set(filter_tags)
