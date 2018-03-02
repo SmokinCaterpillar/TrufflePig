@@ -328,7 +328,7 @@ class NGramTopicModel(TopicModel):
 
     """
     def __init__(self, no_below, no_above, num_topics, prune_at=5000000,
-                 keep_n=250000, n=4):
+                 keep_n=250000, n=3):
         super().__init__(no_below=no_below,
                          no_above=no_above,
                          num_topics=num_topics,
