@@ -1,5 +1,6 @@
 import logging
 import os
+import itertools
 
 import numpy as np
 import pandas as pd
@@ -185,14 +186,18 @@ class TopicModel(BaseEstimator):
     num_topics: int
         Dimensionality of topic space
     prune_at: int
-        Maximum number of elements in dictionary
+        Maximum number of elements in dictionary during creation
+    keep_n: int
+        Maximum number of elements kept after filtering
 
     """
-    def __init__(self, no_below, no_above, num_topics, prune_at=2000000):
+    def __init__(self, no_below, no_above, num_topics, prune_at=2000000,
+                 keep_n=2000000):
         self.num_topics = num_topics
         self.no_below = no_below
         self.no_above = no_above
         self.prune_at = prune_at
+        self.keep_n = keep_n
         self.lsi = None
         self.disctionary = None
 
@@ -211,8 +216,8 @@ class TopicModel(BaseEstimator):
         """
         return [self.dictionary.doc2bow(text) for text in tokens]
 
-    def train(self, tokens):
-        """ Trains the LSI model
+    def fill_dictionary(self, tokens):
+        """ Fills a dictionary
 
         Parameters
         ----------
@@ -222,7 +227,18 @@ class TopicModel(BaseEstimator):
         """
         self.dictionary = corpora.Dictionary(tokens, prune_at=self.prune_at)
         self.dictionary.filter_extremes(self.no_below, self.no_above,
-                                        keep_n=self.prune_at)
+                                        keep_n=self.keep_n)
+
+    def train(self, tokens):
+        """ Trains the LSI model
+
+        Parameters
+        ----------
+        tokens: list of list of str
+            e.g. [['hi', 'ho'], ['my', 'name', ...], ...]
+
+        """
+        self.fill_dictionary(tokens)
         corpus = self.to_corpus(tokens)
         self.lsi = LsiModel(corpus, num_topics=self.num_topics)
 
@@ -311,10 +327,12 @@ class NGramTopicModel(TopicModel):
         Maximum ngram size
 
     """
-    def __init__(self, no_below, no_above, num_topics, prune_at=5000000, n=2):
+    def __init__(self, no_below, no_above, num_topics, prune_at=5000000,
+                 keep_n=250000, n=4):
         super().__init__(no_below=no_below,
                          no_above=no_above,
                          num_topics=num_topics,
+                         keep_n=keep_n,
                          prune_at=prune_at)
         self.n = n
 
@@ -335,24 +353,12 @@ class NGramTopicModel(TopicModel):
         for doc_tokens in tokens:
             ngrams = []
             for irun in range(1, self.n + 1):
-                ngrams.extend(create_ngrams(doc_tokens, irun))
-            result_tokens.append(ngrams)
+                ngrams.append(create_ngrams(doc_tokens, irun))
+            result_tokens.append(itertools.chain(*ngrams))
         return result_tokens
 
-    def train(self, tokens):
-        """ Trains the LSI model
-
-        Parameters
-        ----------
-        tokens: list of list of str
-            e.g. [['hi', 'ho'], ['my', 'name', ...], ...]
-
-        """
-        ngram_tokens = self.add_ngrams(tokens)
-        return super().train(ngram_tokens)
-
-    def project(self, tokens):
-        """ Projects `tokens` into the N-dimensional LSI space
+    def to_corpus(self, tokens):
+        """ Transfers a list of tokens into the Gensim corpus representation
 
         Parameters
         ----------
@@ -361,12 +367,23 @@ class NGramTopicModel(TopicModel):
 
         Returns
         -------
-        lsi projection
+        list of Bag of Words representations
 
         """
         ngram_tokens = self.add_ngrams(tokens)
-        return super().project(ngram_tokens)
+        return super().to_corpus(ngram_tokens)
 
+    def fill_dictionary(self, tokens):
+        """ Fills a dictionary
+
+        Parameters
+        ----------
+        tokens: list of list of str
+            e.g. [['hi', 'ho'], ['my', 'name', ...], ...]
+
+        """
+        ngram_tokens = self.add_ngrams(tokens)
+        return super().fill_dictionary(ngram_tokens)
 
 
 class FeatureSelector(BaseEstimator):
