@@ -1,6 +1,5 @@
 import logging
 import os
-import operator
 
 import numpy as np
 import pandas as pd
@@ -185,12 +184,15 @@ class TopicModel(BaseEstimator):
         Filters that a token should occur in less than `no_above` documents
     num_topics: int
         Dimensionality of topic space
+    prune_at: int
+        Maximum number of elements in dictionary
 
     """
-    def __init__(self, no_below, no_above, num_topics):
+    def __init__(self, no_below, no_above, num_topics, prune_at=2000000):
         self.num_topics = num_topics
         self.no_below = no_below
         self.no_above = no_above
+        self.prune_at = prune_at
         self.lsi = None
         self.disctionary = None
 
@@ -218,8 +220,9 @@ class TopicModel(BaseEstimator):
             e.g. [['hi', 'ho'], ['my', 'name', ...], ...]
 
         """
-        self.dictionary = corpora.Dictionary(tokens)
-        self.dictionary.filter_extremes(self.no_below, self.no_above)
+        self.dictionary = corpora.Dictionary(tokens, prune_at=self.prune_at)
+        self.dictionary.filter_extremes(self.no_below, self.no_above,
+                                        keep_n=self.prune_at)
         corpus = self.to_corpus(tokens)
         self.lsi = LsiModel(corpus, num_topics=self.num_topics)
 
@@ -280,6 +283,92 @@ class TopicModel(BaseEstimator):
         return result
 
 
+def create_ngrams(tokens, n):
+    """Converts tokens to ngrams with white space separator
+
+    Returns generator for n > 1
+    """
+    if n == 1:
+        return tokens
+    return (' '.join(tokens[irun:irun + n]) for irun in range(len(tokens) - n + 1))
+
+
+class NGramTopicModel(TopicModel):
+    """ Gensim Latent Semantic Indexing wrapper for scikit API
+
+    Augments the standard model by increasing the token list by
+    ngram tokens up to n.
+
+    Parameters
+    ----------
+    no_below: int
+        Filters according to minimum number of times a token must appear
+    no_above: float
+        Filters that a token should occur in less than `no_above` documents
+    num_topics: int
+        Dimensionality of topic space
+    n : int
+        Maximum ngram size
+
+    """
+    def __init__(self, no_below, no_above, num_topics, prune_at=5000000, n=2):
+        super().__init__(no_below=no_below,
+                         no_above=no_above,
+                         num_topics=num_topics,
+                         prune_at=prune_at)
+        self.n = n
+
+    def add_ngrams(self, tokens):
+        """ Appends ngram tokens to the original ones
+
+        Parameters
+        ----------
+        tokens list of str
+
+        Returns
+        -------
+        iterator over ngrams
+
+        """
+        logger.info('Computing N Grams up to {}'.format(self.n))
+        result_tokens = []
+        for doc_tokens in tokens:
+            ngrams = []
+            for irun in range(1, self.n + 1):
+                ngrams.extend(create_ngrams(doc_tokens, irun))
+            result_tokens.append(ngrams)
+        return result_tokens
+
+    def train(self, tokens):
+        """ Trains the LSI model
+
+        Parameters
+        ----------
+        tokens: list of list of str
+            e.g. [['hi', 'ho'], ['my', 'name', ...], ...]
+
+        """
+        ngram_tokens = self.add_ngrams(tokens)
+        return super().train(ngram_tokens)
+
+    def project(self, tokens):
+        """ Projects `tokens` into the N-dimensional LSI space
+
+        Parameters
+        ----------
+        tokens: list of list of str
+            e.g. [['hi', 'ho'], ['my', 'name', ...], ...]
+
+        Returns
+        -------
+        lsi projection
+
+        """
+        ngram_tokens = self.add_ngrams(tokens)
+        return super().project(ngram_tokens)
+
+
+
 class FeatureSelector(BaseEstimator):
     """ Simply selects features from a pandas DataFrame """
     def __init__(self, features):
@@ -327,7 +416,7 @@ def create_default_pipeline(topic_kwargs, regressor_kwargs, features=FEATURES):
     feature_generation = FeatureUnion(
         transformer_list=[
             ('feature_selection', FeatureSelector(features)),
-            ('topic_model', TopicModel(**topic_kwargs)),
+            ('topic_model', NGramTopicModel(**topic_kwargs)),
         ]
     )
 
@@ -412,6 +501,7 @@ def train_pipeline(post_frame, pipeline=None,
 
 def train_test_pipeline(post_frame, pipeline=None,
                         train_size=0.8, sample_weight_function='default',
+                        random_state=None,
                         **kwargs):
     """ As above but splits into training and test set and computes test score
 
@@ -421,7 +511,8 @@ def train_test_pipeline(post_frame, pipeline=None,
 
     """
     train_frame, test_frame = train_test_split(post_frame,
-                                               train_size=train_size)
+                                               train_size=train_size,
+                                               random_state=random_state)
     targets = kwargs.get('targets', TARGETS)
     pipeline = train_pipeline(train_frame, pipeline=pipeline,
                               sample_weight_function=sample_weight_function,
