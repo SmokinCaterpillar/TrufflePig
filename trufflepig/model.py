@@ -309,6 +309,13 @@ def create_ngrams(tokens, n):
     return (' '.join(tokens[irun:irun + n]) for irun in range(len(tokens) - n + 1))
 
 
+def create_skip_bigrams(tokens, s):
+    if s == -1:
+        return tokens
+    end = s + 2
+    return (' '.join(tokens[irun:irun + end:s+1]) for irun in range(len(tokens) - end + 1))
+
+
 class NGramTopicModel(TopicModel):
     """ Gensim Latent Semantic Indexing wrapper for scikit API
 
@@ -328,13 +335,15 @@ class NGramTopicModel(TopicModel):
 
     """
     def __init__(self, no_below, no_above, num_topics, prune_at=5000000,
-                 keep_n=250000, n=3):
+                 keep_n=400000, ngrams=(1,2)):
         super().__init__(no_below=no_below,
                          no_above=no_above,
                          num_topics=num_topics,
                          keep_n=keep_n,
                          prune_at=prune_at)
-        self.n = n
+        if isinstance(ngrams, int):
+            ngrams = (ngrams,)
+        self.ngrams = ngrams
 
     def add_ngrams(self, tokens):
         """ Appends ngram tokens to the original ones
@@ -348,12 +357,12 @@ class NGramTopicModel(TopicModel):
         iterator over ngrams
 
         """
-        logger.info('Computing N Grams up to {}'.format(self.n))
+        logger.info('Computing {} Grams'.format(self.ngrams))
         result_tokens = []
         for doc_tokens in tokens:
             ngrams = []
-            for irun in range(1, self.n + 1):
-                ngrams.append(create_ngrams(doc_tokens, irun))
+            for ngram in self.ngrams:
+                ngrams.append(create_ngrams(doc_tokens, ngram))
             result_tokens.append(itertools.chain(*ngrams))
         return result_tokens
 
@@ -384,6 +393,56 @@ class NGramTopicModel(TopicModel):
         """
         ngram_tokens = self.add_ngrams(tokens)
         return super().fill_dictionary(ngram_tokens)
+
+
+# class SkipBiGramTopicModel(NGramTopicModel):
+#     """ Gensim Latent Semantic Indexing wrapper for scikit API
+#
+#     Augments the standard model by increasing the token list by
+#     ngram tokens up to n.
+#
+#     Parameters
+#     ----------
+#     no_below: int
+#         Filters according to minimum number of times a token must appear
+#     no_above: float
+#         Filters that a token should occur in less than `no_above` documents
+#     num_topics: int
+#         Dimensionality of topic space
+#     n : int
+#         Maximum ngram size
+#
+#     """
+#     def __init__(self, no_below, no_above, num_topics, prune_at=5000000,
+#                  keep_n=250000, s=2):
+#         super().__init__(no_below=no_below,
+#                          no_above=no_above,
+#                          num_topics=num_topics,
+#                          keep_n=keep_n,
+#                          prune_at=prune_at,
+#                          n=None)
+#         self.s = s
+#
+#     def add_ngrams(self, tokens):
+#         """ Appends ngram tokens to the original ones
+#
+#         Parameters
+#         ----------
+#         tokens list of str
+#
+#         Returns
+#         -------
+#         iterator over ngrams
+#
+#         """
+#         logger.info('Computing Skip-N-Grams with up to {} skips'.format(self.s))
+#         result_tokens = []
+#         for doc_tokens in tokens:
+#             ngrams = []
+#             for irun in range(0, self.s + 1):
+#                 ngrams.append(create_skip_bigrams(doc_tokens, irun))
+#             result_tokens.append(itertools.chain(*ngrams))
+#         return result_tokens
 
 
 class FeatureSelector(BaseEstimator):

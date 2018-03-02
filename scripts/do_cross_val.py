@@ -35,7 +35,8 @@ def main():
                               max_features=0.2, n_jobs=-1, verbose=1,
                               random_state=42)
 
-    topic_kwargs = dict(num_topics=128, no_below=7, no_above=0.1)
+    topic_kwargs = dict(num_topics=128, no_below=5, no_above=0.05,
+                        ngrams=2)
 
     post_frame = tppp.load_or_preprocess(post_frame, crossval_filename,
                                          ncores=8, chunksize=500,
