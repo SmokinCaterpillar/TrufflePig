@@ -1,3 +1,5 @@
+import pytest
+
 from integration_tests.bchain.getdata_test import steem_kwargs
 from integration_tests.model_test import MockPipeline
 
@@ -5,6 +7,7 @@ from integration_tests.model_test import MockPipeline
 import trufflepig.pigonduty as tppd
 
 
+@pytest.mark.skipif(config.PASSWORD is None, reason="needs posting key")
 def test_call_a_pig(steem_kwargs):
     current_datetime = '2018-03-03-18:21:30'
 
