@@ -2,6 +2,7 @@ import logging
 import multiprocessing as mp
 
 from steem import Steem
+from steem.post import Post
 
 from trufflepig.utils import progressbar
 import trufflepig.bchain.getdata as tpbg
@@ -161,3 +162,35 @@ def check_all_ops_between_parallel(start_datetime, end_datetime, steem_args,
 
     pool.join()
     return comment_authors_and_permalinks
+
+
+def get_parent_posts(comment_authors_and_permalinks, steem):
+    posts = []
+    for comment_author, comment_permalink in comment_authors_and_permalinks:
+        try:
+            comment = Post('@{}/{}'.format(comment_author,
+                                           comment_permalink), steem)
+            root_author = comment.root_author
+            root_permalink = comment.root_permlink
+
+            p = Post('@{}/{}'.format(root_author, root_permalink), steem)
+
+            post = {
+                'title': p.title,
+                'reward': p.reward.amount,
+                'votes': len(p.active_votes),
+                'created': p.created,
+                'tags': p.tags,
+                'body': p.body,
+                'author': root_author,
+                'permalink': root_permalink,
+                'comment_author': comment_author,
+                'comment_permalink': comment_permalink
+            }
+            posts.append(post)
+
+        except Exception:
+            logger.exception(('Could not work with comment {} by '
+                              '{}').format(comment_permalink, comment_author))
+
+    return posts
