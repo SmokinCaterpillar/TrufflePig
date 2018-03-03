@@ -165,6 +165,19 @@ def check_all_ops_between_parallel(start_datetime, end_datetime, steem_args,
 
 
 def get_parent_posts(comment_authors_and_permalinks, steem):
+    """ Scrapes posts where a reply mentioned the bot
+
+    Parameters
+    ----------
+    comment_authors_and_permalinks: list of tuples
+    steem: Steem object
+
+    Returns
+    -------
+    List of dict
+        Posts were the bot was mentioned in the replies
+
+    """
     posts = []
     for comment_author, comment_permalink in comment_authors_and_permalinks:
         try:

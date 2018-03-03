@@ -20,6 +20,21 @@ MAX_COMMENTS = 3000
 def call_a_pig(steem_kwargs, account, pipeline, topN_link, current_datetime,
                offset_hours=2, hours=24, max_comments=MAX_COMMENTS,
                sleep_time=20.1):
+    """ Scans for user mentioning the bot and answers
+
+    Parameters
+    ----------
+    steem_kwargs: dict
+    account: str
+    pipeline: sklearn pipeline
+    topN_link: str
+    current_datetime: datetime
+    offset_hours: int
+    hours: int
+    max_comments: int
+    sleep_time: float
+
+    """
 
     steem = tpbg.check_and_convert_steem(steem_kwargs)
 

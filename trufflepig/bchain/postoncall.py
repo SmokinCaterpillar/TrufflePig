@@ -10,18 +10,31 @@ import trufflepig.bchain.getdata as tfgd
 logger = logging.getLogger(__name__)
 
 
-I_WAS_HERE = 'Huh? Seems like already voted on this post, thanks for calling anyway!'
+I_WAS_HERE = 'Huh? Seems like I already voted on this post, thanks for calling anyway!'
 
-YOU_DID_NOT_MAKE_IT = """I am sorry, I cannot evaluate your post. This can have several reasons, for example, it may not be long enough, it's not in English, has been filtered, etc."""
+YOU_DID_NOT_MAKE_IT = """I am sorry, I cannot evaluate your post. This can have several reasons, for example, it may not be long enough, it's not in English, or has been filtered, etc."""
 
 
-def post_on_call(sorted_post_frame, account, steem, topN_link,
+def post_on_call(post_frame, account, steem, topN_link,
                  exclusion_set=tfgd.EXCLUSION_VOTERS_SET,
                  sleep_time=20.1):
+    """ Replies to users calling @trufflepig
 
-    weight = min(100 / len(sorted_post_frame), 10)
+    Parameters
+    ----------
+    post_frame: DataFrame
+    account: str
+    steem: Steem object
+    topN_link: str
+    exclusion_set: set of str
+    sleep_time: float
+        Bot can only post every 20 seconds,
+        should only be lowered for debugging
 
-    for kdx, (_, row) in enumerate(sorted_post_frame.iterrows()):
+    """
+    weight = min(100 / len(post_frame), 10)
+
+    for kdx, (_, row) in enumerate(post_frame.iterrows()):
         try:
             comment = Post('@{}/{}'.format(row.comment_author,
                                            row.comment_permalink), steem)
