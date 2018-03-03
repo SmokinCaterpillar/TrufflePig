@@ -4,7 +4,7 @@ import trufflepig.filters.textfilters as tftf
 TRUFFLE_LINK = 'https://steemit.com/steemit/@smcaterpillar/trufflepig-introducing-the-artificial-intelligence-for-content-curation-and-minnow-support'
 TRUFFLE_IMAGE_SMALL = '![trufflepig](https://raw.githubusercontent.com/SmokinCaterpillar/TrufflePig/master/img/trufflepig17_small.png)'
 TRUFFLE_IMAGE = '![trufflepig](https://raw.githubusercontent.com/SmokinCaterpillar/TrufflePig/master/img/trufflepig17.png)'
-QUOTE_MAX_LENGTH = 400
+QUOTE_MAX_LENGTH = 496
 TAGS = ['steemit', 'steem', 'minnowsupport', 'upvote', 'community']
 
 BODY_PREFIX = ''  # to announce tests etc.
@@ -35,7 +35,7 @@ def topN_list(topN_authors, topN_permalinks, topN_titles,
     """Creates a toplist string"""
     topN_entry="""{rank}. [{title}](https://steemit.com/@{author}/{permalink})  --  **by @{author} with an estimated worth of {reward:d} SBD and {votes:d} votes**
     
-    {images}{quote}
+    {image}{quote}
 
 """
 
@@ -50,13 +50,13 @@ def topN_list(topN_authors, topN_permalinks, topN_titles,
         quote = '>' + filtered_body[:quote_max_length].replace('\n', ' ').replace('  ', ' ').replace('  ', ' ').replace('  ', ' ') + '...'
         title = tftf.replace_newlines(title)
         title = tftf.filter_special_characters(title)
-        if len(img_urls) >= 2:
-            imgstr = """<div class="pull-left"><div class="pull-left"><img src="{img1}" /></div><div class="pull-right"><img src="{img2}" /></div></div>\n\n    """.format(img1=img_urls[0], img2=img_urls[1])
+        if len(img_urls) >= 1:
+            imgstr = """ <div class="pull-right"><img src="{img}" /></div>\n\n    """.format(img=img_urls[0])
         else:
             imgstr=''
         entry = topN_entry.format(rank=rank, author=author, permalink=permalink,
                                    title=title, quote=quote, votes=int(votes),
-                                   reward=int(reward), images=imgstr)
+                                   reward=int(reward), image=imgstr)
         result_string += entry
     return result_string
 
@@ -88,11 +88,11 @@ def topN_post(topN_authors, topN_permalinks, topN_titles,
               truffle_link=TRUFFLE_LINK, truffle_image=TRUFFLE_IMAGE,
               quote_max_length=QUOTE_MAX_LENGTH):
     """Craetes the truffle pig daily toplist post"""
-    title = """The daily Top 10 Truffle Picks: Quality Steemit Posts that deserve more Attention! ({date})"""
+    title = """Today's Truffle Picks: Quality Steemit Posts that deserve more Rewards and Attention! ({date})"""
 
     post=""" ## Daily Truffle Picks
     
-Hello and good day to you dear beloved Steemit community! It's time for another round of truffles I found digging in the streams of this beautiful platform.
+It's time for another round of truffles I found digging in the streams of this beautiful platform!
 
 For those of you who do not know me: My name is *TrufflePig*. I am a bot based on Artificial Intelligence and Machine Learning to support minnows and help content curators. I was created and am being maintained by @smcaterpillar. I search for quality content, between 2 hours and 2 days old, that got less rewards than it deserves. I call these posts truffles, publish a daily top list, and upvote them. Now it is up to you to give these posts the attention they deserve. If you are curious how I select content, [you can find an explanation here.]({truffle_link})
     

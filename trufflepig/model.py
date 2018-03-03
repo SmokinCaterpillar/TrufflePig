@@ -1,6 +1,6 @@
 import logging
 import os
-import operator
+import itertools
 
 import numpy as np
 import pandas as pd
@@ -185,12 +185,19 @@ class TopicModel(BaseEstimator):
         Filters that a token should occur in less than `no_above` documents
     num_topics: int
         Dimensionality of topic space
+    prune_at: int
+        Maximum number of elements in dictionary during creation
+    keep_n: int
+        Maximum number of elements kept after filtering
 
     """
-    def __init__(self, no_below, no_above, num_topics):
+    def __init__(self, no_below, no_above, num_topics,
+                 prune_at=2000000, keep_n=200000):
         self.num_topics = num_topics
         self.no_below = no_below
         self.no_above = no_above
+        self.prune_at = prune_at
+        self.keep_n = keep_n
         self.lsi = None
         self.disctionary = None
 
@@ -209,6 +216,19 @@ class TopicModel(BaseEstimator):
         """
         return [self.dictionary.doc2bow(text) for text in tokens]
 
+    def fill_dictionary(self, tokens):
+        """ Fills a dictionary
+
+        Parameters
+        ----------
+        tokens: list of list of str
+            e.g. [['hi', 'ho'], ['my', 'name', ...], ...]
+
+        """
+        self.dictionary = corpora.Dictionary(tokens, prune_at=self.prune_at)
+        self.dictionary.filter_extremes(self.no_below, self.no_above,
+                                        keep_n=self.keep_n)
+
     def train(self, tokens):
         """ Trains the LSI model
 
@@ -218,8 +238,7 @@ class TopicModel(BaseEstimator):
             e.g. [['hi', 'ho'], ['my', 'name', ...], ...]
 
         """
-        self.dictionary = corpora.Dictionary(tokens)
-        self.dictionary.filter_extremes(self.no_below, self.no_above)
+        self.fill_dictionary(tokens)
         corpus = self.to_corpus(tokens)
         self.lsi = LsiModel(corpus, num_topics=self.num_topics)
 
@@ -280,6 +299,107 @@ class TopicModel(BaseEstimator):
         return result
 
 
+def create_ngrams(tokens, n):
+    """Converts tokens to ngrams with white space separator
+
+    Returns generator for n > 1
+    """
+    if n == 1:
+        return tokens
+    return (' '.join(tokens[irun:irun + n]) for irun in range(len(tokens) - n + 1))
+
+
+def create_skip_bigrams(tokens, s):
+    """Creates skip grams, not used in production"""
+    if s == -1:
+        return tokens
+    end = s + 2
+    return (' '.join(tokens[irun:irun + end:s+1]) for irun in range(len(tokens) - end + 1))
+
+
+class NGramTopicModel(TopicModel):
+    """ Gensim Latent Semantic Indexing wrapper for scikit API
+
+    Augments the standard model by increasing the token list by
+    ngram tokens.
+
+    Parameters
+    ----------
+    no_below: int
+        Filters according to minimum number of times a token must appear
+    no_above: float
+        Filters that a token should occur in less than `no_above` documents
+    num_topics: int
+        Dimensionality of topic space
+    prune_at: int
+        Maximum dict size during construction
+    keep_n: int
+        Maximum dict size after filtering
+    ngrams : tuple of int
+        The ngrams to use e.g. (1,2) for normal tokens and bigrams
+
+    """
+    def __init__(self, no_below, no_above, num_topics, prune_at=5000000,
+                 keep_n=300000, ngrams=(1,2)):
+        super().__init__(no_below=no_below,
+                         no_above=no_above,
+                         num_topics=num_topics,
+                         keep_n=keep_n,
+                         prune_at=prune_at)
+        if isinstance(ngrams, int):
+            ngrams = (ngrams,)
+        self.ngrams = ngrams
+
+    def add_ngrams(self, tokens):
+        """ Appends ngram tokens to the original ones
+
+        Parameters
+        ----------
+        tokens list of str
+
+        Returns
+        -------
+        list of generators over ngrams
+
+        """
+        logger.info('Computing {} Grams'.format(self.ngrams))
+        result_tokens = []
+        for doc_tokens in tokens:
+            ngrams = []
+            for ngram in self.ngrams:
+                ngrams.append(create_ngrams(doc_tokens, ngram))
+            result_tokens.append(itertools.chain(*ngrams))
+        return result_tokens
+
+    def to_corpus(self, tokens):
+        """ Transfers a list of tokens into the Gensim corpus representation
+
+        Parameters
+        ----------
+        tokens: list of list of str
+            e.g. [['hi', 'ho'], ['my', 'name', ...], ...]
+
+        Returns
+        -------
+        list of Bag of Words representations
+
+        """
+        ngram_tokens = self.add_ngrams(tokens)
+        return super().to_corpus(ngram_tokens)
+
+    def fill_dictionary(self, tokens):
+        """ Fills a dictionary
+
+        Parameters
+        ----------
+        tokens: list of list of str
+            e.g. [['hi', 'ho'], ['my', 'name', ...], ...]
+
+        """
+        ngram_tokens = self.add_ngrams(tokens)
+        return super().fill_dictionary(ngram_tokens)
+
+
 class FeatureSelector(BaseEstimator):
     """ Simply selects features from a pandas DataFrame """
     def __init__(self, features):
@@ -327,7 +447,7 @@ def create_default_pipeline(topic_kwargs, regressor_kwargs, features=FEATURES):
     feature_generation = FeatureUnion(
         transformer_list=[
             ('feature_selection', FeatureSelector(features)),
-            ('topic_model', TopicModel(**topic_kwargs)),
+            ('topic_model', NGramTopicModel(**topic_kwargs)),
         ]
     )
 
@@ -412,6 +532,7 @@ def train_pipeline(post_frame, pipeline=None,
 
 def train_test_pipeline(post_frame, pipeline=None,
                         train_size=0.8, sample_weight_function='default',
+                        random_state=None,
                         **kwargs):
     """ As above but splits into training and test set and computes test score
 
@@ -421,7 +542,8 @@ def train_test_pipeline(post_frame, pipeline=None,
 
     """
     train_frame, test_frame = train_test_split(post_frame,
-                                               train_size=train_size)
+                                               train_size=train_size,
+                                               random_state=random_state)
     targets = kwargs.get('targets', TARGETS)
     pipeline = train_pipeline(train_frame, pipeline=pipeline,
                               sample_weight_function=sample_weight_function,

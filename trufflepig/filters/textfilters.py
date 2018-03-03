@@ -46,6 +46,8 @@ def filter_formatting(text):
     text = re.sub('aligncenter', '', text)
     text = re.sub('styletextalign', '', text)
     text = re.sub('href', '', text)
+    text = re.sub('img', '', text)
+    text = re.sub('src', '', text)
     text = re.sub('h[1-6]', '', text)
     return text
 

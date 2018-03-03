@@ -1,4 +1,8 @@
-*0.2.1a*` - 2018-02-28
+*0.2.3a*` - 2018-03-02
+
+* New NGram model
+
+*0.2.2a*` - 2018-02-28
 
 * New selection of truffle pigs based on ranking score
 
