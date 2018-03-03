@@ -185,7 +185,8 @@ def get_parent_posts(comment_authors_and_permalinks, steem):
                 'author': root_author,
                 'permalink': root_permalink,
                 'comment_author': comment_author,
-                'comment_permalink': comment_permalink
+                'comment_permalink': comment_permalink,
+                'voted_by': tuple(v['voter'] for v in p.active_votes)
             }
             posts.append(post)
 
