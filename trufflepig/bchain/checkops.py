@@ -170,10 +170,8 @@ def get_parent_posts(comment_authors_and_permalinks, steem):
         try:
             comment = Post('@{}/{}'.format(comment_author,
                                            comment_permalink), steem)
-            root_author = comment.root_author
-            root_permalink = comment.root_permlink
 
-            p = Post('@{}/{}'.format(root_author, root_permalink), steem)
+            p = Post(comment.root_identifier, steem)
 
             post = {
                 'title': p.title,
@@ -182,15 +180,15 @@ def get_parent_posts(comment_authors_and_permalinks, steem):
                 'created': p.created,
                 'tags': p.tags,
                 'body': p.body,
-                'author': root_author,
-                'permalink': root_permalink,
+                'author': p.author,
+                'permalink': p.permlink,
                 'comment_author': comment_author,
                 'comment_permalink': comment_permalink,
-                'voted_by': tuple(v['voter'] for v in p.active_votes)
+                'active_votes': p.active_votes
             }
             posts.append(post)
 
-        except Exception:
+        except Exception as e:
             logger.exception(('Could not work with comment {} by '
                               '{}').format(comment_permalink, comment_author))
 

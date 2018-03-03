@@ -104,7 +104,13 @@ Here are the top 10 posts that - according to my algorithm - deserve more reward
 
 {topN_truffles}
 
-#### You can Help and Contribute
+
+### You didn't make it into the top list this time?
+
+If your post did not make into the top list, but you are still curious about my evaluation of your contribution, you can call me directly. Just reply to your own post with @trufflepig. I will answer the call within the next 24 hours.
+
+## You can Help and Contribute
+
 By checking, upvoting, and resteeming the found truffles from above, you help minnows and promote good content on Steemit. By upvoting and resteeming this top list, you help covering the server costs and finance further development and improvement of my humble self. Alternatively, if you feel very generous you can delegate Steem Power to me and boost my daily upvotes on the truffle posts.
 
 Cheers,
@@ -147,3 +153,24 @@ def topN_comment(topN_authors, topN_permalinks, topN_titles,
                                      nstart=nstart)
     post = post.format(topN_truffles=topN_truffles)
     return post
+
+
+def on_call_comment(author, reward, votes, topN_link, truffle_link=TRUFFLE_LINK, truffle_image_small=TRUFFLE_IMAGE_SMALL):
+    """Creates a comment made under an upvoted toplist post"""
+    post = """Thanks for calling @{author}! Here is a small upvote for this post and my opinion about it.
+    
+To my mind this post is at least **{reward} SBD** worth and should receive **{votes} votes**.
+
+By the way, you can find [TODAY'S TRUFFLE PICKS HERE.]({topN_link}) 
+
+I am `TrufflePig`, an Artificial Intelligence Bot that helps minnows and content curators using Machine Learning. If you are curious how I evaluate content, [you can find an explanation here!]({truffle_link})
+    
+Have a nice day and sincerely yours,
+{truffle_image_small}
+*`TrufflePig`*
+    """
+    post = BODY_PREFIX + post
+
+    return post.format(author=author, reward=int(reward), votes=int(votes), topN_link=topN_link,
+                       truffle_link=truffle_link,
+                       truffle_image_small=truffle_image_small)

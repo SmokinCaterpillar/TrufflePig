@@ -12,6 +12,7 @@ import trufflepig.bchain.postdata as tppd
 import trufflepig.model as tpmo
 import trufflepig.preprocessing as tppp
 import trufflepig.utils as tfut
+import trufflepig.pigonduty as tfod
 from trufflepig import config
 from trufflepig.utils import configure_logging
 
@@ -170,10 +171,20 @@ def main():
                                   topN_permalink=permalink,
                                   account=account)
 
+    logger.info('Done with normal duty, answering manual calls!')
+    tfod.call_a_pig(steem_kwargs=steem_kwargs,
+                    account=account,
+                    pipeline=pipeline,
+                    topN_link=permalink,
+                    current_datetime=current_datetime,
+                    offset_hours=2,
+                    hours=24)
+
     logger.info('Cleaning up after myself')
     tfut.clean_up_directory(model_directoy, keep_last=3)
     tfut.clean_up_directory(data_directory, keep_last=25)
     tfut.clean_up_directory(log_directory, keep_last=14)
+
     logger.info('DONE at {}'.format(current_datetime))
 
 

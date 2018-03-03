@@ -817,7 +817,8 @@ def compute_rank_score(post_frame, punish_list=PUNISH_LIST, ncores=2, chunksize=
 
 def find_truffles(post_frame, pipeline, account='trufflepig',
                   punish_list=PUNISH_LIST,
-                  k=25, ncores=2, chunksize=500):
+                  k=25, ncores=2, chunksize=500,
+                  add_rank_score=True):
     """ Digs for truffles, i.e. underpaid posts
 
     Filtering happens in place
@@ -839,6 +840,8 @@ def find_truffles(post_frame, pipeline, account='trufflepig',
         by LanguageTool Java Server process
     chunksize: int
         Multiprocessing chunk size
+    add_rank_score: bool
+        If rank score should be computed and frame should be sorted
 
     Returns
     -------
@@ -848,7 +851,7 @@ def find_truffles(post_frame, pipeline, account='trufflepig',
     """
     logger.info('Looking for truffles in frame of shape {} '
                 'and filtering osts by '
-                'myself'.format(post_frame.shape))
+                '{}'.format(post_frame.shape, account))
     to_drop = post_frame.loc[post_frame.author == account]
 
     post_frame.drop(to_drop.index, inplace=True)
@@ -861,13 +864,12 @@ def find_truffles(post_frame, pipeline, account='trufflepig',
     post_frame['predicted_votes'] = predicted_rewards_and_votes[:, 1]
     post_frame['reward_difference'] = post_frame.predicted_reward - post_frame.reward
 
-    logger.info('Computing rank score')
-    post_frame = compute_rank_score(post_frame, punish_list=punish_list,
-                                    ncores=ncores, chunksize=chunksize)
-
-    post_frame.sort_values('rank_score', ascending=False, inplace=True)
-
-    log_truffle_info(post_frame, k)
+    if add_rank_score:
+        logger.info('Computing rank score')
+        post_frame = compute_rank_score(post_frame, punish_list=punish_list,
+                                        ncores=ncores, chunksize=chunksize)
+        post_frame.sort_values('rank_score', ascending=False, inplace=True)
+        log_truffle_info(post_frame, k)
 
     return post_frame
 
