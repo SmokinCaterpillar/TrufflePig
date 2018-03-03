@@ -15,6 +15,7 @@ from trufflepig.utils import progressbar
 
 logger = logging.getLogger(__name__)
 
+
 MIN_CHARACTERS = 500
 
 EXCLUSION_VOTERS_SET = {'cheetah'}
@@ -341,7 +342,7 @@ def get_all_posts_between(start_datetime, end_datetime, steem,
     return posts
 
 
-def _config_mp_logging(level=logging.INFO):
+def config_mp_logging(level=logging.INFO):
     """Helper function to log in multiproc environment"""
     logging.basicConfig(level=level)
 
@@ -387,7 +388,7 @@ def get_all_posts_between_parallel(start_datetime, end_datetime, steem_args,
                 for irun in range(0, len(block_nums), chunksize)]
 
     ctx = mp.get_context('spawn')
-    pool = ctx.Pool(ncores, initializer=_config_mp_logging)
+    pool = ctx.Pool(ncores, initializer=config_mp_logging)
 
     async_results = []
     for idx, chunk in enumerate(chunks):
@@ -587,33 +588,3 @@ def scrape_hour_data(steem_or_args,
                 'window, but before {}'.format(len(to_drop), start_datetime))
     post_frame.drop(to_drop.index, inplace=True)
     return post_frame
-
-
-################################ Comment Data #################################
-
-
-def extract_parent_authors_and_permalinks(operations, account, steem):
-    """Takes a list of ops and returns a set of author and permalink tuples"""
-    authors_and_permalinks = set()
-    for operation in operations:
-        op = operation['op']
-        if op[0] == 'comment':
-            body = op[1]['body']
-            if body == '@' + account:
-                comment_author = op[1]['author']
-                comment_permalink = op[1]['permlink']
-                comment = Post('@{}/{}'.format(comment_author, comment_permalink), steem)
-                replies = comment.steemd.get_content_replies(comment.author,
-                                                             comment.permlink)
-                if any(reply['author'] == account for reply in replies):
-                    continue
-
-                parent_author = comment.parent_author
-                parent_permalink = comment.parent_permlink
-
-                post
-
-
-            #authors_and_permalinks.add((author, permalink))
-    return authors_and_permalinks
-
