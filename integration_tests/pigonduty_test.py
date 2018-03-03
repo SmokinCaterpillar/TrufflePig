@@ -3,7 +3,7 @@ import pytest
 from integration_tests.bchain.getdata_test import steem_kwargs
 from integration_tests.model_test import MockPipeline
 
-
+from trufflepig import config
 import trufflepig.pigonduty as tppd
 
 
