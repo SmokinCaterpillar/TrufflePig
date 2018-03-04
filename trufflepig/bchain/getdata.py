@@ -79,7 +79,7 @@ def get_block_headers_between_offset_start(start_datetime, end_datetime,
 def find_nearest_block_num(target_datetime, steem,
                            latest_block_num=None,
                            max_tries=5000,
-                           block_num_tolerance=5):
+                           block_num_tolerance=0):
     """ Finds nearest block number to `target_datetime`
 
     Parameters
