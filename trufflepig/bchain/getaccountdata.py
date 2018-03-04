@@ -8,6 +8,9 @@ from steem.account import Account
 logger = logging.getLogger(__name__)
 
 
+INVESTOR_SHARE = 0.5
+
+
 def find_nearest_index(target_datetime,
                            account,
                            steem,
@@ -74,3 +77,65 @@ def find_nearest_index(target_datetime,
             logger.exception('Problems for index {}'.format(current_index))
             current_index -= 1
             best_smallest_index -= 1
+
+
+def get_delegates_and_shares(account, steem):
+    """ Queries all delegators to `account` and the amount of shares
+
+    Parameters
+    ----------
+    account: str
+    steem: Steem
+
+    Returns
+    -------
+    dict of float
+
+    """
+    acc = Account(account, steem)
+    delegators = {}
+    for tr in acc.history_reverse(filter_by='delegate_vesting_shares'):
+        try:
+            delegator = tr['delegator']
+            if delegator not in delegators:
+                shares = tr['vesting_shares']
+                if shares.endswith(' VESTS'):
+                    shares = float(shares[:-6])
+                    delegators[delegator] = shares
+                else:
+                    raise RuntimeError('Weird shares {}'.format(shares))
+
+        except Exception as e:
+            logger.exception('Error extracting delegator from {}'.format(tr))
+    return delegators
+
+
+def get_delegate_payouts(account, steem, investor_share=INVESTOR_SHARE):
+    """ Returns pending payouts for investors
+
+    Parameters
+    ----------
+    account: str
+    steem: Steem
+    investor_share: float
+
+    Returns
+    -------
+    dict of float:
+        SBD to pay to each investor
+
+    """
+    assert 0 < investor_share <= 1
+
+    vestsby = get_delegates_and_shares(account, steem)
+    acc = Account(account, steem)
+
+    pending = acc.balances['rewards']['SBD']
+    vests = acc.balances['total']['VESTS']
+    vestsby[account] = vests
+
+    total_vests = sum(vestsby.values())
+    payouts = {delegator: vests / total_vests * investor_share * pending
+                    for delegator, vests in vestsby.items() if delegator != account}
+    return payouts
+

@@ -11,3 +11,16 @@ def test_find_index_offset(steem):
     offset, datetime = tpac.find_nearest_index(target, 'cheetah', steem)
     assert 0 < offset
     assert abs((target - datetime).seconds) < 3600*48
+
+
+def test_shares_query(steem):
+    result = tpac.get_delegates_and_shares('trufflepig', steem)
+
+    assert 'smcaterpillar' in result
+
+
+def test_payouts(steem):
+    result = tpac.get_delegate_payouts('trufflepig', steem)
+
+    assert 'smcaterpillar' in result
+    assert 'trufflepig' not in result
