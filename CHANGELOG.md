@@ -1,4 +1,4 @@
-*0.3.0a*` - 2018-03-03
+*0.3.0a*` - 2018-03-04
 
 * New call a pig mode, add @trufflepig to your post!
 
