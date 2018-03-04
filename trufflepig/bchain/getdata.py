@@ -15,11 +15,15 @@ from trufflepig.utils import progressbar
 
 logger = logging.getLogger(__name__)
 
+
 MIN_CHARACTERS = 500
 
 EXCLUSION_VOTERS_SET = {'cheetah'}
 
 FILENAME_TEMPLATE = 'steemit_posts__{time}.gz'
+
+
+################################### Block Utils #################################
 
 
 def check_and_convert_steem(steem_or_args_kwargs):
@@ -75,7 +79,7 @@ def get_block_headers_between_offset_start(start_datetime, end_datetime,
 def find_nearest_block_num(target_datetime, steem,
                            latest_block_num=None,
                            max_tries=5000,
-                           block_num_tolerance=5):
+                           block_num_tolerance=0):
     """ Finds nearest block number to `target_datetime`
 
     Parameters
@@ -141,6 +145,9 @@ def get_block_headers_between(start_datetime, end_datetime, steem):
     return get_block_headers_between_offset_start(start_datetime, end_datetime,
                                                   steem=steem,
                                                   end_offset_num=end_offset_num)
+
+
+################################### Post Data #################################
 
 
 def extract_authors_and_permalinks(operations):
@@ -335,7 +342,7 @@ def get_all_posts_between(start_datetime, end_datetime, steem,
     return posts
 
 
-def _config_mp_logging(level=logging.INFO):
+def config_mp_logging(level=logging.INFO):
     """Helper function to log in multiproc environment"""
     logging.basicConfig(level=level)
 
@@ -381,7 +388,7 @@ def get_all_posts_between_parallel(start_datetime, end_datetime, steem_args,
                 for irun in range(0, len(block_nums), chunksize)]
 
     ctx = mp.get_context('spawn')
-    pool = ctx.Pool(ncores, initializer=_config_mp_logging)
+    pool = ctx.Pool(ncores, initializer=config_mp_logging)
 
     async_results = []
     for idx, chunk in enumerate(chunks):

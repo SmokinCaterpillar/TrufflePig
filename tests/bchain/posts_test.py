@@ -51,3 +51,11 @@ def test_topN_comment():
                              topN_rewards=df.reward)
 
     assert post
+
+
+def test_post_on_call():
+
+    comment = tbpo.on_call_comment(reward=1000000, author='Douglas Adams', votes=42000000,
+                                   topN_link='www.deep.thought')
+
+    assert comment

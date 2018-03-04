@@ -1,3 +1,7 @@
+*0.3.0a*` - 2018-03-04
+
+* New call a pig mode, add @trufflepig to your post!
+
 *0.2.3a*` - 2018-03-02
 
 * New NGram model
