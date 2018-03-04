@@ -41,28 +41,28 @@ def post_on_call(post_frame, account, steem, topN_link,
             comment.commit.no_broadcast = steem.commit.no_broadcast
             # Wait a bit Steemit nodes hate comments in quick succession
             time.sleep(sleep_time)
-            if row.passed and not tfgd.exclude_if_voted_by(row.active_votes, exclusion_set):
-                if not tfgd.exclude_if_voted_by(row.active_votes, {account}):
+            if not tfgd.exclude_if_voted_by(row.active_votes, {account}):
+                if row.passed and not tfgd.exclude_if_voted_by(row.active_votes, exclusion_set):
 
-                    logger.info('Voting and commenting on https://steemit.com/@{author}/{permalink}'
-                                    ''.format(author=row.author, permalink=row.permalink))
-                    reply = tfbp.on_call_comment(reward=row.predicted_reward,
-                                                 author=row.comment_author,
-                                                 votes=row.predicted_votes,
-                                                 topN_link=topN_link)
+                        logger.info('Voting and commenting on https://steemit.com/@{author}/{permalink}'
+                                        ''.format(author=row.author, permalink=row.permalink))
+                        reply = tfbp.on_call_comment(reward=row.predicted_reward,
+                                                     author=row.comment_author,
+                                                     votes=row.predicted_votes,
+                                                     topN_link=topN_link)
 
-                    post = Post('@{}/{}'.format(row.author, row.permalink), steem)
-                    # to pass around the no broadcast setting otherwise it is lost
-                    # see https://github.com/steemit/steem-python/issues/155
-                    post.commit.no_broadcast = steem.commit.no_broadcast
+                        post = Post('@{}/{}'.format(row.author, row.permalink), steem)
+                        # to pass around the no broadcast setting otherwise it is lost
+                        # see https://github.com/steemit/steem-python/issues/155
+                        post.commit.no_broadcast = steem.commit.no_broadcast
 
-                    # We cannot use this post.upvote(weight=weight, voter=account)
-                    # because we need to vote on archived posts as a flag!
-                    post.commit.vote(post.identifier, weight, account=account)
+                        # We cannot use this post.upvote(weight=weight, voter=account)
+                        # because we need to vote on archived posts as a flag!
+                        post.commit.vote(post.identifier, weight, account=account)
                 else:
-                    reply = I_WAS_HERE
+                    reply = YOU_DID_NOT_MAKE_IT
             else:
-                reply = YOU_DID_NOT_MAKE_IT
+                reply = I_WAS_HERE
 
             logger.info('Replying to https://steemit.com/@{author}/{permalink} '
                         'with {answer}...'.format(author=row.comment_author,
