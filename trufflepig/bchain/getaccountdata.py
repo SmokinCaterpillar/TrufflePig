@@ -1,6 +1,7 @@
 import logging
 
 import pandas as pd
+import numpy as np
 
 from steem.account import Account
 
@@ -135,7 +136,8 @@ def get_delegate_payouts(account, steem, investor_share=INVESTOR_SHARE):
     vestsby[account] = vests
 
     total_vests = sum(vestsby.values())
-    payouts = {delegator: vests / total_vests * investor_share * pending
+    payouts = {delegator: np.round(vests / total_vests * investor_share * pending, decimals=3)
                     for delegator, vests in vestsby.items() if delegator != account}
+
     return payouts
 
