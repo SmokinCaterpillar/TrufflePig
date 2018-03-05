@@ -20,7 +20,7 @@ MEMO = 'Thank you for your trust in TrufflePig the Artificial Intelligence bot t
 
 def pay_delegates(account, steem_args,
                   current_datetime,
-                  min_days=1,
+                  min_days=3,
                   investor_share=INVESTOR_SHARE,
                   memo=MEMO):
     """ Pays delegators their share of daily SBD rewards

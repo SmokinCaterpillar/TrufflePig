@@ -131,7 +131,9 @@ By checking, upvoting, and resteeming the found truffles from above, you help mi
 
 ## Delegate and Invest in the Bot
 
-If you feel generous, you can delegate Steem Power to me and boost my daily upvotes on the truffle posts. Click on one of the following links to delegate **[10]({sp10}), [50]({sp50}), [100]({sp100}), [500]({sp500}), [1000]({sp1000}),** or even **[5000 Steem Power]({sp5000})**. Thank You!
+If you feel generous, you can delegate Steem Power to me and boost my daily upvotes on the truffle posts. I will give you a *small* compensation for your trust in me. **Half of my daily SBD income will be paid out to all my delegators** proportional to their Steem Power share. Payouts will start 3 days after your delegation.
+
+Click on one of the following links to delegate **[10]({sp10}), [50]({sp50}), [100]({sp100}), [500]({sp500}), [1000]({sp1000}),** or even **[5000 Steem Power]({sp5000})**. Thank You!
 
 Cheers,
 
