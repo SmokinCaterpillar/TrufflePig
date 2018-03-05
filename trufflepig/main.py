@@ -116,7 +116,9 @@ def main():
 
     steem_kwargs = dict(nodes=config.NODES, no_broadcast=no_broadcast)
 
-    tppd.create_wallet(steem_kwargs, config.PASSWORD, config.POSTING_KEY)
+    tppd.create_wallet(steem_kwargs, config.PASSWORD,
+                       posting_key=config.POSTING_KEY,
+                       active_key=config.ACTIVE_KEY)
 
     if not tpmo.model_exists(current_datetime, model_directoy):
 

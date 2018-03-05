@@ -9,9 +9,6 @@ from steem.account import Account
 logger = logging.getLogger(__name__)
 
 
-INVESTOR_SHARE = 0.5
-
-
 def find_nearest_index(target_datetime,
                            account,
                            steem,
@@ -111,7 +108,7 @@ def get_delegates_and_shares(account, steem):
     return delegators
 
 
-def get_delegate_payouts(account, steem, investor_share=INVESTOR_SHARE):
+def get_delegate_payouts(account, steem, investor_share):
     """ Returns pending payouts for investors
 
     Parameters

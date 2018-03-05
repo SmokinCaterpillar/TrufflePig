@@ -20,7 +20,7 @@ def test_shares_query(steem):
 
 
 def test_payouts(steem):
-    result = tpac.get_delegate_payouts('trufflepig', steem)
+    result = tpac.get_delegate_payouts('trufflepig', steem, 0.5)
 
     assert 'smcaterpillar' in result
     assert 'trufflepig' not in result
