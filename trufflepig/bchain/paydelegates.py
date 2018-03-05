@@ -54,10 +54,12 @@ def claim_all_reward_balance(steem, account):
     reward_steem = acc['reward_steem_balance']
     reward_sbd = acc['reward_sbd_balance']
     reward_vests = acc['reward_vesting_balance']
-    op = operations.ClaimRewardBalance(
-            account=account,
-            reward_steem=reward_steem,
-            reward_sbd=reward_sbd,
-            reward_vests=reward_vests,
-        )
+    logger.info('Claiming {}, {}, and {} for {}'.format(reward_sbd,
+                                                        reward_vests,
+                                                        reward_steem,
+                                                        account))
+    op = operations.ClaimRewardBalance(account=account,
+                                       reward_steem=reward_steem,
+                                       reward_sbd=reward_sbd,
+                                       reward_vests=reward_vests)
     return steem.commit.finalizeOp(op, account, "posting")
