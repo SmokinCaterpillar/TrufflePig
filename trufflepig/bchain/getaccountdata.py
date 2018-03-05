@@ -110,14 +110,15 @@ def get_delegates_and_shares(account, steem):
     return delegators
 
 
-def get_delegate_payouts(account, steem, current_date, min_days, investor_share):
+def get_delegate_payouts(account, steem, current_datetime,
+                         min_days, investor_share):
     """ Returns pending payouts for investors
 
     Parameters
     ----------
     account: str
     steem: Steem
-    current_date: datetime
+    current_datetime: datetime
     min_days: int
         minimum days of delegation before payout
     investor_share: float
@@ -130,8 +131,8 @@ def get_delegate_payouts(account, steem, current_date, min_days, investor_share)
     """
     assert 0 < investor_share <= 1
 
-    current_date = pd.to_datetime(current_date)
-    threshold_date = current_date - pd.Timedelta(days=min_days)
+    current_datetime = pd.to_datetime(current_datetime)
+    threshold_date = current_datetime - pd.Timedelta(days=min_days)
 
     vests_by = get_delegates_and_shares(account, steem)
     filtered_vests_by = {delegator: dict_['vests']

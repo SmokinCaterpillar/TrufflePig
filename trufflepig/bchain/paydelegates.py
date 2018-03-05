@@ -19,7 +19,7 @@ MEMO = 'Thank you for your trust in TrufflePig the Artificial Intelligence bot t
 
 
 def pay_delegates(account, steem_args,
-                  current_date,
+                  current_datetime,
                   min_days=1,
                   investor_share=INVESTOR_SHARE,
                   memo=MEMO):
@@ -29,6 +29,8 @@ def pay_delegates(account, steem_args,
     ----------
     account: str
     steem_args: Steem or kwargs
+    current_datetime: dateime
+    min_days: int
     investor_share: float
     memo: str
 
@@ -36,7 +38,7 @@ def pay_delegates(account, steem_args,
     logger.info('Computing payouts for delegates!')
     steem = tpdg.check_and_convert_steem(steem_args)
     payouts = tpga.get_delegate_payouts(account, steem,
-                                        current_date,
+                                        current_datetime=current_datetime,
                                         min_days=min_days,
                                         investor_share=investor_share)
     logger.info('Count the following payouts:\n{}'.format(payouts))
