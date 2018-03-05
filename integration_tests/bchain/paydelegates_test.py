@@ -14,4 +14,5 @@ def test_pay_delegates(steem_kwargs):
                        config.POSTING_KEY, config.ACTIVE_KEY)
 
     tppd.pay_delegates(account=config.ACCOUNT,
-                       steem_args=steem_kwargs)
+                       steem_args=steem_kwargs,
+                       current_datetime='2029-01-01')

@@ -694,13 +694,13 @@ def compute_tag_factor(tags, punish_list):
 
     Returns
     -------
-    For each tag found in the `punish_list` the factor is multiplied by 0.85
+    For each tag found in the `punish_list` the factor is multiplied by 0.8
 
     """
     tag_factor = tags.apply(lambda x: 1.0)
     for to_punish in punish_list:
         logger.info('...punishing {}...'.format(to_punish))
-        tag_factor *= tags.apply(lambda x: 1 if to_punish not in x else 0.85)
+        tag_factor *= tags.apply(lambda x: 1 if to_punish not in x else 0.8)
     return tag_factor
 
 
