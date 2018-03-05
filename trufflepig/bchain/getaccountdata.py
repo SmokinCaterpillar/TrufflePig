@@ -99,7 +99,9 @@ def get_delegates_and_shares(account, steem):
                 shares = tr['vesting_shares']
                 if shares.endswith(' VESTS'):
                     shares = float(shares[:-6])
-                    delegators[delegator] = shares
+                    timestamp = pd.to_datetime(tr['timestamp'])
+                    delegators[delegator] = {'vests': shares,
+                                             'timestamp': timestamp}
                 else:
                     raise RuntimeError('Weird shares {}'.format(shares))
 
@@ -108,13 +110,16 @@ def get_delegates_and_shares(account, steem):
     return delegators
 
 
-def get_delegate_payouts(account, steem, investor_share):
+def get_delegate_payouts(account, steem, current_date, min_days, investor_share):
     """ Returns pending payouts for investors
 
     Parameters
     ----------
     account: str
     steem: Steem
+    current_date: datetime
+    min_days: int
+        minimum days of delegation before payout
     investor_share: float
 
     Returns
@@ -125,16 +130,22 @@ def get_delegate_payouts(account, steem, investor_share):
     """
     assert 0 < investor_share <= 1
 
-    vestsby = get_delegates_and_shares(account, steem)
+    current_date = pd.to_datetime(current_date)
+    threshold_date = current_date - pd.Timedelta(days=min_days)
+
+    vests_by = get_delegates_and_shares(account, steem)
+    filtered_vests_by = {delegator: dict_['vests']
+                         for delegator, dict_ in vests_by.items()
+                            if dict_['timestamp'] < threshold_date}
     acc = Account(account, steem)
 
     pending = acc.balances['rewards']['SBD']
     vests = acc.balances['total']['VESTS']
-    vestsby[account] = vests
+    filtered_vests_by[account] = vests
 
-    total_vests = sum(vestsby.values())
+    total_vests = sum(filtered_vests_by.values())
     payouts = {delegator: np.round(vests / total_vests * investor_share * pending, decimals=3)
-                    for delegator, vests in vestsby.items() if delegator != account}
+                    for delegator, vests in filtered_vests_by.items() if delegator != account}
 
     return payouts
 

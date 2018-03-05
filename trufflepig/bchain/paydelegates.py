@@ -1,5 +1,7 @@
 import logging
 
+import pandas as pd
+
 import trufflepig.bchain.getaccountdata as tpga
 import trufflepig.bchain.getdata as tpdg
 
@@ -16,7 +18,10 @@ INVESTOR_SHARE = 0.5
 MEMO = 'Thank you for your trust in TrufflePig the Artificial Intelligence bot to help content curators and minnows.'
 
 
-def pay_delegates(account, steem_args, investor_share=INVESTOR_SHARE,
+def pay_delegates(account, steem_args,
+                  current_date,
+                  min_days=1,
+                  investor_share=INVESTOR_SHARE,
                   memo=MEMO):
     """ Pays delegators their share of daily SBD rewards
 
@@ -31,6 +36,8 @@ def pay_delegates(account, steem_args, investor_share=INVESTOR_SHARE,
     logger.info('Computing payouts for delegates!')
     steem = tpdg.check_and_convert_steem(steem_args)
     payouts = tpga.get_delegate_payouts(account, steem,
+                                        current_date,
+                                        min_days=min_days,
                                         investor_share=investor_share)
     logger.info('Count the following payouts:\n{}'.format(payouts))
     claim_all_reward_balance(steem, account)
@@ -49,7 +56,7 @@ def pay_delegates(account, steem_args, investor_share=INVESTOR_SHARE,
 
 
 def claim_all_reward_balance(steem, account):
-    """Helper funtion to claim rewards because of bug in Steem object"""
+    """Helper funtion to claim rewards because of bug in Steem"""
     acc = Account(account, steem)
     reward_steem = acc['reward_steem_balance']
     reward_sbd = acc['reward_sbd_balance']

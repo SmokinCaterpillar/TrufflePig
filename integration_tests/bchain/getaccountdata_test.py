@@ -20,7 +20,11 @@ def test_shares_query(steem):
 
 
 def test_payouts(steem):
-    result = tpac.get_delegate_payouts('trufflepig', steem, 0.5)
+    now_24 = pd.datetime.utcnow() + pd.Timedelta(days=1)
+    result = tpac.get_delegate_payouts('trufflepig', steem,
+                                       now_24,
+                                       1,
+                                       0.5)
 
     assert 'smcaterpillar' in result
     assert 'trufflepig' not in result
