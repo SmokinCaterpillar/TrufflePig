@@ -3,6 +3,7 @@ import time
 
 from steem.post import Post, PostDoesNotExist, VotingInvalidOnArchivedPost
 from steembase.exceptions import RPCError
+from steem.converter import Converter
 
 import trufflepig.bchain.posts as tfbp
 import trufflepig.bchain.getdata as tfgd
@@ -39,6 +40,9 @@ def post_topN_list(sorted_post_frame, steem_or_args, account,
 
     logger.info('Creating top {} post'.format(N))
     df.first_image_url = df.body.apply(lambda x: tftf.get_image_urls(x))
+
+    steem_per_mvests = Converter(steem).steem_per_mvests()
+
     title, body = tfbp.topN_post(topN_authors=df.author,
                                  topN_permalinks=df.permalink,
                                  topN_titles=df.title,
@@ -46,7 +50,8 @@ def post_topN_list(sorted_post_frame, steem_or_args, account,
                                  topN_image_urls=df.first_image_url,
                                  topN_votes=df.predicted_votes,
                                  topN_rewards=df.predicted_reward,
-                                 title_date=current_datetime)
+                                 title_date=current_datetime,
+                                 steem_per_mvests=steem_per_mvests)
 
     permalink = PERMALINK_TEMPLATE.format(date=current_datetime.strftime('%Y-%m-%d'))
     logger.info('Posting top post with permalink: {}'.format(permalink))
