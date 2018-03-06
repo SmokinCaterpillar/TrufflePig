@@ -45,6 +45,7 @@ POSTS = [
                      'Lookat ![j kjds](wehwjrkjewrk.de), yes [iii](jlkajddjsla), and '
                     '![images (17).jpg](https://steemitimages.com/DQmQF5BxHtPdPu1yKipV67GpnRdzemPpEFCqB59kVXC6Ahy/images%20(17).jpg)'),
             'author': 'mary',
-            'permalink': 'ladida'
+            'permalink': 'ladida',
+            'author_reputation': 99999999,
         }
 ]

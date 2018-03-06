@@ -748,8 +748,10 @@ def vote_score_step_function(x):
         return 0.95
     elif x >= 5:
         return 0.9
-    else:
+    elif x >= 3:
         return 0.4
+    else:
+        return 0.2
 
 
 def reward_score_step_function(x):
@@ -760,8 +762,34 @@ def reward_score_step_function(x):
         return 1.0
     elif x >= 0.5:
         return 0.9
-    else:
+    elif x >= 0.2:
         return 0.4
+    else:
+        return 0.2
+
+
+def reputation_score_step_function(x):
+    """Mapping of reputation to correction factor"""
+    if x > 50:
+        return 1.0
+    elif x > 45:
+        return 0.95
+    elif x > 40:
+        return 0.9
+    elif x > 35:
+        return 0.85
+    elif x > 30:
+        return 0.75
+    elif x > 25:
+        return 0.6
+    else:
+        return 0.3
+
+
+def compute_simple_reputation(x):
+    """Maps raw author reputation to simple reputation"""
+    result = (np.log10(x) - 9) * 9 +25
+    return result
 
 
 def compute_rank_score(post_frame, punish_list=PUNISH_LIST, ncores=2, chunksize=500):
@@ -779,7 +807,7 @@ def compute_rank_score(post_frame, punish_list=PUNISH_LIST, ncores=2, chunksize=
     -------
     Series of ranks score
         The score is reward_difference * adjustment
-        and adjustment=tag_factor*vote_factor*reward_factor*spelling_errors_factor*grammar_factor
+        and adjustment=tag_factor*vote_factor*reward_factor*spelling_errors_factor*grammar_factor*reputation_factor
 
     """
     logger.info('Computing tag factor...')
@@ -795,6 +823,10 @@ def compute_rank_score(post_frame, punish_list=PUNISH_LIST, ncores=2, chunksize=
     spelling_errors_factor = post_frame.errors_per_word.apply(lambda x:
                                                               spelling_error_step_function(x))
 
+    logger.info('Computing reputation factor...')
+    simple_reputation = post_frame.author_reputation.apply(lambda x: compute_simple_reputation(x))
+    reputation_factor = simple_reputation.apply(lambda x: reputation_score_step_function(x))
+
     logger.info('Applying grammar check...')
     checker = tfsm.GrammarErrorCounter()
     errors_per_character = apply_parallel(checker.count_mistakes_per_character,
@@ -807,7 +839,8 @@ def compute_rank_score(post_frame, punish_list=PUNISH_LIST, ncores=2, chunksize=
 
     logger.info('...Done combining reward difference and factors')
     result = post_frame.reward_difference
-    final_factor = grammar_factor * reward_factor * vote_factor * tag_factor * spelling_errors_factor
+    final_factor = (grammar_factor * reward_factor * vote_factor *
+                        tag_factor * spelling_errors_factor * reputation_factor)
     # increase negative values for low factors:
     final_factor.loc[result < 0] = 1.0 / final_factor.loc[result < 0]
     result = result * final_factor
