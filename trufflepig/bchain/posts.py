@@ -8,7 +8,7 @@ TRUFFLE_IMAGE_SMALL = '![trufflepig](https://raw.githubusercontent.com/SmokinCat
 TRUFFLE_IMAGE = '![trufflepig](https://raw.githubusercontent.com/SmokinCaterpillar/TrufflePig/master/img/trufflepig17.png)'
 DELEGATION_LINK = 'https://v2.steemconnect.com/sign/delegateVestingShares?delegator=&delegatee=trufflepig&vesting_shares={shares}%20VESTS'
 QUOTE_MAX_LENGTH = 496
-TAGS = ['steemit', 'steem', 'minnowsupport', 'upvote', 'community']
+TAGS = ['steemit', 'curation', 'minnowsupport', 'technology', 'community']
 
 BODY_PREFIX = ''  # to announce tests etc.
 
