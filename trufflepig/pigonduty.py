@@ -17,7 +17,7 @@ logger = logging.getLogger(__name__)
 MAX_COMMENTS = 3000
 
 
-def call_a_pig(steem_kwargs, account, pipeline, topN_link, current_datetime,
+def call_a_pig(steem_kwargs, account, pipeline, topN_permalink, current_datetime,
                offset_hours=2, hours=24, max_comments=MAX_COMMENTS,
                sleep_time=20.1):
     """ Scans for user mentioning the bot and answers
@@ -55,33 +55,51 @@ def call_a_pig(steem_kwargs, account, pipeline, topN_link, current_datetime,
     )
 
     if comment_authors_and_permalinks:
-        ncomments = len(comment_authors_and_permalinks)
+        execute_call(comment_authors_and_permalinks=comment_authors_and_permalinks,
+                     account=account,
+                     pipeline=pipeline,
+                     steem=steem,
+                     topN_permalink=topN_permalink,
+                     sleep_time=sleep_time,
+                     max_comments=max_comments)
+    else:
+        logger.info('No mentions of {} found, good bye!'.format(account))
 
-        logger.info('Found {} comments mentioning {}'.format(ncomments,
-                                                             account))
-        if ncomments > max_comments:
-            logger.info('To many comments, reducing to {}'.format(max_comments))
-            comment_authors_and_permalinks = comment_authors_and_permalinks[:max_comments]
 
-        posts = tpco.get_parent_posts(comment_authors_and_permalinks, steem)
+def execute_call(comment_authors_and_permalinks, account, pipeline,
+                 steem, topN_permalink, sleep_time, max_comments):
+    """Executes the pig on duty call"""
+    ncomments = len(comment_authors_and_permalinks)
 
-        initial_frame = pd.DataFrame(posts)
-        post_frame = initial_frame.copy()
+    logger.info('Found {} comments mentioning {}'.format(ncomments,
+                                                         account))
+    if ncomments > max_comments:
+        logger.info('To many comments, reducing to {}'.format(max_comments))
+        comment_authors_and_permalinks = comment_authors_and_permalinks[:max_comments]
 
-        post_frame = tppp.preprocess(post_frame, ncores=4)
+    posts = tpco.get_parent_posts(comment_authors_and_permalinks, steem)
 
+    initial_frame = pd.DataFrame(posts)
+    post_frame = initial_frame.copy()
+
+    post_frame = tppp.preprocess(post_frame, ncores=4)
+
+    if len(post_frame):
         truffle_frame = tpmo.find_truffles(post_frame, pipeline, k=0,
                                            account='', add_rank_score=False)
         truffle_frame['passed'] = True
-
-        filtered_posts = initial_frame[~initial_frame.index.isin(truffle_frame.index)]
-        filtered_posts['passed'] = False
-
-        combined = pd.concat([truffle_frame, filtered_posts], axis=0)
-
-        tpoc.post_on_call(combined, account=account,
-                              steem=steem,
-                              topN_link=topN_link,
-                              sleep_time=sleep_time)
     else:
-        logger.info('No mentions of {} found, good bye!'.format(account))
+        truffle_frame = pd.DataFrame()
+
+    filtered_posts = initial_frame[~initial_frame.index.isin(truffle_frame.index)]
+    filtered_posts['passed'] = False
+
+    combined = pd.concat([truffle_frame, filtered_posts], axis=0)
+
+    topN_link = 'https://steemit.com/@{author}/{permalink}'.format(author=account,
+                                                    permalink=topN_permalink)
+
+    tpoc.post_on_call(combined, account=account,
+                          steem=steem,
+                          topN_link=topN_link,
+                          sleep_time=sleep_time)

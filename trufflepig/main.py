@@ -178,7 +178,7 @@ def main():
     tfod.call_a_pig(steem_kwargs=steem_kwargs,
                     account=account,
                     pipeline=pipeline,
-                    topN_link=permalink,
+                    topN_permalink=permalink,
                     current_datetime=current_datetime,
                     offset_hours=2,
                     hours=24)

@@ -32,7 +32,7 @@ def post_on_call(post_frame, account, steem, topN_link,
         should only be lowered for debugging
 
     """
-    weight = min(100 / len(post_frame), 10)
+    weight = min(90 / len(post_frame), 10)
 
     for kdx, (_, row) in enumerate(post_frame.iterrows()):
         try:
@@ -67,7 +67,7 @@ def post_on_call(post_frame, account, steem, topN_link,
             logger.info('Replying to https://steemit.com/@{author}/{permalink} '
                         'with {answer}...'.format(author=row.comment_author,
                                                permalink=row.comment_permalink,
-                                               answer=reply[:64]))
+                                               answer=reply[:256]))
             comment.reply(body=reply, author=account)
 
         except Exception as e:
