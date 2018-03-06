@@ -85,7 +85,7 @@ def simple_topN_list(topN_authors, topN_permalinks, topN_titles,
     return result_string
 
 
-def get_delegation_link(steem_per_mvests, steem_powers=(10, 50, 100, 500, 1000, 5000)):
+def get_delegation_link(steem_per_mvests, steem_powers=(1, 5, 10, 50, 100, 500, 1000, 5000)):
     """Returns a dictionary of links to delegate SP"""
     link_dict = {}
     for steem_power in steem_powers:
@@ -133,7 +133,7 @@ By checking, upvoting, and resteeming the found truffles from above, you help mi
 
 If you feel generous, you can delegate Steem Power to me and boost my daily upvotes on the truffle posts. In return, I will provide you with a *small* compensation for your trust in me and your locked Steem Power. **Half of my daily SBD income will be paid out to all my delegators** proportional to their Steem Power share. Payouts will start 3 days after your delegation.
 
-Click on one of the following links to delegate **[10]({sp10}), [50]({sp50}), [100]({sp100}), [500]({sp500}), [1000]({sp1000}),** or even **[5000 Steem Power]({sp5000})**. Thank You!
+Click on one of the following links to delegate **[1]({sp1}), [5]({sp5}), [10]({sp10}), [50]({sp50}), [100]({sp100}), [500]({sp500}), [1000]({sp1000}),** or even **[5000 Steem Power]({sp5000})**. Thank You!
 
 Cheers,
 
