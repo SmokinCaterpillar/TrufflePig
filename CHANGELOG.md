@@ -1,3 +1,7 @@
+*0.4.1a* - 2018-03-05
+
+* New factor based on rep
+
 *0.4.0a* - 2018-03-05
 
 * New payout for investors
