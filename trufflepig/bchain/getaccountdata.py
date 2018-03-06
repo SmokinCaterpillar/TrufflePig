@@ -1,6 +1,7 @@
 import logging
 
 import pandas as pd
+import numpy as np
 
 from steem.account import Account
 
@@ -74,3 +75,78 @@ def find_nearest_index(target_datetime,
             logger.exception('Problems for index {}'.format(current_index))
             current_index -= 1
             best_smallest_index -= 1
+
+
+def get_delegates_and_shares(account, steem):
+    """ Queries all delegators to `account` and the amount of shares
+
+    Parameters
+    ----------
+    account: str
+    steem: Steem
+
+    Returns
+    -------
+    dict of float
+
+    """
+    acc = Account(account, steem)
+    delegators = {}
+    for tr in acc.history_reverse(filter_by='delegate_vesting_shares'):
+        try:
+            delegator = tr['delegator']
+            if delegator not in delegators:
+                shares = tr['vesting_shares']
+                if shares.endswith(' VESTS'):
+                    shares = float(shares[:-6])
+                    timestamp = pd.to_datetime(tr['timestamp'])
+                    delegators[delegator] = {'vests': shares,
+                                             'timestamp': timestamp}
+                else:
+                    raise RuntimeError('Weird shares {}'.format(shares))
+
+        except Exception as e:
+            logger.exception('Error extracting delegator from {}'.format(tr))
+    return delegators
+
+
+def get_delegate_payouts(account, steem, current_datetime,
+                         min_days, investor_share):
+    """ Returns pending payouts for investors
+
+    Parameters
+    ----------
+    account: str
+    steem: Steem
+    current_datetime: datetime
+    min_days: int
+        minimum days of delegation before payout
+    investor_share: float
+
+    Returns
+    -------
+    dict of float:
+        SBD to pay to each investor
+
+    """
+    assert 0 < investor_share <= 1
+
+    current_datetime = pd.to_datetime(current_datetime)
+    threshold_date = current_datetime - pd.Timedelta(days=min_days)
+
+    vests_by = get_delegates_and_shares(account, steem)
+    filtered_vests_by = {delegator: dict_['vests']
+                         for delegator, dict_ in vests_by.items()
+                            if dict_['timestamp'] < threshold_date}
+    acc = Account(account, steem)
+
+    pending = acc.balances['rewards']['SBD']
+    vests = acc.balances['total']['VESTS']
+    filtered_vests_by[account] = vests
+
+    total_vests = sum(filtered_vests_by.values())
+    payouts = {delegator: np.round(vests / total_vests * investor_share * pending, decimals=3)
+                    for delegator, vests in filtered_vests_by.items() if delegator != account}
+
+    return payouts
+

@@ -3,6 +3,7 @@ import time
 
 from steem.post import Post, PostDoesNotExist, VotingInvalidOnArchivedPost
 from steembase.exceptions import RPCError
+from steem.converter import Converter
 
 import trufflepig.bchain.posts as tfbp
 import trufflepig.bchain.getdata as tfgd
@@ -39,6 +40,9 @@ def post_topN_list(sorted_post_frame, steem_or_args, account,
 
     logger.info('Creating top {} post'.format(N))
     df.first_image_url = df.body.apply(lambda x: tftf.get_image_urls(x))
+
+    steem_per_mvests = Converter(steem).steem_per_mvests()
+
     title, body = tfbp.topN_post(topN_authors=df.author,
                                  topN_permalinks=df.permalink,
                                  topN_titles=df.title,
@@ -46,7 +50,8 @@ def post_topN_list(sorted_post_frame, steem_or_args, account,
                                  topN_image_urls=df.first_image_url,
                                  topN_votes=df.predicted_votes,
                                  topN_rewards=df.predicted_reward,
-                                 title_date=current_datetime)
+                                 title_date=current_datetime,
+                                 steem_per_mvests=steem_per_mvests)
 
     permalink = PERMALINK_TEMPLATE.format(date=current_datetime.strftime('%Y-%m-%d'))
     logger.info('Posting top post with permalink: {}'.format(permalink))
@@ -151,7 +156,8 @@ def vote_and_comment_on_topK(sorted_post_frame, steem_or_args, account,
             logger.exception('W00t? row: {}'.format(row))
 
 
-def create_wallet(steem_or_args, password, posting_key):
+def create_wallet(steem_or_args, password, posting_key,
+                  active_key=None):
     """ Creates a new wallet
 
     Does nothing if wallet database entry already exists
@@ -161,6 +167,7 @@ def create_wallet(steem_or_args, password, posting_key):
     steem_or_args: kwargs or Steem object
     password: str
     posting_key: str
+    active_key: str
 
     """
     if posting_key is None or password is None:
@@ -171,9 +178,18 @@ def create_wallet(steem_or_args, password, posting_key):
     logger.info('Unlocking or creating wallet')
     wallet = steem.wallet
     wallet.unlock(pwd=password)
-    logger.info('Adding Posting Key')
+
+    logger.info('Adding POSTING Key')
     try:
         wallet.addPrivateKey(posting_key)
     except ValueError:
         logger.info('Key already present')
+
+    if active_key:
+        logger.info('Adding ACTIVE Key')
+        try:
+            wallet.addPrivateKey(active_key)
+        except ValueError:
+            logger.info('Key already present')
+
     logger.info('Wallet is ready')
