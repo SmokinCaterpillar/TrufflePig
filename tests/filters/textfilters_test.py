@@ -65,6 +65,8 @@ heyho
     
 jdd
 <h4> lkjsdsak!"§$$ </h5>
+
+<H5> jjjjjj </H5>
 """
     new_text = tptf.filter_headings(text)
     expected = """heyho
