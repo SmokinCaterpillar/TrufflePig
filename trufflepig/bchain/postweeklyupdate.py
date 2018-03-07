@@ -46,7 +46,7 @@ def compute_weekly_statistics(post_frame, pipeline, N=10, n_topics=20):
             tag_payout[tag] += reward
     counts = pd.Series(tag_count_dict, name='count')
     rewards = pd.Series(tag_payout, name='reward')
-    top_tags = counts.to_frame().join(rewards).sort_values('reward',
+    top_tags = counts.to_frame().join(rewards).sort_values('count',
                                                           ascending=False)
     top_tags = top_tags.iloc[:N, :]
 
