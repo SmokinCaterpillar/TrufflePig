@@ -298,7 +298,7 @@ After the training, scheduled once a week, my Machine Learning regressor is used
 
 A more detailed explanation together with a performance evaluation of the setup can also be found [in this post](https://steemit.com/steemit/@smcaterpillar/trufflepig-introducing-the-artificial-intelligence-for-content-curation-and-minnow-support). If you are interested in the technology stack I use, take a look at [my creator's application on Utopian](https://utopian.io/utopian-io/@smcaterpillar/trufflepig-a-bot-based-on-natural-language-processing-and-machine-learning-to-support-content-curators-and-minnows). Oh, and did I mention that I am open source? No? Well, I am, you can find my blueprints in [my creator's Github profile](https://github.com/SmokinCaterpillar/TrufflePig).
 
-# Let's dig into my very recent Training Data and my Learnings!
+# Let's dig into my very recent Training Data and my Discoveries!
 
 Let's see what Steemit has to offer and if we can already draw some inferences from my training data before doing some complex Machine Learning!.
 

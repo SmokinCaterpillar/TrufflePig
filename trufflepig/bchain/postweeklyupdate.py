@@ -1,15 +1,25 @@
 import logging
+import time
 
 import pandas as pd
+from steem.post import Post, PostDoesNotExist
+from steem.converter import Converter
+
 import trufflepig.model as tpmo
+import trufflepig.bchain.posts as tpbp
+import trufflepig.bchain.getdata as tppd
 
 
 logger = logging.getLogger(__name__)
 
 
+PERMALINK_TEMPLATE = 'weekly-truffle-updates-{date}'
+
 SPELLING_CATEGORY = ['num_spelling_errors', 'errors_per_word']
 
 STYLE_CATEGORY = [x for x in tpmo.FEATURES if x not in SPELLING_CATEGORY]
+
+TAGS = ['steemit', 'steemstem', 'minnowsupport', 'technology', 'utopian-io']
 
 
 def compute_weekly_statistics(post_frame, pipeline, N=10, n_topics=20):
@@ -106,3 +116,37 @@ def compute_weekly_statistics(post_frame, pipeline, N=10, n_topics=20):
     )
     logger.info('Done final dict:\n{}'.format(result))
     return result
+
+
+def does_weekly_update_exist(account, steem_args, current_datetime):
+    steem = tppd.check_and_convert_steem(steem_args)
+    permalink = PERMALINK_TEMPLATE.format(date=current_datetime.strftime('%Y-%V'))
+    try:
+        Post('@{}/{}'.format(account, permalink), steem)
+        return True
+    except PostDoesNotExist:
+        return False
+
+
+def post_weakly_update(pipeline, post_frame, account, steem_args, current_datetime,
+                       sleep_time=21):
+    steem = tppd.check_and_convert_steem(steem_args)
+    steem_per_mvests = Converter(steem).steem_per_mvests()
+    stats = compute_weekly_statistics(post_frame, pipeline)
+
+    title, body = tpbp.weekly_update(steem_per_mvests=steem_per_mvests,
+                                     current_datetime=current_datetime,
+                                     **stats)
+    permalink = PERMALINK_TEMPLATE.format(date=current_datetime.strftime('%Y-%V'))
+    logger.info('Posting weekly update with permalink: {}'.format(permalink))
+    logger.info(title)
+    logger.info(body)
+    time.sleep(sleep_time)
+    steem.commit.post(author=account,
+                      title=title,
+                      body=body,
+                      permlink=permalink,
+                      self_vote=True,
+                      tags=TAGS)
+
+    return permalink
