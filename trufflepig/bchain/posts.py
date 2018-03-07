@@ -332,7 +332,7 @@ You are wondering what these 128 topics of mine are? I give you the first twenty
 
 > {topics}
 
-So now I'll use these insights I have gained to dig for truffles. Watch out for my daily top lists!
+So now I'll use these insights and dig for truffles. Watch out for my daily top lists!
 
 ## You can Help and Contribute
 
