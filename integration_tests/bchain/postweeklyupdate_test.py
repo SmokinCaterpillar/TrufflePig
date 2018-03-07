@@ -36,10 +36,10 @@ def test_statistics():
 
 
 def test_existence(steem_kwargs):
-    result = tppw.does_weekly_update_exist(account=config.ACCOUNT,
-                                           steem_args=steem_kwargs,
-                                  current_datetime=pd.datetime.utcnow())
-    assert (result is False) or (result is True)
+    result = tppw.return_overview_permalink_if_exists(account=config.ACCOUNT,
+                                                      steem_args=steem_kwargs,
+                                                      current_datetime=pd.datetime.utcnow())
+    assert isinstance(result, str)
 
 
 @pytest.mark.skipif(config.PASSWORD is None, reason="needs posting key")
@@ -62,7 +62,6 @@ def test_weekly_post(steem_kwargs):
     permalink = tppw.post_weakly_update(pipeline, post_frame,
                                         account=config.ACCOUNT,
                                         steem_args=steem_kwargs,
-                                        current_datetime=current_date,
-                                        sleep_time=0.1)
+                                        current_datetime=current_date)
 
     assert permalink

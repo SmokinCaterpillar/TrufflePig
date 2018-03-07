@@ -118,18 +118,17 @@ def compute_weekly_statistics(post_frame, pipeline, N=10, n_topics=20):
     return result
 
 
-def does_weekly_update_exist(account, steem_args, current_datetime):
+def return_overview_permalink_if_exists(account, steem_args, current_datetime):
     steem = tppd.check_and_convert_steem(steem_args)
     permalink = PERMALINK_TEMPLATE.format(date=current_datetime.strftime('%Y-%V'))
     try:
         Post('@{}/{}'.format(account, permalink), steem)
-        return True
+        return permalink
     except PostDoesNotExist:
-        return False
+        return ''
 
 
-def post_weakly_update(pipeline, post_frame, account, steem_args, current_datetime,
-                       sleep_time=21):
+def post_weakly_update(pipeline, post_frame, account, steem_args, current_datetime):
     steem = tppd.check_and_convert_steem(steem_args)
     steem_per_mvests = Converter(steem).steem_per_mvests()
     stats = compute_weekly_statistics(post_frame, pipeline)
@@ -141,7 +140,6 @@ def post_weakly_update(pipeline, post_frame, account, steem_args, current_dateti
     logger.info('Posting weekly update with permalink: {}'.format(permalink))
     logger.info(title)
     logger.info(body)
-    time.sleep(sleep_time)
     steem.commit.post(author=account,
                       title=title,
                       body=body,

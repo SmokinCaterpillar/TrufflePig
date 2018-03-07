@@ -3,7 +3,6 @@ import numpy as np
 import trufflepig.filters.textfilters as tftf
 
 
-TRUFFLE_LINK = 'https://steemit.com/steemit/@smcaterpillar/trufflepig-introducing-the-artificial-intelligence-for-content-curation-and-minnow-support'
 TRUFFLE_IMAGE_SMALL = '![trufflepig](https://raw.githubusercontent.com/SmokinCaterpillar/TrufflePig/master/img/trufflepig17_small.png)'
 TRUFFLE_IMAGE = '![trufflepig](https://raw.githubusercontent.com/SmokinCaterpillar/TrufflePig/master/img/trufflepig17.png)'
 DELEGATION_LINK = 'https://v2.steemconnect.com/sign/delegateVestingShares?delegator=&delegatee=trufflepig&vesting_shares={shares}%20VESTS'
@@ -13,7 +12,7 @@ TAGS = ['steemit', 'curation', 'minnowsupport', 'technology', 'community']
 BODY_PREFIX = ''  # to announce tests etc.
 
 
-def truffle_comment(reward, votes, rank, topN_link, truffle_link=TRUFFLE_LINK, truffle_image_small=TRUFFLE_IMAGE_SMALL):
+def truffle_comment(reward, votes, rank, topN_link, truffle_link, truffle_image_small=TRUFFLE_IMAGE_SMALL):
     """Creates a comment made under an upvoted toplist post"""
     post = """**Congratulations!** Your post has been selected as a daily Steemit truffle! It is listed on **rank {rank}** of all contributions awarded today. You can find the [TOP DAILY TRUFFLE PICKS HERE.]({topN_link}) 
     
@@ -94,12 +93,9 @@ def get_delegation_link(steem_per_mvests, steem_powers=(1, 5, 10, 50, 100, 500, 
     return link_dict
 
 
-def topN_post(topN_authors, topN_permalinks, topN_titles,
-              topN_filtered_bodies, topN_image_urls,
-              topN_rewards, topN_votes, title_date,
-              steem_per_mvests=490,
-              truffle_link=TRUFFLE_LINK,
-              truffle_image=TRUFFLE_IMAGE,
+def topN_post(topN_authors, topN_permalinks, topN_titles, topN_filtered_bodies,
+              topN_image_urls, topN_rewards, topN_votes, title_date,
+              truffle_link, steem_per_mvests=490, truffle_image=TRUFFLE_IMAGE,
               quote_max_length=QUOTE_MAX_LENGTH):
     """Craetes the truffle pig daily toplist post"""
     title = """Today's Truffle Picks: Quality Steemit Posts that deserve more Rewards and Attention! ({date})"""
@@ -179,7 +175,7 @@ def topN_comment(topN_authors, topN_permalinks, topN_titles,
     return post
 
 
-def on_call_comment(author, reward, votes, topN_link, truffle_link=TRUFFLE_LINK, truffle_image_small=TRUFFLE_IMAGE_SMALL):
+def on_call_comment(author, reward, votes, topN_link, truffle_link, truffle_image_small=TRUFFLE_IMAGE_SMALL):
     """Creates a comment made under an upvoted toplist post"""
     post = """Thanks for calling @{author}! Here is a small upvote for this post and my opinion about it.
     

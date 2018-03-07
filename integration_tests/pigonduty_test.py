@@ -15,7 +15,7 @@ def test_call_a_pig(steem_kwargs):
     tppd.call_a_pig(steem_kwargs=steem_kwargs,account='trufflepig',
                     pipeline=pipeline, topN_permalink='www.test.com',
                     current_datetime=current_datetime, hours=0.1,
-                    sleep_time=0.1)
+                    sleep_time=0.1, overview_permalink='dsfd')
 
 
 @pytest.mark.skipif(config.PASSWORD is None, reason="needs posting key")
@@ -26,4 +26,5 @@ def test_call_a_pig_empty_frame(steem):
     tppd.execute_call(comment_authors_and_permalinks=aacs,
                         steem=steem,account='trufflepig',
                         pipeline=pipeline, topN_permalink='www.test.com',
-                        max_comments=1000, sleep_time=0.1)
+                        max_comments=1000, sleep_time=0.1,
+                        overview_permalink='jdsakd')

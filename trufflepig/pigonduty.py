@@ -18,7 +18,9 @@ MAX_COMMENTS = 3000
 
 
 def call_a_pig(steem_kwargs, account, pipeline, topN_permalink, current_datetime,
-               offset_hours=2, hours=24, max_comments=MAX_COMMENTS,
+               overview_permalink,
+               offset_hours=2, hours=24,
+               max_comments=MAX_COMMENTS,
                sleep_time=20.1):
     """ Scans for user mentioning the bot and answers
 
@@ -29,6 +31,7 @@ def call_a_pig(steem_kwargs, account, pipeline, topN_permalink, current_datetime
     pipeline: sklearn pipeline
     topN_link: str
     current_datetime: datetime
+    overview_permalink: str
     offset_hours: int
     hours: int
     max_comments: int
@@ -61,13 +64,15 @@ def call_a_pig(steem_kwargs, account, pipeline, topN_permalink, current_datetime
                      steem=steem,
                      topN_permalink=topN_permalink,
                      sleep_time=sleep_time,
-                     max_comments=max_comments)
+                     max_comments=max_comments,
+                     overview_permalink=overview_permalink)
     else:
         logger.info('No mentions of {} found, good bye!'.format(account))
 
 
 def execute_call(comment_authors_and_permalinks, account, pipeline,
-                 steem, topN_permalink, sleep_time, max_comments):
+                 steem, topN_permalink, sleep_time, max_comments,
+                 overview_permalink):
     """Executes the pig on duty call"""
     ncomments = len(comment_authors_and_permalinks)
 
@@ -102,4 +107,5 @@ def execute_call(comment_authors_and_permalinks, account, pipeline,
     tpoc.post_on_call(combined, account=account,
                           steem=steem,
                           topN_link=topN_link,
-                          sleep_time=sleep_time)
+                          sleep_time=sleep_time,
+                          overview_permalink=overview_permalink)

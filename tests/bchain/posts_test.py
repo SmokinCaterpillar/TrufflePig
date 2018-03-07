@@ -13,7 +13,8 @@ def test_comment():
     result = tbpo.truffle_comment(reward=post['reward'],
                                   votes=post['votes'],
                                   rank=1,
-                                  topN_link='www.example.com')
+                                  topN_link='www.example.com',
+                                  truffle_link='www.tf.tf')
 
     assert result
 
@@ -31,9 +32,8 @@ def test_topN_post():
                                  topN_titles=df.title,
                                  topN_filtered_bodies=df.filtered_body,
                                  topN_image_urls=df.image_urls,
-                                 topN_votes=df.votes,
-                                 topN_rewards=df.reward,
-                                 title_date=date)
+                                 topN_rewards=df.reward, topN_votes=df.votes,
+                                 title_date=date, truffle_link='de.de.de')
 
     assert post
     assert title
@@ -56,7 +56,8 @@ def test_topN_comment():
 def test_post_on_call():
 
     comment = tbpo.on_call_comment(reward=1000000, author='Douglas Adams', votes=42000000,
-                                   topN_link='www.deep.thought')
+                                   topN_link='www.deep.thought',
+                                   truffle_link='adsadsad.de')
 
     assert comment
 
