@@ -12,6 +12,7 @@ from sklearn.model_selection import train_test_split, GridSearchCV, \
 from sklearn.base import BaseEstimator, RegressorMixin
 
 from gensim.models.lsimodel import LsiModel
+from gensim.models.tfidfmodel import TfidfModel
 from gensim import corpora
 from gensim.matutils import corpus2dense
 import gensim.models.doc2vec as d2v
@@ -199,7 +200,8 @@ class TopicModel(BaseEstimator):
         self.prune_at = prune_at
         self.keep_n = keep_n
         self.lsi = None
-        self.disctionary = None
+        self.tfidf = None
+        self.dictionary = None
 
     def to_corpus(self, tokens):
         """ Transfers a list of tokens into the Gensim corpus representation
@@ -240,6 +242,8 @@ class TopicModel(BaseEstimator):
         """
         self.fill_dictionary(tokens)
         corpus = self.to_corpus(tokens)
+        self.tfidf = TfidfModel(corpus)
+        corpus = self.tfidf[corpus]
         self.lsi = LsiModel(corpus, num_topics=self.num_topics)
 
     def project(self, tokens):
@@ -256,6 +260,7 @@ class TopicModel(BaseEstimator):
 
         """
         corpus = self.to_corpus(tokens)
+        corpus = self.tfidf[corpus]
         return self.lsi[corpus]
 
     def project_dense(self, tokens):

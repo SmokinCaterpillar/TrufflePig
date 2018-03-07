@@ -6,7 +6,7 @@ logger = logging.getLogger(__name__)
 
 
 def filter_html_tags(text):
-    return re.sub('</?[a-z]{1,11}>', '', text)
+    return re.sub('</?[a-zA-Z]{1,11}>', '', text)
 
 
 def filter_images_and_links(text):
@@ -49,7 +49,22 @@ def filter_formatting(text):
     text = re.sub('img', '', text)
     text = re.sub('src', '', text)
     text = re.sub('h[1-6]', '', text)
+
+    text = re.sub('&?NPSB', ' ',text)
+    text = re.sub('ALIGNCENTER', '', text)
+    text = re.sub('STYLETEXTALIGN', '', text)
+    text = re.sub('HREF', '', text)
+    text = re.sub('IMG', '', text)
+    text = re.sub('SRC', '', text)
     text = re.sub('H[1-6]', '', text)
+
+    text = re.sub('&?Npsb', ' ',text)
+    text = re.sub('Aligncenter', '', text)
+    text = re.sub('Styletextalign', '', text)
+    text = re.sub('Href', '', text)
+    text = re.sub('Img', '', text)
+    text = re.sub('Src', '', text)
+
     return text
 
 
