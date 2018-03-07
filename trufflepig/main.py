@@ -149,7 +149,9 @@ def main():
     tpmo.log_pipeline_info(pipeline=pipeline)
 
     account = config.ACCOUNT
-    overview_permalink = tppw.return_overview_permalink_if_exists(account=account)
+    overview_permalink = tppw.return_overview_permalink_if_exists(account=account,
+                                                                  current_datetime=current_datetime,
+                                                                  steem_args=steem_kwargs)
 
     if not overview_permalink:
         if post_frame is None:
