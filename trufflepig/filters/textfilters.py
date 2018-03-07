@@ -42,7 +42,6 @@ def filter_special_characters(text):
 
 
 def filter_formatting(text):
-    text = text.lower()
     text = re.sub('&?nbsp', ' ',text)
     text = re.sub('aligncenter', '', text)
     text = re.sub('styletextalign', '', text)
@@ -58,6 +57,13 @@ def filter_formatting(text):
     text = re.sub('IMG', '', text)
     text = re.sub('SRC', '', text)
     text = re.sub('H[1-6]', '', text)
+
+    text = re.sub('&?Npsb', ' ',text)
+    text = re.sub('Aligncenter', '', text)
+    text = re.sub('Styletextalign', '', text)
+    text = re.sub('Href', '', text)
+    text = re.sub('Img', '', text)
+    text = re.sub('Src', '', text)
 
     return text
 
