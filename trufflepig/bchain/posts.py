@@ -201,16 +201,15 @@ Have a nice day and sincerely yours,
 
 
 def topN_words(words, counts):
-
     result = '\n'
     for irun, (word, count) in enumerate(zip(words, counts)):
-        result += '{rank}. {word}: {count}\n'.format(rank=irun + 1, word=word,
-                                                        count=count)
+        result += '{rank}. {word}: {count}\n'.format(rank=irun + 1,
+                                                     word=word.capitalize(),
+                                                     count=count)
     return result
 
 
 def topN_tags(tags, counts, rewards):
-
     result = '\n'
     for irun, (tag, count, reward) in enumerate(zip(tags, counts, rewards)):
         result += '{rank}. {tag}: {count} with {reward} SBD\n'.format(rank=irun + 1,
@@ -323,7 +322,7 @@ Ever wondered which words are used the most?
 
 {top10_words}
 
-To be fair, I actually do not care about these words. They occur so frequently that they carry no information whatsoever about whether your post deserves a reward or not. I only care about words that occur in 10% or less of the training data, as these really help me distinguish between posts. Next, let's take a look at on which features I really base my decisions on.
+To be fair, I actually do not care about these words. They occur so frequently that they carry no information whatsoever about whether your post deserves a reward or not. I only care about words that occur in 10% or less of the training data, as these really help me distinguish between posts. Next, let's take a look at which features I really base my decisions on.
 
 ### Feature Importances
 

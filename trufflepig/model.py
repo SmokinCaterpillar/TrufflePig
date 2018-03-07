@@ -953,12 +953,15 @@ def log_truffle_info(post_frame, k):
         logger.info(truffle_str)
 
 
-def log_pipeline_info(pipeline,  features=FEATURES, num_topics=256):
+def log_pipeline_info(pipeline):
     """Helper function to log model information to console"""
     topic_model = pipeline.named_steps['feature_generation'].transformer_list[1][1]
+    feature_selector = pipeline.named_steps['feature_generation'].transformer_list[0][1]
     logging.getLogger().info(topic_model.print_topics(n_best=None))
 
     feature_importance_string = 'Feature importances \n'
+    num_topics = topic_model.num_topics
+    features = feature_selector.features
     feature_names = features + ['topic_{:03d}'.format(x)
                                 for x in range(num_topics)]
     for kdx, importance in enumerate(pipeline.named_steps['regressor'].feature_importances_):
