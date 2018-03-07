@@ -119,6 +119,8 @@ def create_post():
     randauthor = np.random.randint(0, len(AUTHORS))
     author = AUTHORS[randauthor]
 
+    author_reputation = 2000000000 * ntwords
+
     post = {
             'title': title,
             'reward': reward,
@@ -128,6 +130,7 @@ def create_post():
             'body': body,
             'author': author,
             'permalink': permalink,
+            'author_reputation': author_reputation
         }
 
     return post

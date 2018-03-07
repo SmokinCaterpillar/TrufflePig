@@ -49,6 +49,7 @@ def filter_formatting(text):
     text = re.sub('img', '', text)
     text = re.sub('src', '', text)
     text = re.sub('h[1-6]', '', text)
+    text = re.sub('H[1-6]', '', text)
     return text
 
 
@@ -61,7 +62,7 @@ def filter_punctuation(text):
 
 
 def filter_headings(text):
-    return re.sub('(\n|^)( *#{1,6}| *<h[1-6]>)[^\n#]*\n', '', text)
+    return re.sub('(\n|^)( *#{1,6}| *<h[1-6]>| *<H[1-6]>)[^\n#]*\n', '', text)
 
 
 def is_in_filter_tags(tags, filter_tags):

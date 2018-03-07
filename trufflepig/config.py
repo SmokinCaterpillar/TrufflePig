@@ -13,6 +13,7 @@ if PASSWORD:
     # The wallet creation needs it in this very explicit way :-(
     os.environ['UNLOCK'] = PASSWORD
 POSTING_KEY = os.environ.get('STEEM_POSTING_KEY', None)
+ACTIVE_KEY = os.environ.get('STEEM_ACTIVE_KEY', None)
 
 # Useful helper constant
 PROJECT_DIRECTORY = os.path.abspath(os.path.join(os.path.dirname(__file__), '..'))

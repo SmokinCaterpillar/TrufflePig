@@ -1,6 +1,6 @@
 import pytest
 
-from integration_tests.bchain.getdata_test import steem_kwargs
+from integration_tests.bchain.getdata_test import steem_kwargs, steem
 from integration_tests.model_test import MockPipeline
 
 from trufflepig import config
@@ -13,6 +13,17 @@ def test_call_a_pig(steem_kwargs):
 
     pipeline = MockPipeline()
     tppd.call_a_pig(steem_kwargs=steem_kwargs,account='trufflepig',
-                    pipeline=pipeline, topN_link='www.test.com',
+                    pipeline=pipeline, topN_permalink='www.test.com',
                     current_datetime=current_datetime, hours=0.1,
                     sleep_time=0.1)
+
+
+@pytest.mark.skipif(config.PASSWORD is None, reason="needs posting key")
+def test_call_a_pig_empty_frame(steem):
+    aacs = (('smcaterpillar','question-is-there-an-api-to-upload-images-to-steemit'),)
+
+    pipeline = MockPipeline()
+    tppd.execute_call(comment_authors_and_permalinks=aacs,
+                        steem=steem,account='trufflepig',
+                        pipeline=pipeline, topN_permalink='www.test.com',
+                        max_comments=1000, sleep_time=0.1)

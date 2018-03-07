@@ -1,11 +1,14 @@
+import numpy as np
+
 import trufflepig.filters.textfilters as tftf
 
 
 TRUFFLE_LINK = 'https://steemit.com/steemit/@smcaterpillar/trufflepig-introducing-the-artificial-intelligence-for-content-curation-and-minnow-support'
 TRUFFLE_IMAGE_SMALL = '![trufflepig](https://raw.githubusercontent.com/SmokinCaterpillar/TrufflePig/master/img/trufflepig17_small.png)'
 TRUFFLE_IMAGE = '![trufflepig](https://raw.githubusercontent.com/SmokinCaterpillar/TrufflePig/master/img/trufflepig17.png)'
+DELEGATION_LINK = 'https://v2.steemconnect.com/sign/delegateVestingShares?delegator=&delegatee=trufflepig&vesting_shares={shares}%20VESTS'
 QUOTE_MAX_LENGTH = 496
-TAGS = ['steemit', 'steem', 'minnowsupport', 'upvote', 'community']
+TAGS = ['steemit', 'curation', 'minnowsupport', 'technology', 'community']
 
 BODY_PREFIX = ''  # to announce tests etc.
 
@@ -82,10 +85,21 @@ def simple_topN_list(topN_authors, topN_permalinks, topN_titles,
     return result_string
 
 
+def get_delegation_link(steem_per_mvests, steem_powers=(1, 5, 10, 50, 100, 500, 1000, 5000)):
+    """Returns a dictionary of links to delegate SP"""
+    link_dict = {}
+    for steem_power in steem_powers:
+        shares = np.round(steem_power / steem_per_mvests * 1e6, 3)
+        link_dict['sp'+str(steem_power)] = DELEGATION_LINK.format(shares=shares)
+    return link_dict
+
+
 def topN_post(topN_authors, topN_permalinks, topN_titles,
               topN_filtered_bodies, topN_image_urls,
               topN_rewards, topN_votes, title_date,
-              truffle_link=TRUFFLE_LINK, truffle_image=TRUFFLE_IMAGE,
+              steem_per_mvests=490,
+              truffle_link=TRUFFLE_LINK,
+              truffle_image=TRUFFLE_IMAGE,
               quote_max_length=QUOTE_MAX_LENGTH):
     """Craetes the truffle pig daily toplist post"""
     title = """Today's Truffle Picks: Quality Steemit Posts that deserve more Rewards and Attention! ({date})"""
@@ -111,7 +125,15 @@ If your post did not make into the top list, but you are still curious about my 
 
 ## You can Help and Contribute
 
-By checking, upvoting, and resteeming the found truffles from above, you help minnows and promote good content on Steemit. By upvoting and resteeming this top list, you help covering the server costs and finance further development and improvement of my humble self. Alternatively, if you feel very generous you can delegate Steem Power to me and boost my daily upvotes on the truffle posts.
+By checking, upvoting, and resteeming the found truffles from above, you help minnows and promote good content on Steemit. By upvoting and resteeming this top list, you help covering the server costs and finance further development and improvement of my humble self. 
+
+**NEW**: You may further show your support for me and all the found truffles by [**following my curation trail**](https://steemauto.com/dash.php?trail=trufflepig&i=1) on SteemAuto!
+
+## Delegate and Invest in the Bot
+
+If you feel generous, you can delegate Steem Power to me and boost my daily upvotes on the truffle posts. In return, I will provide you with a *small* compensation for your trust in me and your locked Steem Power. **Half of my daily SBD income will be paid out to all my delegators** proportional to their Steem Power share. Payouts will start 3 days after your delegation.
+
+Click on one of the following links to delegate **[1]({sp1}), [5]({sp5}), [10]({sp10}), [50]({sp50}), [100]({sp100}), [500]({sp500}), [1000]({sp1000}),** or even **[5000 Steem Power]({sp5000})**. Thank You!
 
 Cheers,
 
@@ -119,6 +141,7 @@ Cheers,
 
 *`TrufflePig`*
     """
+    link_dict = get_delegation_link(steem_per_mvests=steem_per_mvests)
 
     topN_truffles = topN_list(topN_authors=topN_authors,
                               topN_permalinks=topN_permalinks,
@@ -132,7 +155,8 @@ Cheers,
     title = title.format(date=title_date.strftime('%d.%m.%Y'))
     post = post.format(topN_truffles=topN_truffles,
                           truffle_image=truffle_image,
-                          truffle_link=truffle_link)
+                          truffle_link=truffle_link,
+                          **link_dict)
     post = BODY_PREFIX + post
     return title, post
 

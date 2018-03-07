@@ -13,6 +13,7 @@ import trufflepig.model as tpmo
 import trufflepig.preprocessing as tppp
 import trufflepig.utils as tfut
 import trufflepig.pigonduty as tfod
+import trufflepig.bchain.paydelegates as tpde
 from trufflepig import config
 from trufflepig.utils import configure_logging
 
@@ -116,7 +117,9 @@ def main():
 
     steem_kwargs = dict(nodes=config.NODES, no_broadcast=no_broadcast)
 
-    tppd.create_wallet(steem_kwargs, config.PASSWORD, config.POSTING_KEY)
+    tppd.create_wallet(steem_kwargs, config.PASSWORD,
+                       posting_key=config.POSTING_KEY,
+                       active_key=config.ACTIVE_KEY)
 
     if not tpmo.model_exists(current_datetime, model_directoy):
 
@@ -175,7 +178,7 @@ def main():
     tfod.call_a_pig(steem_kwargs=steem_kwargs,
                     account=account,
                     pipeline=pipeline,
-                    topN_link=permalink,
+                    topN_permalink=permalink,
                     current_datetime=current_datetime,
                     offset_hours=2,
                     hours=24)
@@ -184,6 +187,11 @@ def main():
     tfut.clean_up_directory(model_directoy, keep_last=3)
     tfut.clean_up_directory(data_directory, keep_last=25)
     tfut.clean_up_directory(log_directory, keep_last=14)
+
+    logger.info('Paying out investors')
+    tpde.pay_delegates(account=account,
+                       steem_args=steem_kwargs,
+                       current_datetime=current_datetime)
 
     logger.info('DONE at {}'.format(current_datetime))
 

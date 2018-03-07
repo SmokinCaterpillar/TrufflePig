@@ -253,7 +253,8 @@ def get_post_data(authors_and_permalinks, steem, exclusion_voters):
             'tags': p.tags,
             'body': p.body,
             'author': author,
-            'permalink': permalink
+            'permalink': permalink,
+            'author_reputation': int(p.author_reputation)
         }
         posts.append(post)
     return posts
