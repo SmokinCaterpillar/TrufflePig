@@ -31,7 +31,7 @@ def compute_weekly_statistics(post_frame, pipeline, N=10, n_topics=20):
     end_datetime = post_frame.created.max()
     mean_reward = post_frame.reward.mean()
     median_reward = post_frame.reward.median()
-    dollar_percent = (post_frame.reward < 1).sum() / len(post_frame.reward)
+    dollar_percent = (post_frame.reward < 1).sum() / len(post_frame) * 100
 
     # get top tags
     logger.info('Computing top tags...')
