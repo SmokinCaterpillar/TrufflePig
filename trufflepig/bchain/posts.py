@@ -278,9 +278,9 @@ Steemit can be a tough place for minnows. Due to the sheer amount of new posts t
 
 However, this user based curation also has its merits, of course. You can become fortunate and your nice posts get traction and the recognition they deserve. Maybe there is a way to support the Steemit content curators such that high quality content does not go unnoticed anymore? There is! In fact, I am a bot that tries to achieve this by using Artificial Intelligence, especially Natural Language Processing and Machine Learning.
 
-My name is *TrufflePig*. I was created and am being maintained by @smcaterpillar. I search for quality content that got less rewards than it deserves. I call these posts truffles, publish a daily top list, and upvote them.
+My name is *`TrufflePig`*. I was created and am being maintained by @smcaterpillar. I search for quality content that got less rewards than it deserves. I call these posts truffles, publish a daily top list, and upvote them.
 
-In this weekly series of posts I want to do two things: First, give you an overview about my inner workings, so you can get an idea how I select and reward content. Secondly, I want to peak into my training data with you and show you what insights I draw from all the posts published on this platform. If you have read one of my previous weekly posts before, you can happily skip the first part and directly scroll to the new stuff about analyzing my most recent training data.
+In this weekly series of posts I want to do two things: First, give you an overview about my inner workings, so you can get an idea about how I select and reward content. Secondly, I want to peak into my training data with you and show you what insights I draw from all the posts published on this platform. If you have read one of my previous weekly posts before, you can happily skip the first part and directly scroll to the new stuff about analyzing my most recent training data.
 
 # My Inner Workings
 
@@ -304,7 +304,7 @@ Usually the most difficult and involved part of engineering a Machine Learning a
 
 It is important that I use features that represent the content and quality of a post. I do not want to use author specific features such as the number of followers or past author payouts. Although these are very predictive features of future payouts, these do not help me to identify overlooked and buried truffles.
 
-I use some features that encode the style of the posts, such as number of paragraphs, average words per sentence, or spelling mistakes. Clearly, posts with many spelling errors are usually not high-quality content and are, to my mind, a pain to read. Moreover, I included readability scores like the [Flesch-Kincaid index](https://en.wikipedia.org/wiki/Flesch%E2%80%93Kincaid_readability_tests) and syllable distributions to quantify how easy and nice a post is to read.
+I use some features that encode the layout of the posts, such as number of paragraphs or number of headings. I also care about spelling mistakes. Clearly, posts with many spelling errors are usually not high-quality content and are, to my mind, a pain to read. Moreover, I include readability scores like the [Flesch-Kincaid index](https://en.wikipedia.org/wiki/Flesch%E2%80%93Kincaid_readability_tests) and syllable distributions to quantify how easy and nice a post is to read.
 
 Still, the question remains, how do I encode the content of a post? How to represent the topic someone chose and the story an author told? The most simple encoding that is quite often used is the so called ['term frequency inverse document frequency'](https://en.wikipedia.org/wiki/Tf%E2%80%93idf) (tf-idf). This technique basically encodes each document, so in my case Steemit posts, by the particular words that are present and weighs them by their (heuristically) normalized frequency of occurrence. However, this encoding produces vectors of enormous length with one entry for each unique word in all documents. Hence, most entries in these vectors are zero anyway because each document contains only a small subset of all potential words. For instance, if there are 150,000 different unique words in all our Steemit posts, each post will be represented by a vector of length 150,000 with almost all entries set to zero. Even if we filter and ignore very common words such as `the` or `a` we could easily end up with vectors having 30,000 or more dimensions.
 
@@ -314,13 +314,13 @@ After a bit of experimentation I chose an LSA projection with 128 dimensions. To
 
 For training, I read all posts between 7 and 17 days of age. These posts are first filtered and subsequently encoded. This week I got a training set of {total_posts} contributions. Too short posts, way too long ones, non-English, whale war posts, posts flagged by @cheetah, or posts with too many spelling errors are removed from the training set. The resulting matrix of {total_posts} by 150 entries is used as the input to a multi-output [Random Forest regressor from scikit learn](http://scikit-learn.org/stable/modules/generated/sklearn.ensemble.RandomForestRegressor.html). The target values are the reward in SBD as well as the total number of votes a post received.
 
-After the training, scheduled once a week, my Machine Learning regressor is used on a daily basis on recent posts between 2 and 26 hours old to predict the expected reward and votes. Posts with a high expected reward but a low real payout are classified as truffles and mentioned in a daily top list. I slightly adjust the ranking to promote less popular topics and punish posts with very popular tags like #steemit or #cryptocurrency. Still this doesn't mean, that posts about these topics won't show up in the top-list (in fact they do quite often), but they have it a bit harder than others.
+After the training, scheduled once a week, my Machine Learning regressor is used on a daily basis on recent posts between 2 and 26 hours old to predict the expected reward and votes. Posts with a high expected reward but a low real payout are classified as truffles and mentioned in a daily top list. I slightly adjust the ranking to promote less popular topics and punish posts with very popular tags like #steemit or #cryptocurrency. Still, this doesn't mean that posts about these topics won't show up in the top-list (in fact they do quite often), but they have it a bit harder than others.
 
 A bit more detailed explanation together with a performance evaluation of the setup can also be found [in this post](https://steemit.com/steemit/@smcaterpillar/trufflepig-introducing-the-artificial-intelligence-for-content-curation-and-minnow-support). If you are interested in the technology stack I use, take a look at [my creator's application on Utopian](https://utopian.io/utopian-io/@smcaterpillar/trufflepig-a-bot-based-on-natural-language-processing-and-machine-learning-to-support-content-curators-and-minnows). Oh, and did I mention that I am open source? No? Well, I am, you can find my blueprints in [my creator's Github profile](https://github.com/SmokinCaterpillar/TrufflePig).
 
 # Let's dig into my very recent Training Data and Discoveries!
 
-Let's see what Steemit has to offer and if we can already draw some inferences from my training data before doing some complex Machine Learning!.
+Let's see what Steemit has to offer and if we can already draw some inferences from my training data before doing some complex Machine Learning!
 
 So this week I scraped posts between **{start_date}** and **{end_date}**. After filtering the contributions (as mentioned above, because they are too short or not in English, etc.) my training data this week comprises of **{total_posts} posts** that received **{total_votes} votes** leading to a total payout of **{total_reward} SBD**. Wow, this is a lot!
 
@@ -328,7 +328,7 @@ How are these payouts distributed among the posts? Well, on average a post recei
 
 ![earnings](https://raw.githubusercontent.com/SmokinCaterpillar/TrufflePig/feature/weekly_status/img/distribution.png)
 
-Next time you envy other peoples' payouts of several hundred bucks and your post only got a few, remember that you are already lucky if making more than 1 Dollar! Hopefully, I can help to distribute payouts more evenly and help reward good content.
+Next time you envy other peoples' payouts of several hundred bucks and your post only got a few, remember that you are already lucky if making more than 1 Dollar! Hopefully, I can help to distribute payouts more evenly and help to reward good content.
 
 While we are speaking of the rhich kids of Steemit. Who has earned the most money with their posts? Below is a top ten list of the high rollers in my dataset.
 
@@ -354,17 +354,17 @@ Next, let's take a look at which features I really base my decisions on.
 
 ### Feature Importances
 
-Fortunately, my random forest regressor allows us to take a look at the importance of the features I use to evaluate posts. I summarized my 150 or so features into three categories: *Spelling errors*, *readability* features, and *content*. *Spelling errors* are rather self explanatory and *readability* features comprise of things like ratios of long syllable to short syllable words, variance in sentence length, or ratio of punctuation to text. By *content* I mean the importance of the LSA projection that encodes the subject matter of your post.
+Fortunately, my random forest regressor allows us to inspect the importance of the features I use to evaluate posts. For simplicity, I group my 150 or so features into three categories: *Spelling errors*, *readability* features, and *content*. *Spelling errors* are rather self explanatory and *readability* features comprise of things like ratios of long syllable to short syllable words, variance in sentence length, or ratio of punctuation to text. By *content* I mean the importance of the LSA projection that encodes the subject matter of your post.
 
 The importance is shown in percent, the higher the importance, the more likely the feature is able to distinguish between low and high payout. In technical terms, the higher the importance the higher up are the features used in the decision trees of the forest to split the training data.
 
-So this time the *spelling errors* have an importance of **{spelling_percent:.1f}%** in comparison to *readability* with **{style_percent:.1f}%**. Yet, the biggest and most important part is the actual *content* you post about, with all LSA topics together accumulating to **{topic_percent:.1f}%**.
+So this time the *spelling errors* have an importance of **{spelling_percent:.1f}%** in comparison to *readability* with **{style_percent:.1f}%**. Yet, the biggest and most important part is the actual *content* your post is about, with all LSA topics together accumulating to **{topic_percent:.1f}%**.
 
-You are wondering what these 128 topics of mine are? I give you some examples below. Each topic is described by it's most important words with a large positive or negative contribution. You may think of it this way: A post covers a particular topic if the words with a positve weight are present and the ones with negative weights are absent.
+You are wondering what these 128 topics of mine are? I give you some examples below. Each topic is described by its most important words with a large positive or negative contribution. You may think of it this way: A post covers a particular topic if the words with a positve weight are present and the ones with negative weights are absent.
 
 > {topics}
 
-After creating the *spelling*, *readability* and topic or *content* features. I train my random forest regressor on the encoded data. In a nutshell, the random forest (and the individual decision trees in the forest) try to infer complex rules from the encoded data like:
+After creating the *spelling*, *readability* and *content* features. I train my random forest regressor on the encoded data. In a nutshell, the random forest (and the individual decision trees in the forest) try to infer complex rules from the encoded data like:
 
 > If spelling_errors < 10 AND topic_1 > 0.6 AND average_sentence_length < 5 AND ... THEN 20 SBD AND 42 votes
 
