@@ -200,7 +200,7 @@ def topN_words(words, counts):
     result = '\n'
     for irun, (word, count) in enumerate(zip(words, counts)):
         result += '{rank}. {word}: {count}\n'.format(rank=irun + 1,
-                                                     word=word.capitalize(),
+                                                     word=word,
                                                      count=count)
     return result
 
@@ -209,7 +209,7 @@ def topN_tfidf(words, tfidfs):
     result = '\n'
     for irun, (word, tfidf) in enumerate(zip(words, tfidfs)):
         result += '{rank}. {word}: {tfidf:.2f} tfidf score\n'.format(rank=irun + 1,
-                                                                             word=word.capitalize(),
+                                                                             word=word,
                                                                              tfidf=tfidf)
     return result
 
@@ -330,7 +330,7 @@ How are these payouts distributed among the posts? Well, on average a post recei
 
 Next time you envy other peoples' payouts of several hundred bucks and your post only got a few, remember that you are already lucky if making more than 1 Dollar! Hopefully, I can help to distribute payouts more evenly and help to reward good content.
 
-While we are speaking of the rhich kids of Steemit. Who has earned the most money with their posts? Below is a top ten list of the high rollers in my dataset.
+While we are speaking of the rich kids of Steemit. Who has earned the most money with their posts? Below is a top ten list of the high rollers in my dataset.
 
 {top10_earners}
 
