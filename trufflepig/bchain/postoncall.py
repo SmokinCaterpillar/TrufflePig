@@ -33,7 +33,7 @@ def post_on_call(post_frame, account, steem, topN_link,
         should only be lowered for debugging
 
     """
-    weight = min(90 / len(post_frame), 10)
+    weight = min(75 / len(post_frame), 10)
     truffle_link = 'https://steemit.com/steemit/@{}/{}'.format(account,
                                                                overview_permalink)
 
