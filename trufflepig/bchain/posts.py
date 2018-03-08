@@ -205,6 +205,15 @@ def topN_words(words, counts):
     return result
 
 
+def topN_tfidf(words, tfidfs):
+    result = '\n'
+    for irun, (word, tfidf) in enumerate(zip(words, tfidfs)):
+        result += '{rank}. {word}: {tfidf:.2f} tfidf score\n'.format(rank=irun + 1,
+                                                                             word=word.capitalize(),
+                                                                             tfidf=tfidf)
+    return result
+
+
 def topN_tags(tags, counts, rewards):
     result = '\n'
     for irun, (tag, count, reward) in enumerate(zip(tags, counts, rewards)):
@@ -212,6 +221,16 @@ def topN_tags(tags, counts, rewards):
                                                                       tag=tag,
                                                                       count=count,
                                                                       reward=int(reward))
+    return result
+
+
+def topN_tags_earnings(tags, counts, rewards_per_post):
+    result = '\n'
+    for irun, (tag, count, reward) in enumerate(zip(tags, counts, rewards_per_post)):
+        result += '{rank}. {tag}: {count} with {reward:.3f} SBD per post\n'.format(rank=irun + 1,
+                                                                      tag=tag,
+                                                                      count=count,
+                                                                      reward=reward)
     return result
 
 
@@ -241,8 +260,13 @@ def weekly_update(current_datetime,
                   top_tags,
                   top_tag_counts,
                   top_tag_rewards,
+                  top_tags_earnings,
+                  top_tags_earnings_counts,
+                  top_tags_earnings_reward,
                   top_words,
                   top_words_counts,
+                  top_tfidf,
+                  top_tfidf_scores,
                   spelling_percent,
                   style_percent,
                   topic_percent,
@@ -314,11 +338,19 @@ Let's continue with top lists. What are the most favorite tags and how much did 
 
 {top10_tags}
 
+Ok what if we order them by the payout per post?
+
+{top10_tags_earnings}
+
 Ever wondered which words are used the most?
 
 {top10_words}
 
-To be fair, I actually do not care about these words. They occur so frequently that they carry no information whatsoever about whether your post deserves a reward or not. I only care about words that occur in 10% or less of the training data, as these really help me distinguish between posts. Next, let's take a look at which features I really base my decisions on.
+To be fair, I actually do not care about these words. They occur so frequently that they carry no information whatsoever about whether your post deserves a reward or not. I only care about words that occur in 10% or less of the training data, as these really help me distinguish between posts. We can figure out which words or bigrams of words I care about the most by ordering according to their tfidf score (taking the maximum tfidf across a large sample of documents):
+
+{top10_tfidf}
+
+Next, let's take a look at which features I really base my decisions on.
 
 ### Feature Importances
 
@@ -328,11 +360,17 @@ The importance is shown in percent, the higher the importance, the more likely t
 
 So this time the *spelling errors* have an importance of **{spelling_percent:.1f}%** in comparison to *readability* with **{style_percent:.1f}%**. Yet, the biggest and most important part is the actual *content* you post about, with all LSA topics together accumulating to **{topic_percent:.1f}%**.
 
-You are wondering what these 128 topics of mine are? I give you the first twenty as an example below. Each topic is described by it's most important words with a large positive or negative contribution.
+You are wondering what these 128 topics of mine are? I give you some examples below. Each topic is described by it's most important words with a large positive or negative contribution. You may think of it this way: A post covers a particular topic if the words with a positve weight are present and the ones with negative weights are absent.
 
 > {topics}
 
-So now I'll use these insights and dig for truffles. Watch out for my daily top lists!
+After creating the *spelling*, *readability* and topic or *content* features. I train my random forest regressor on the encoded data. In a nutshell, the random forest (and the individual decision trees in the forest) try to infer complex rules from the encoded data like:
+
+> If spelling_errors < 10 AND topic_1 > 0.6 AND average_sentence_length < 5 AND ... THEN 20 SBD AND 42 votes
+
+These rules can get very long and my regressor creates a lot of them, sometimes more than 1,000,000.
+
+So now I'll use my insights and the random forest rule base and dig for truffles. Watch out for my daily top lists!
 
 ## You can Help and Contribute
 
@@ -367,8 +405,15 @@ Cheers,
                            rewards=top_tag_rewards,
                            counts=top_tag_counts)
 
+    top10_tags_earnings = topN_tags_earnings(tags=top_tags_earnings,
+                                             counts=top_tags_earnings_counts,
+                                             rewards_per_post=top_tags_earnings_reward)
+
     top10_words = topN_words(words=top_words,
                              counts=top_words_counts)
+
+    top10_tfidf = topN_tfidf(words=top_tfidf,
+                             tfidfs=top_tfidf_scores)
 
     title = title.format(week_date=current_datetime.strftime('%Y-%V'))
     post = post.format(start_date=start_datetime.strftime('%d.%m.%Y'),
@@ -381,11 +426,13 @@ Cheers,
                       dollar_percent=int(dollar_percent),
                       top10_earners=top10_earners,
                       top10_tags=top10_tags,
+                      top10_tags_earnings=top10_tags_earnings,
                       top10_words=top10_words,
+                      top10_tfidf=top10_tfidf,
                       spelling_percent=spelling_percent,
                       style_percent=style_percent,
                       topic_percent=topic_percent,
-                      topics=topics,
+                      topics=topics.replace('\n', '\n>'),
                       truffle_image=truffle_image,
                       **link_dict)
 

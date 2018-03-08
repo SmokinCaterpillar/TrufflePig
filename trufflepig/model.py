@@ -278,7 +278,7 @@ class TopicModel(BaseEstimator):
         """Project in scikit API language"""
         return self.project_dense(data.tokens)
 
-    def print_topics(self, n_best=10, n_words=7):
+    def print_topics(self, n_best=10, n_words=7, topics_step=1):
         """ Returns a string of the best topics
 
         Parameters
@@ -287,6 +287,8 @@ class TopicModel(BaseEstimator):
             Number of topics to return
         n_words: int
             Number of words to show per topic
+        topics_step: int
+            Steps of printing
 
         Returns
         -------
@@ -296,7 +298,7 @@ class TopicModel(BaseEstimator):
             n_best = self.num_topics
 
         result = ''
-        for topic in range(n_best):
+        for topic in range(0, n_best, topics_step):
             best_words = self.lsi.show_topic(topic, n_words)
             inwords = [(self.dictionary[int(x[0])], x[1]) for x in best_words]
             wordstring = ', '.join('{}: {:0.2f}'.format(*x) for x in inwords)

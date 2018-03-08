@@ -8,7 +8,7 @@ from steem.converter import Converter
 import trufflepig.model as tpmo
 import trufflepig.bchain.posts as tpbp
 import trufflepig.bchain.getdata as tppd
-
+from trufflepig.bchain.posts import topN_tfidf
 
 logger = logging.getLogger(__name__)
 
@@ -22,7 +22,7 @@ STYLE_CATEGORY = [x for x in tpmo.FEATURES if x not in SPELLING_CATEGORY]
 TAGS = ['steemit', 'steemstem', 'minnowsupport', 'technology', 'utopian-io']
 
 
-def compute_weekly_statistics(post_frame, pipeline, N=10, n_topics=20):
+def compute_weekly_statistics(post_frame, pipeline, N=10, topics_step=4):
     logger.info('Computing statistics...')
     total_reward = post_frame.reward.sum()
     total_posts = len(post_frame)
@@ -48,7 +48,13 @@ def compute_weekly_statistics(post_frame, pipeline, N=10, n_topics=20):
     rewards = pd.Series(tag_payout, name='reward')
     top_tags = counts.to_frame().join(rewards).sort_values('count',
                                                           ascending=False)
+    top_tags_earnings = top_tags.copy()
     top_tags = top_tags.iloc[:N, :]
+
+    logger.info('Computing top tags earnings...')
+    top_tags_earnings['per_post'] = top_tags_earnings.reward / top_tags_earnings['count']
+    top_tags_earnings = top_tags_earnings.sort_values('per_post', ascending=False)
+    top_tags_earnings = top_tags_earnings.iloc[:N, :]
 
     # get top tokens
     logger.info('Computing top words...')
@@ -61,6 +67,27 @@ def compute_weekly_statistics(post_frame, pipeline, N=10, n_topics=20):
     top_words = pd.Series(token_count_dict, name='count')
     top_words = top_words.sort_values(ascending=False).iloc[:N]
 
+    logger.info('Computing top tfidf...')
+    topic_model = pipeline.named_steps['feature_generation'].transformer_list[1][1]
+    tfidf = topic_model.tfidf
+    dictionary = topic_model.dictionary
+    sample_size = 2000
+    if sample_size > len(post_frame):
+        sample_frame = post_frame
+    else:
+        sample_frame = post_frame.sample(n=sample_size)
+    corpus_tfidf = tfidf[topic_model.to_corpus(sample_frame.tokens)]
+    top_tfidf = {}
+    for doc in corpus_tfidf:
+        for iWord, tf_idf in doc:
+            iWord = dictionary.get(iWord)
+            if iWord not in top_tfidf:
+                top_tfidf[iWord] = 0
+            if tf_idf > top_tfidf[iWord]:
+                top_tfidf[iWord] = tf_idf
+    top_tfidf = pd.Series(top_tfidf, name='score')
+    top_tfidf = top_tfidf.sort_values(ascending=False).iloc[:N]
+
     # get top authors
     logger.info('Computing top posts...')
     top_posts = post_frame.loc[:, ['title', 'author', 'permalink', 'reward', 'votes']].sort_values('reward',
@@ -68,13 +95,13 @@ def compute_weekly_statistics(post_frame, pipeline, N=10, n_topics=20):
 
     # get topics
     logger.info('Computing topics...')
-    topic_model = pipeline.named_steps['feature_generation'].transformer_list[1][1]
-    topics = topic_model.print_topics(n_best=n_topics, n_words=4)
+    num_topics = topic_model.num_topics
+    topics = topic_model.print_topics(n_best=num_topics, n_words=4,
+                                      topics_step=topics_step)
 
     # get feature importances
     logger.info('Computing feature importances...')
     feature_selector = pipeline.named_steps['feature_generation'].transformer_list[0][1]
-    num_topics = topic_model.num_topics
     features = feature_selector.features
     feature_names = features + ['topic_{:03d}'.format(x)
                                 for x in range(num_topics)]
@@ -107,8 +134,13 @@ def compute_weekly_statistics(post_frame, pipeline, N=10, n_topics=20):
           top_tags=top_tags.index,
           top_tag_counts=top_tags['count'],
           top_tag_rewards=top_tags.reward,
+          top_tags_earnings=top_tags_earnings.index,
+          top_tags_earnings_counts=top_tags_earnings['count'],
+          top_tags_earnings_reward=top_tags_earnings.per_post,
           top_words=top_words.index,
           top_words_counts=top_words,
+          top_tfidf=top_tfidf.index,
+          top_tfidf_scores=top_tfidf,
           spelling_percent=spelling_percent,
           style_percent=style_percent,
           topic_percent=topic_percent,
