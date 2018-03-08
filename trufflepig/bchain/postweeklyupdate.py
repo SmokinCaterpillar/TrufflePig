@@ -53,7 +53,9 @@ def compute_weekly_statistics(post_frame, pipeline, N=10, topics_step=4):
 
     logger.info('Computing top tags earnings...')
     top_tags_earnings['per_post'] = top_tags_earnings.reward / top_tags_earnings['count']
-    top_tags_earnings = top_tags_earnings.sort_values('per_post', ascending=False)
+    min_count = 500
+    top_tags_earnings = top_tags_earnings[top_tags_earnings['count']
+                                          >= min_count].sort_values('per_post', ascending=False)
     top_tags_earnings = top_tags_earnings.iloc[:N, :]
 
     # get top tokens
