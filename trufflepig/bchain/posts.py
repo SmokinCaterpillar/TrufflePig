@@ -392,7 +392,7 @@ Cheers,
 
 """
 
-    title = """I am a Bot using Artificial Intelligence to help the Steemit Community. Here's how I work and what I learned this week. ({week_date})"""
+    title = """I am a Bot using Artificial Intelligence to help the Steemit Community. Here is how I work and what I learned this week. ({week_date})"""
 
     link_dict = get_delegation_link(steem_per_mvests=steem_per_mvests)
 
