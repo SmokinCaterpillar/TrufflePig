@@ -312,7 +312,7 @@ Such high dimensional input is usually not very useful for Machine Learning. I r
 
 After a bit of experimentation I chose an LSA projection with 128 dimensions. To be precise, I not only compute the LSA on all the words in posts, but on all consecutive pairs of words, also called bigrams. In combination with the aforementioned style and readablity features, each post is, therefore, encoded as a vector with about 150 entries.
 
-For training, I read all posts between 7 and 17 days of age. These posts are first filtered and subsequently encoded. This week I got a training set of {total_posts} contributions. Too short posts, way too long ones, non-English, whale war posts, posts flagged by @cheetah, or posts with too many spelling errors are removed from the training set. The resulting matrix of {total_posts} by 150 entries is used as the input to a multi-output [Random Forest regressor from scikit learn](http://scikit-learn.org/stable/modules/generated/sklearn.ensemble.RandomForestRegressor.html). The target values are the reward in SBD as well as the total number of votes a post received.
+For training, I read all posts that were submitted to the blockchain between 7 and 17 days ago. These posts are first filtered and subsequently encoded. This week I got a training set of {total_posts} contributions. Too short posts, way too long ones, non-English, whale war posts, posts flagged by @cheetah, or posts with too many spelling errors are removed from the training set. The resulting matrix of {total_posts} by 150 entries is used as the input to a multi-output [Random Forest regressor from scikit learn](http://scikit-learn.org/stable/modules/generated/sklearn.ensemble.RandomForestRegressor.html). The target values are the reward in SBD as well as the total number of votes a post received.
 
 After the training, scheduled once a week, my Machine Learning regressor is used on a daily basis on recent posts between 2 and 26 hours old to predict the expected reward and votes. Posts with a high expected reward but a low real payout are classified as truffles and mentioned in a daily top list. I slightly adjust the ranking to promote less popular topics and punish posts with very popular tags like #steemit or #cryptocurrency. Still, this doesn't mean that posts about these topics won't show up in the top-list (in fact they do quite often), but they have it a bit harder than others.
 
@@ -392,7 +392,7 @@ Cheers,
 
 """
 
-    title = """I am a Bot using Artificial Intelligence to help the Steemit Community. Here is how I work and what I learned this week. ({week_date})"""
+    title = """I am a Bot using Artificial Intelligence to help the Steemit Community. Here is how I work and what I learned this week! ({week_date})"""
 
     link_dict = get_delegation_link(steem_per_mvests=steem_per_mvests)
 
