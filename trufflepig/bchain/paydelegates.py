@@ -8,6 +8,7 @@ import trufflepig.bchain.getdata as tpdg
 from steem import Steem
 from steembase import operations
 from steem.account import Account
+from steembase.exceptions import RPCError
 
 
 logger = logging.getLogger(__name__)
@@ -71,4 +72,9 @@ def claim_all_reward_balance(steem, account):
                                        reward_steem=reward_steem,
                                        reward_sbd=reward_sbd,
                                        reward_vests=reward_vests)
-    return steem.commit.finalizeOp(op, account, "posting")
+    try:
+        return steem.commit.finalizeOp(op, account, "posting")
+    except RPCError as exc:
+        logger.exception('Could not claim rewards {}'.format((reward_sbd,
+                                                              reward_vests,
+                                                              reward_steem)))
