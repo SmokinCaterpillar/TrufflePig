@@ -28,8 +28,11 @@ def test_statistics():
     stats = tppw.compute_weekly_statistics(post_frame, pipeline)
     steem_per_mvests = 490
 
+    delegator_list = ['peter', 'paul']
+
     title, body = tpbp.weekly_update(steem_per_mvests=steem_per_mvests,
                                      current_datetime=current_date,
+                                     delegator_list=delegator_list,
                                      **stats)
     assert title
     assert body

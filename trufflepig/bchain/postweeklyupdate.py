@@ -8,7 +8,7 @@ from steem.converter import Converter
 import trufflepig.model as tpmo
 import trufflepig.bchain.posts as tpbp
 import trufflepig.bchain.getdata as tppd
-from trufflepig.bchain.posts import topN_tfidf
+import trufflepig.bchain.getaccountdata as tpaa
 
 logger = logging.getLogger(__name__)
 
@@ -167,8 +167,11 @@ def post_weakly_update(pipeline, post_frame, account, steem_args, current_dateti
     steem_per_mvests = Converter(steem).steem_per_mvests()
     stats = compute_weekly_statistics(post_frame, pipeline)
 
+    delegator_list = tpaa.get_delegates_and_shares(account, steem).keys()
+
     title, body = tpbp.weekly_update(steem_per_mvests=steem_per_mvests,
                                      current_datetime=current_datetime,
+                                     delegator_list=delegator_list,
                                      **stats)
     permalink = PERMALINK_TEMPLATE.format(date=current_datetime.strftime('%Y-%V'))
     logger.info('Posting weekly update with permalink: {}'.format(permalink))

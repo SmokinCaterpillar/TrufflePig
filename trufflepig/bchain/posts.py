@@ -271,6 +271,7 @@ def weekly_update(current_datetime,
                   style_percent,
                   topic_percent,
                   topics,
+                  delegator_list,
                   truffle_image=TRUFFLE_IMAGE):
     post = """### TrufflePig at Your Service
 
@@ -322,7 +323,7 @@ A bit more detailed explanation together with a performance evaluation of the se
 
 Let's see what Steemit has to offer and if we can already draw some inferences from my training data before doing some complex Machine Learning!
 
-So this week I scraped posts between **{start_date}** and **{end_date}**. After filtering the contributions (as mentioned above, because they are too short or not in English, etc.) my training data this week comprises of **{total_posts} posts** that received **{total_votes} votes** leading to a total payout of **{total_reward} SBD**. Wow, this is a lot!
+So this week I scraped posts with an initial publication date between **{start_date}** and **{end_date}**. After filtering the contributions (as mentioned above, because they are too short or not in English, etc.) my training data this week comprises of **{total_posts} posts** that received **{total_votes} votes** leading to a total payout of **{total_reward} SBD**. Wow, this is a lot!
 
 How are these payouts distributed among the posts? Well, on average a post received **{mean_reward:.3f} SBD**. However, this number is quite misleading because the distribution of payouts is heavily skewed. In fact, the median payout is **only {median_reward:.3f} SBD**! Moreover, **{dollar_percent}%** of posts are paid less than 1 SBD! Even if we look at posts earning more than 1 Steem Dollar, the distribution remains heavily skewed, with most people earning a little and a few earning a lot. Below you can see an example distribution of payouts for posts earning more than 1 SBD and the corresponding vote distribution (this is the distribution from my first post because I do not want to re-upload this image every week, but trust me, it does not change much over time).
 
@@ -382,6 +383,8 @@ By checking, upvoting, and resteeming the found truffles of my daily top lists, 
 
 If you feel generous, you can delegate Steem Power to me and boost my daily upvotes on the truffle posts. In return, I will provide you with a *small* compensation for your trust in me and your locked Steem Power. **Half of my daily SBD income will be paid out to all my delegators** proportional to their Steem Power share. Payouts will start 3 days after your delegation.
 
+Big thank you to the people who already delegated Power to me: {delegator_list}!
+
 Click on one of the following links to delegate **[1]({sp1}), [5]({sp5}), [10]({sp10}), [50]({sp50}), [100]({sp100}), [500]({sp500}), [1000]({sp1000}),** or even **[5000 Steem Power]({sp5000})**. Thank You!
 
 Cheers,
@@ -415,6 +418,8 @@ Cheers,
     top10_tfidf = topN_tfidf(words=top_tfidf,
                              tfidfs=top_tfidf_scores)
 
+    delegator_list = ', '.join('@{}'.format(x) for x in sorted(delegator_list))
+
     title = title.format(week_date=current_datetime.strftime('%Y-%V'))
     post = post.format(start_date=start_datetime.strftime('%d.%m.%Y'),
                       end_date=end_datetime.strftime('%d.%m.%Y'),
@@ -434,6 +439,7 @@ Cheers,
                       topic_percent=topic_percent,
                       topics=topics.replace('\n', '\n>'),
                       truffle_image=truffle_image,
+                      delegator_list=delegator_list,
                       **link_dict)
 
     return title, post
