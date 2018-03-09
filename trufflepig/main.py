@@ -122,6 +122,12 @@ def main():
                        posting_key=config.POSTING_KEY,
                        active_key=config.ACTIVE_KEY)
 
+    logger.info('Paying out investors')
+    account = config.ACCOUNT
+    tpde.pay_delegates(account=account,
+                       steem_args=steem_kwargs,
+                       current_datetime=current_datetime)
+
     if not tpmo.model_exists(current_datetime, model_directoy):
 
         post_frame = load_and_preprocess_2_frames(
@@ -148,7 +154,6 @@ def main():
 
     tpmo.log_pipeline_info(pipeline=pipeline)
 
-    account = config.ACCOUNT
     overview_permalink = tppw.return_overview_permalink_if_exists(account=account,
                                                                   current_datetime=current_datetime,
                                                                   steem_args=steem_kwargs)
@@ -210,11 +215,6 @@ def main():
     tfut.clean_up_directory(model_directoy, keep_last=3)
     tfut.clean_up_directory(data_directory, keep_last=25)
     tfut.clean_up_directory(log_directory, keep_last=14)
-
-    logger.info('Paying out investors')
-    tpde.pay_delegates(account=account,
-                       steem_args=steem_kwargs,
-                       current_datetime=current_datetime)
 
     logger.info('DONE at {}'.format(current_datetime))
 
