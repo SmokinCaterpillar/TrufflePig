@@ -3,8 +3,7 @@ import logging
 
 import pandas as pd
 
-from integration_tests.bchain.getdata_test import temp_dir
-
+from trufflepig.testutils.pytest_fixtures import temp_dir
 import trufflepig.utils as tfut
 
 

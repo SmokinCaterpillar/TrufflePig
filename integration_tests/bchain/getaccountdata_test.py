@@ -1,7 +1,6 @@
 import pandas as pd
 
-from integration_tests.bchain.getdata_test import steem, steem_kwargs
-
+from trufflepig.testutils.pytest_fixtures import steem_kwargs, steem
 import trufflepig.bchain.getaccountdata as tpac
 
 

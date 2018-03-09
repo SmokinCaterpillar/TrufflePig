@@ -1,34 +1,12 @@
-import pytest
 import os
 
 import pandas as pd
 from pandas.testing import assert_frame_equal
-from steem.blockchain import Blockchain
 from steem.post import Post
 
-from trufflepig import config
 import trufflepig.bchain.getdata as tpbg
-
-
-@pytest.fixture()
-def steem_kwargs():
-    return dict(nodes=config.NODES,
-                no_broadcast=True)
-
-
-@pytest.fixture
-def steem(steem_kwargs):
-    return tpbg.Steem(**steem_kwargs)
-
-
-@pytest.fixture
-def bchain(steem):
-    return Blockchain(steem)
-
-
-@pytest.fixture
-def temp_dir(tmpdir_factory):
-    return tmpdir_factory.mktemp('test', numbered=True)
+from trufflepig.testutils.pytest_fixtures import steem, steem_kwargs, \
+    bchain, temp_dir
 
 
 def test_get_headers(steem, bchain):

@@ -1,13 +1,13 @@
-import pytest
 import pandas as pd
+import pytest
 
-from tests.fixtures.random_data import create_n_random_posts
-from integration_tests.bchain.getdata_test import steem_kwargs
+import trufflepig.bchain.posts as tpbp
+import trufflepig.bchain.postweeklyupdate as tppw
 import trufflepig.model as tpmo
 import trufflepig.preprocessing as tppp
-import trufflepig.bchain.postweeklyupdate as tppw
-import trufflepig.bchain.posts as tpbp
 from trufflepig import config
+from trufflepig.testutils.random_data import create_n_random_posts
+from trufflepig.testutils.pytest_fixtures import steem_kwargs
 
 
 def test_statistics():

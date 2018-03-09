@@ -1,19 +1,13 @@
 import os
 
-import pandas as pd
 import numpy as np
-import pytest
+import pandas as pd
 
-from tests.fixtures.random_data import create_n_random_posts
+import trufflepig.bchain.getdata as tpbg
 import trufflepig.model as tpmo
 import trufflepig.preprocessing as tppp
-import trufflepig.bchain.getdata as tpbg
-from integration_tests.bchain.getdata_test import steem_kwargs
-
-
-@pytest.fixture
-def temp_dir(tmpdir_factory):
-    return tmpdir_factory.mktemp('test', numbered=True)
+from trufflepig.testutils.random_data import create_n_random_posts
+from trufflepig.testutils.pytest_fixtures import steem_kwargs, temp_dir
 
 
 def test_pipeline_model():

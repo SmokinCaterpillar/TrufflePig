@@ -1,7 +1,6 @@
 import pytest
 
-from integration_tests.bchain.getdata_test import steem_kwargs
-
+from trufflepig.testutils.pytest_fixtures import steem_kwargs
 import trufflepig.bchain.paydelegates as tppd
 import trufflepig.bchain.postdata as tpdd
 from trufflepig import config

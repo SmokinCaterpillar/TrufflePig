@@ -1,11 +1,11 @@
 import os
 
-from pandas.testing import assert_frame_equal
 import pandas as pd
+from pandas.testing import assert_frame_equal
 
-from integration_tests.model_test import temp_dir
-from tests.fixtures.random_data import create_n_random_posts
 import trufflepig.preprocessing as tppp
+from trufflepig.testutils.random_data import create_n_random_posts
+from trufflepig.testutils.pytest_fixtures import temp_dir
 
 
 def test_load_or_preproc(temp_dir):

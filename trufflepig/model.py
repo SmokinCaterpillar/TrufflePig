@@ -845,7 +845,7 @@ def compute_rank_score(post_frame, punish_list=PUNISH_LIST, ncores=2, chunksize=
     grammar_factor = gramma_errors_per_sentence.apply(lambda x: grammar_score_step_function(x))
 
     logger.info('...Done combining reward difference and factors')
-    result = post_frame.reward_difference
+    result = post_frame.rank_score
     final_factor = (grammar_factor * reward_factor * vote_factor *
                         tag_factor * spelling_errors_factor * reputation_factor)
     # increase negative values for low factors:
@@ -902,7 +902,7 @@ def find_truffles(post_frame, pipeline, account='trufflepig',
 
     post_frame['predicted_reward'] = predicted_rewards_and_votes[:, 0]
     post_frame['predicted_votes'] = predicted_rewards_and_votes[:, 1]
-    post_frame['reward_difference'] = post_frame.predicted_reward - post_frame.reward
+    post_frame['rank_score'] = post_frame.predicted_reward - post_frame.reward
 
     if add_rank_score:
         logger.info('Computing rank score')

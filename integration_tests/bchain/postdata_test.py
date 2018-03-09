@@ -1,14 +1,12 @@
-import pytest
 import pandas as pd
+import pytest
 
-from tests.fixtures import random_data
-from integration_tests.bchain.getdata_test import steem, steem_kwargs
-
-import trufflepig.bchain.posts as tbpo
+import trufflepig.bchain.getdata as tpbg
 import trufflepig.bchain.postdata as tbpd
 import trufflepig.preprocessing as tppp
-import trufflepig.bchain.getdata as tpbg
 from trufflepig import config
+from trufflepig.testutils import random_data
+from trufflepig.testutils.pytest_fixtures import steem_kwargs, steem
 
 
 @pytest.mark.skipif(config.PASSWORD is None, reason="needs posting key")

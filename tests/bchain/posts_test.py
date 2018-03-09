@@ -1,10 +1,9 @@
 import pandas as pd
 
-from tests.fixtures import random_data
-
 import trufflepig.bchain.posts as tbpo
-import trufflepig.preprocessing as tppp
 import trufflepig.filters.textfilters as tptf
+import trufflepig.preprocessing as tppp
+from trufflepig.testutils import random_data
 
 
 def test_comment():

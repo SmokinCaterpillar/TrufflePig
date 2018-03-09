@@ -1,9 +1,8 @@
 import pandas as pd
 
-from tests.fixtures.raw_data import POSTS
-from tests.fixtures.random_data import create_n_random_posts
-
 import trufflepig.preprocessing as tppp
+from trufflepig.testutils.random_data import create_n_random_posts
+from trufflepig.testutils.raw_data import POSTS
 
 
 def test_preprocessing():
