@@ -27,7 +27,8 @@ def test_test_top10post(steem):
 
     account = config.ACCOUNT
 
-    permalink = tbpd.post_topN_list(df, steem, account, date)
+    permalink = tbpd.post_topN_list(df, steem, account, date,
+                                    overview_permalink='iii')
     tbpd.comment_on_own_top_list(df, steem, account, permalink)
 
 
@@ -49,9 +50,11 @@ def test_test_all_top_with_real_data(steem_kwargs):
 
     account = config.ACCOUNT
 
-    permalink = tbpd.post_topN_list(df, steem, account, date)
+    permalink = tbpd.post_topN_list(df, steem, account, date,
+                                    overview_permalink='jjj')
     tbpd.comment_on_own_top_list(df, steem, account, permalink)
-    tbpd.vote_and_comment_on_topK(df, steem, account, permalink, K=1)
+    tbpd.vote_and_comment_on_topK(df, steem, account, permalink, K=1,
+                                  overview_permalink='jjj')
 
 
 @pytest.mark.skipif(config.PASSWORD is None, reason="needs posting key")
@@ -68,7 +71,8 @@ def test_test_top20_vote_and_comment(steem):
 
     account = config.ACCOUNT
 
-    tbpd.vote_and_comment_on_topK(df, steem, account, 'laida')
+    tbpd.vote_and_comment_on_topK(df, steem, account, 'laida',
+                                  overview_permalink='lll')
 
 
 @pytest.mark.skipif(config.PASSWORD is None, reason="needs posting key")

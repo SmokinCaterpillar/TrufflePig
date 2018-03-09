@@ -1,3 +1,8 @@
+*0.5.0a* - 2018-03-07
+
+* Fixed tfids error
+* New weekly status post after training
+
 *0.4.1a* - 2018-03-05
 
 * New factor based on rep

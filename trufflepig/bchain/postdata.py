@@ -17,7 +17,7 @@ PERMALINK_TEMPLATE = 'daily-truffle-picks-{date}'
 
 
 def post_topN_list(sorted_post_frame, steem_or_args, account,
-                   current_datetime, N=10):
+                   current_datetime, overview_permalink, N=10):
     """ Post the toplist to the blockchain
 
     Parameters
@@ -42,15 +42,18 @@ def post_topN_list(sorted_post_frame, steem_or_args, account,
     df.first_image_url = df.body.apply(lambda x: tftf.get_image_urls(x))
 
     steem_per_mvests = Converter(steem).steem_per_mvests()
+    truffle_link = 'https://steemit.com/steemit/@{}/{}'.format(account,
+                                                               overview_permalink)
 
     title, body = tfbp.topN_post(topN_authors=df.author,
                                  topN_permalinks=df.permalink,
                                  topN_titles=df.title,
                                  topN_filtered_bodies=df.filtered_body,
                                  topN_image_urls=df.first_image_url,
-                                 topN_votes=df.predicted_votes,
                                  topN_rewards=df.predicted_reward,
+                                 topN_votes=df.predicted_votes,
                                  title_date=current_datetime,
+                                 truffle_link=truffle_link,
                                  steem_per_mvests=steem_per_mvests)
 
     permalink = PERMALINK_TEMPLATE.format(date=current_datetime.strftime('%Y-%m-%d'))
@@ -107,7 +110,7 @@ def comment_on_own_top_list(sorted_post_frame, steem_or_args, account,
 
 
 def vote_and_comment_on_topK(sorted_post_frame, steem_or_args, account,
-                             topN_permalink, K=25):
+                             topN_permalink, overview_permalink, K=25):
     """
 
     Parameters
@@ -125,6 +128,8 @@ def vote_and_comment_on_topK(sorted_post_frame, steem_or_args, account,
     weight = min(800.0 / K, 100)
     topN_link = 'https://steemit.com/@{author}/{permalink}'.format(author=account,
                                                     permalink=topN_permalink)
+    truffle_link = 'https://steemit.com/steemit/@{}/{}'.format(account,
+                                                               overview_permalink)
 
     for kdx, (_, row) in enumerate(sorted_post_frame.iterrows()):
         if kdx >= K:
@@ -135,7 +140,8 @@ def vote_and_comment_on_topK(sorted_post_frame, steem_or_args, account,
             reply = tfbp.truffle_comment(reward=row.predicted_reward,
                                          votes=row.predicted_votes,
                                          rank=kdx + 1,
-                                         topN_link=topN_link)
+                                         topN_link=topN_link,
+                                         truffle_link=truffle_link)
             post = Post('@{}/{}'.format(row.author, row.permalink), steem)
             # to pass around the no broadcast setting otherwise it is lost
             # see https://github.com/steemit/steem-python/issues/155

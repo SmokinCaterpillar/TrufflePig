@@ -16,6 +16,7 @@ YOU_DID_NOT_MAKE_IT = """I am sorry, I cannot evaluate your post. This can have 
 
 
 def post_on_call(post_frame, account, steem, topN_link,
+                 overview_permalink,
                  exclusion_set=tfgd.EXCLUSION_VOTERS_SET,
                  sleep_time=20.1):
     """ Replies to users calling @trufflepig
@@ -32,7 +33,9 @@ def post_on_call(post_frame, account, steem, topN_link,
         should only be lowered for debugging
 
     """
-    weight = min(90 / len(post_frame), 10)
+    weight = min(75 / len(post_frame), 10)
+    truffle_link = 'https://steemit.com/steemit/@{}/{}'.format(account,
+                                                               overview_permalink)
 
     for kdx, (_, row) in enumerate(post_frame.iterrows()):
         try:
@@ -49,7 +52,8 @@ def post_on_call(post_frame, account, steem, topN_link,
                         reply = tfbp.on_call_comment(reward=row.predicted_reward,
                                                      author=row.comment_author,
                                                      votes=row.predicted_votes,
-                                                     topN_link=topN_link)
+                                                     topN_link=topN_link,
+                                                     truffle_link=truffle_link)
 
                         post = Post('@{}/{}'.format(row.author, row.permalink), steem)
                         # to pass around the no broadcast setting otherwise it is lost

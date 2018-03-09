@@ -16,6 +16,7 @@ import trufflepig.pigonduty as tfod
 import trufflepig.bchain.paydelegates as tpde
 from trufflepig import config
 from trufflepig.utils import configure_logging
+import trufflepig.bchain.postweeklyupdate as tppw
 
 logger = logging.getLogger(__name__)
 
@@ -121,14 +122,19 @@ def main():
                        posting_key=config.POSTING_KEY,
                        active_key=config.ACTIVE_KEY)
 
+    logger.info('Paying out investors')
+    account = config.ACCOUNT
+    tpde.pay_delegates(account=account,
+                       steem_args=steem_kwargs,
+                       current_datetime=current_datetime)
+
     if not tpmo.model_exists(current_datetime, model_directoy):
 
         post_frame = load_and_preprocess_2_frames(
             log_directory=log_directory,
             current_datetime=current_datetime,
             steem_kwargs=steem_kwargs,
-            data_directory=data_directory
-        )
+            data_directory=data_directory)
         logger.info('Garbage collecting')
         gc.collect()
     else:
@@ -148,6 +154,26 @@ def main():
 
     tpmo.log_pipeline_info(pipeline=pipeline)
 
+    overview_permalink = tppw.return_overview_permalink_if_exists(account=account,
+                                                                  current_datetime=current_datetime,
+                                                                  steem_args=steem_kwargs)
+
+    if not overview_permalink:
+        if post_frame is None:
+            logger.info('Need to reaload data for weekly overview')
+            post_frame = load_and_preprocess_2_frames(
+            log_directory=log_directory,
+            current_datetime=current_datetime,
+            steem_kwargs=steem_kwargs,
+            data_directory=data_directory)
+
+        logger.info('I want to post my weekly overview')
+        overview_permalink = tppw.post_weakly_update(pipeline=pipeline,
+                                                     post_frame=post_frame,
+                                                     account=account,
+                                                     steem_args=steem_kwargs,
+                                                     current_datetime=current_datetime)
+
     logger.info('Garbage collecting')
     del post_frame
     gc.collect()
@@ -160,10 +186,10 @@ def main():
 
     sorted_frame = tpmo.find_truffles(prediction_frame, pipeline,
                                       account=config.ACCOUNT)
-    account = config.ACCOUNT
     permalink = tppd.post_topN_list(sorted_frame, steem_kwargs,
                                     account=account,
-                                    current_datetime=current_datetime)
+                                    current_datetime=current_datetime,
+                                    overview_permalink=overview_permalink)
 
     tppd.comment_on_own_top_list(sorted_frame, steem_kwargs,
                                  account=account,
@@ -172,7 +198,8 @@ def main():
     tppd.vote_and_comment_on_topK(sorted_frame,
                                   steem_kwargs,
                                   topN_permalink=permalink,
-                                  account=account)
+                                  account=account,
+                                  overview_permalink=overview_permalink)
 
     logger.info('Done with normal duty, answering manual calls!')
     tfod.call_a_pig(steem_kwargs=steem_kwargs,
@@ -181,17 +208,13 @@ def main():
                     topN_permalink=permalink,
                     current_datetime=current_datetime,
                     offset_hours=2,
-                    hours=24)
+                    hours=24,
+                    overview_permalink=overview_permalink)
 
     logger.info('Cleaning up after myself')
     tfut.clean_up_directory(model_directoy, keep_last=3)
     tfut.clean_up_directory(data_directory, keep_last=25)
     tfut.clean_up_directory(log_directory, keep_last=14)
-
-    logger.info('Paying out investors')
-    tpde.pay_delegates(account=account,
-                       steem_args=steem_kwargs,
-                       current_datetime=current_datetime)
 
     logger.info('DONE at {}'.format(current_datetime))
 

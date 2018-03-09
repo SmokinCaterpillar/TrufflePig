@@ -278,7 +278,7 @@ class TopicModel(BaseEstimator):
         """Project in scikit API language"""
         return self.project_dense(data.tokens)
 
-    def print_topics(self, n_best=10, n_words=7):
+    def print_topics(self, n_best=10, n_words=7, topics_step=1):
         """ Returns a string of the best topics
 
         Parameters
@@ -287,6 +287,8 @@ class TopicModel(BaseEstimator):
             Number of topics to return
         n_words: int
             Number of words to show per topic
+        topics_step: int
+            Steps of printing
 
         Returns
         -------
@@ -296,7 +298,7 @@ class TopicModel(BaseEstimator):
             n_best = self.num_topics
 
         result = ''
-        for topic in range(n_best):
+        for topic in range(0, n_best, topics_step):
             best_words = self.lsi.show_topic(topic, n_words)
             inwords = [(self.dictionary[int(x[0])], x[1]) for x in best_words]
             wordstring = ', '.join('{}: {:0.2f}'.format(*x) for x in inwords)
@@ -953,12 +955,15 @@ def log_truffle_info(post_frame, k):
         logger.info(truffle_str)
 
 
-def log_pipeline_info(pipeline,  features=FEATURES, num_topics=256):
+def log_pipeline_info(pipeline):
     """Helper function to log model information to console"""
     topic_model = pipeline.named_steps['feature_generation'].transformer_list[1][1]
+    feature_selector = pipeline.named_steps['feature_generation'].transformer_list[0][1]
     logging.getLogger().info(topic_model.print_topics(n_best=None))
 
     feature_importance_string = 'Feature importances \n'
+    num_topics = topic_model.num_topics
+    features = feature_selector.features
     feature_names = features + ['topic_{:03d}'.format(x)
                                 for x in range(num_topics)]
     for kdx, importance in enumerate(pipeline.named_steps['regressor'].feature_importances_):
