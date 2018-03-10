@@ -155,15 +155,14 @@ def get_delegate_payouts(account, steem, current_datetime,
     return payouts
 
 
-def get_upvote_payments(account, steem, max_length=500):
+def get_upvote_payments(account, steem, min_timestamp):
 
     upvote_payments = {}
 
     acc = Account(account, steem)
     transfers = acc.history_reverse(filter_by='transfer')
-    history = list(itertools.islice(transfers, max_length))
 
-    for transfer in history:
+    for transfer in transfers:
         try:
             memo = transfer['memo']
             if memo.startswith(MEMO_START):
@@ -173,6 +172,10 @@ def get_upvote_payments(account, steem, max_length=500):
                 if (author, permalink) not in upvote_payments:
                     upvote_payments[(author, permalink)] = []
                 upvote_payments[(author, permalink)].append(transfer['amount'])
+
+            timestamp = pd.to_datetime(transfer['timestamp'])
+            if timestamp < min_timestamp:
+                break
 
         except Exception as e:
             logger.exception('Could not parse {}'.format(transfer))
