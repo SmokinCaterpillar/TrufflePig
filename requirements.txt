@@ -11,5 +11,6 @@ scikit-learn==0.19.1
 langdetect==1.0.7
 pyenchant==2.0.0
 pyphen==0.9.4
+proselint==0.8.0
 language-check==1.1
 steem==0.18.103

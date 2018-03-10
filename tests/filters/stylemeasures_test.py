@@ -113,6 +113,12 @@ def test_adverb_estimate():
     assert result == 1
 
 
+def test_lint_errors():
+    text = 'She works hard for the money. So hard! John is very unique.'
+    result = tpsm.lint_errors(text)
+    assert result == 2
+
+
 def test_grammar_errors():
     counter = tpsm.GrammarErrorCounter()
     sentences = 'She earn moneyt. I did nothing wrogn. He go in Colorado.'

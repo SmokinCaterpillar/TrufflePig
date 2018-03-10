@@ -1,6 +1,7 @@
-*0.6.0a* - 2018-03-08
+*0.6.0a* - 2018-03-10
 
 * Two new readability scores
+* New lint errors
 
 *0.5.0a* - 2018-03-07
 

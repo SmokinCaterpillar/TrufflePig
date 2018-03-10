@@ -54,7 +54,8 @@ FEATURES = ['body_length',
             'syllable_variance',
             'syllable_skew',
             'syllable_kurtosis',
-            'adverbs_per_sentence']
+            'adverbs_per_sentence',
+            'lint_errors_per_sentence']
 
 # output variables for regressor
 TARGETS = ['reward', 'votes']
