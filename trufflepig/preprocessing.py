@@ -383,13 +383,6 @@ def preprocess(post_df, ncores=4, chunksize=500,
                                                             num_words=post_df.num_words,
                                                             num_sentences=post_df.num_sentences)
 
-    logger.info('Counting proselint errors')
-    post_df['lint_errors'] = apply_parallel(tfsm.lint_errors,
-                                              post_df.filtered_body,
-                                              ncores=ncores,
-                                              chunksize=chunksize)
-    post_df['lint_errors_per_sentence'] = post_df.lint_errors / post_df.num_sentences
-
     post_df.dropna(inplace=True)
     logger.info('Final data set has {} shape'.format(post_df.shape))
 

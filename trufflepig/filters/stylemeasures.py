@@ -6,7 +6,6 @@ import scipy.stats as spst
 import langdetect
 import language_check
 import pyphen
-import proselint
 from enchant.checker import SpellChecker
 
 CAPS = "([A-Z])"
@@ -170,11 +169,6 @@ def coleman_liau_index(num_chars, num_words, num_sentences):
 
 def adverb_estimate(tokens):
     return sum([1 for x in tokens if x.endswith('ly')])
-
-
-def lint_errors(text):
-    errors = proselint.tools.lint(text)
-    return len(errors)
 
 
 class SyllableConverter(object):
