@@ -27,3 +27,8 @@ def test_payouts(steem):
 
     assert 'smcaterpillar' in result
     assert 'trufflepig' not in result
+
+
+def test_bidbot_test(steem):
+    result = tpac.get_upvote_payments('brittuf', steem, 200)
+    assert result

@@ -1,4 +1,5 @@
 import logging
+import itertools
 
 import pandas as pd
 import numpy as np
@@ -7,6 +8,9 @@ from steem.account import Account
 
 
 logger = logging.getLogger(__name__)
+
+
+MEMO_START = 'https://steemit.com/'
 
 
 def find_nearest_index(target_datetime,
@@ -150,3 +154,27 @@ def get_delegate_payouts(account, steem, current_datetime,
 
     return payouts
 
+
+def get_upvote_payments(account, steem, max_length=500):
+
+    upvote_payments = {}
+
+    acc = Account(account, steem)
+    transfers = acc.history_reverse(filter_by='transfer')
+    history = list(itertools.islice(transfers, max_length))
+
+    for transfer in history:
+        try:
+            memo = transfer['memo']
+            if memo.startswith(MEMO_START):
+                author, permalink = memo.split('/')[-2:]
+                assert author.startswith('@')
+                author = author[1:]
+                if (author, permalink) not in upvote_payments:
+                    upvote_payments[(author, permalink)] = []
+                upvote_payments[(author, permalink)].append(transfer['amount'])
+
+        except Exception as e:
+            logger.exception('Could not parse {}'.format(transfer))
+
+    return upvote_payments
