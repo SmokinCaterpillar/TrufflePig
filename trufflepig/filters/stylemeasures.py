@@ -126,6 +126,10 @@ def compute_average_puncitation(text_list):
     return np.mean(punctuation)
 
 
+def count_characters(tokens):
+    return sum(len(x) for x in tokens)
+
+
 def count_connectors(tokens):
     return sum(1 for x in tokens if x in CONNECTORS)
 
@@ -149,7 +153,18 @@ def flesch_kincaid_index(num_syllables, num_words, num_sentences):
 
 
 def smog_index(num_complex_words, num_sentences):
+    """https://en.wikipedia.org/wiki/SMOG"""
     return 1.0430 * np.sqrt(num_complex_words * 30 / num_sentences) + 3.1291
+
+
+def automated_readability_index(num_chars, num_words, num_sentences):
+    """https://en.wikipedia.org/wiki/Automated_readability_index"""
+    return 4.71 * (num_chars / num_words) + 0.5 * (num_words / num_sentences) - 21.43
+
+
+def coleman_liau_index(num_chars, num_words, num_sentences):
+    """https://en.wikipedia.org/wiki/Coleman%E2%80%93Liau_index"""
+    return 0.0588 * 100 * num_chars / num_words - 0.296 * 100 * num_sentences / num_words - 15.8
 
 
 def adverb_estimate(tokens):
