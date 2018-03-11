@@ -394,6 +394,7 @@ def preprocess(post_df, ncores=4, chunksize=500,
 def load_or_preprocess(post_frame, filename, *args,
                        overwrite=False, store=True,
                        steem_args_for_upvote=None,
+                       bots=tfga.BITBOTS,
                        **kwargs):
     """ Tries to load a preprocessed frame if not found preprocessing starts.
 
@@ -430,7 +431,8 @@ def load_or_preprocess(post_frame, filename, *args,
             max_datetime = post_frame.created.max() + pd.Timedelta(days=8)
             upvote_payments = tfga.get_upvote_payments_to_bots(steem_args_for_upvote,
                                                                 min_datetime=min_datetime,
-                                                                max_datetime=max_datetime)
+                                                                max_datetime=max_datetime,
+                                                                bots=bots)
             post_frame = compute_bidbot_correction(post_frame,
                                                    upvote_payments)
         if store:
