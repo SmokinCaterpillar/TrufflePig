@@ -26,7 +26,7 @@ def main():
 
     post_frame = tpgd.load_or_scrape_training_data(steem, directory,
                                                    current_datetime=current_datetime,
-                                                   days=1,
+                                                   days=12,
                                                    offset_days=0)
 
     gc.collect()
@@ -58,8 +58,9 @@ def main():
     #                     n_jobs=4, targets=['reward'])
 
     pipe, test_frame = tpmo.train_test_pipeline(post_frame,  topic_kwargs=topic_kwargs,
-                         regressor_kwargs=regressor_kwargs, targets=['adjusted_reward',
-                                                                     'adjusted_votes'],
+                         regressor_kwargs=regressor_kwargs,
+                                                targets=['adjusted_reward',
+                                                         'adjusted_votes'],
                                                 random_state=42)
 
     tpmo.log_pipeline_info(pipe)
