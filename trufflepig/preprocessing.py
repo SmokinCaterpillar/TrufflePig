@@ -337,8 +337,9 @@ def preprocess(post_df, ncores=4, chunksize=500,
     post_df['unique_words'] = post_df.tokens.apply(lambda x: len(set(x)))
     post_df['unique_ratio'] = post_df.unique_words / post_df.num_words
 
-    logger.info('Computing characters per word')
-    post_df['chars_per_word'] = post_df.body_length / post_df.num_words
+    logger.info('Computing characters and characters per word')
+    post_df['num_chars'] = post_df.tokens.apply(lambda x: tfsm.count_characters(x))
+    post_df['chars_per_word'] = post_df.num_chars / post_df.num_words
 
     logger.info('Counting connectors')
     post_df['num_connectors'] = post_df.tokens.apply(lambda x: tfsm.count_connectors(x))
@@ -365,6 +366,8 @@ def preprocess(post_df, ncores=4, chunksize=500,
     post_df['syllable_variance'] = post_df.token_syllables.apply(lambda x: np.var(x))
     post_df['syllable_skew'] = post_df.token_syllables.apply(lambda x: spst.skew(x))
     post_df['syllable_kurtosis'] = post_df.token_syllables.apply(lambda x: spst.kurtosis(x))
+
+    logger.info('Computing readability indices')
     post_df['gunning_fog_index'] = tfsm.gunning_fog_index(num_words=post_df.num_words,
                                                         num_complex_words=post_df.num_complex_words,
                                                         num_sentences=post_df.num_sentences)
@@ -373,6 +376,12 @@ def preprocess(post_df, ncores=4, chunksize=500,
                                                               num_sentences=post_df.num_sentences)
     post_df['smog_index']= tfsm.smog_index(num_complex_words=post_df.num_complex_words,
                                          num_sentences=post_df.num_sentences)
+    post_df['automated_readability_index'] = tfsm.automated_readability_index(num_chars=post_df.num_chars,
+                                                                        num_words=post_df.num_words,
+                                                                        num_sentences=post_df.num_sentences)
+    post_df['coleman_liau_index'] = tfsm.coleman_liau_index(num_chars=post_df.num_chars,
+                                                            num_words=post_df.num_words,
+                                                            num_sentences=post_df.num_sentences)
 
     post_df.dropna(inplace=True)
     logger.info('Final data set has {} shape'.format(post_df.shape))

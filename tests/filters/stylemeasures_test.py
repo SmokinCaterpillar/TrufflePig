@@ -66,6 +66,11 @@ def test_count_pronouns():
     assert result == 2
 
 
+def test_count_characters():
+    result = tpsm.count_characters(['hi', 'mark'])
+    assert result == 6
+
+
 def test_count_letters():
     result = tpsm.count_letters('hallo54 my namE!!')
     assert result == 11
@@ -91,6 +96,16 @@ def test_smog_index():
 def test_flesch_kincaid_index():
     result = tpsm.flesch_kincaid_index(3, 2, 1)
     assert result == 77.90500000000002
+
+
+def test_automated_readability_index():
+    result = tpsm.automated_readability_index(1000, 100, 10)
+    assert result == 30.67
+
+
+def test_coleman_liau_index():
+    result = tpsm.coleman_liau_index(1000, 100, 10)
+    assert result == 40.03999999999999
 
 
 def test_adverb_estimate():

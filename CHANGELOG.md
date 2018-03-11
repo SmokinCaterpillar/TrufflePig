@@ -1,3 +1,7 @@
+*0.6.0a* - 2018-03-10
+
+* Two new readability scores
+
 *0.5.0a* - 2018-03-07
 
 * Fixed tfids error
