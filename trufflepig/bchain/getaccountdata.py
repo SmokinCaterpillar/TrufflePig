@@ -1,5 +1,6 @@
 import logging
 import multiprocessing as mp
+import time
 
 import pandas as pd
 import numpy as np
@@ -192,11 +193,11 @@ def get_delegate_payouts(account, steem, current_datetime,
 
 
 def get_upvote_payments(account, steem, min_datetime, max_datetime,
-                        batch_size=500):
+                        batch_size=500, max_time=1800):
 
+    start = time.time()
     upvote_payments = {}
 
-    acc = Account(account, steem)
     start_index, _ = find_nearest_index(max_datetime,
                                      account, steem)
     try:
@@ -220,6 +221,12 @@ def get_upvote_payments(account, steem, min_datetime, max_datetime,
 
             timestamp = pd.to_datetime(transfer['timestamp'])
             if timestamp < min_datetime:
+                break
+
+            now = time.time()
+            if now - start > max_time:
+                logger.error('Reached max time of {} seconds '
+                             ' will stop!'.format(max_time))
                 break
 
         except Exception as e:
@@ -268,7 +275,7 @@ def _get_upvote_payments_parrallel(accounts, steem_args, min_datetime,
 
 
 def get_upvote_payments_for_accounts(accounts, steem_args, min_datetime, max_datetime,
-                                     chunksize=10, ncores=20, timeout=1200):
+                                     chunksize=10, ncores=20, timeout=3600):
     logger.info('Querying upvote purchases between {} and '
                 '{} for {} accounts'.format(min_datetime,
                                             max_datetime,
