@@ -312,7 +312,7 @@ def get_upvote_payments_for_accounts(accounts, steem_args, min_datetime, max_dat
 
 
 def get_upvote_payments_to_bots(steem_args, min_datetime, max_datetime,
-                                bots=BITBOTS, ncores=20):
+                                bots=BITBOTS, ncores=30):
     logger.info('Getting payments to following bots {}'.format(bots))
     return get_upvote_payments_for_accounts(accounts=bots,
                                             steem_args=steem_args,
