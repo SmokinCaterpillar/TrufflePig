@@ -14,6 +14,7 @@ import trufflepig.preprocessing as tppp
 import trufflepig.utils as tfut
 import trufflepig.pigonduty as tfod
 import trufflepig.bchain.paydelegates as tpde
+import trufflepig.bchain.getaccountdata as tpad
 from trufflepig import config
 from trufflepig.utils import configure_logging
 import trufflepig.bchain.postweeklyupdate as tppw
@@ -90,6 +91,16 @@ def load_and_preprocess_2_frames(log_directory, current_datetime, steem_kwargs,
     post_frame.reset_index(inplace=True, drop=True)
     logger.info('Combining 2 frames into 1')
     post_frame = tppp.filter_duplicates(post_frame)
+
+    logger.info('Searching for bid bots and bought votes')
+    min_datetime = post_frame.created.min()
+    max_datetime = post_frame.created.max() + pd.Timedelta(days=8)
+    upvote_payments = tpad.get_upvote_payments_to_bots(steem_args=steem_kwargs,
+                                                  min_datetime=min_datetime,
+                                                  max_datetime=max_datetime)
+    logger.info('Adjusting votes and reward')
+    post_frame = tppp.compute_bidbot_correction(post_frame=post_frame,
+                                                upvote_payments=upvote_payments)
     return post_frame
 
 
@@ -150,7 +161,8 @@ def main():
     pipeline = tpmo.load_or_train_pipeline(post_frame, model_directoy,
                                            current_datetime,
                                            regressor_kwargs=regressor_kwargs,
-                                           topic_kwargs=topic_kwargs)
+                                           topic_kwargs=topic_kwargs,
+                                           targets=['adjusted_reward', 'adjusted_votes'])
 
     tpmo.log_pipeline_info(pipeline=pipeline)
 

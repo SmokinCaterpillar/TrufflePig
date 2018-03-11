@@ -6,9 +6,11 @@ import gc
 import pandas as pd
 import numpy as np
 import scipy.stats as spst
+from steem.amount import Amount
 
 import trufflepig.filters.stylemeasures as tfsm
 import trufflepig.filters.textfilters as tftf
+import trufflepig.bchain.getaccountdata as tfga
 
 
 logger = logging.getLogger(__name__)
@@ -389,7 +391,9 @@ def preprocess(post_df, ncores=4, chunksize=500,
     return post_df
 
 
-def load_or_preprocess(post_frame, filename, *args, overwrite=False, store=True,
+def load_or_preprocess(post_frame, filename, *args,
+                       overwrite=False, store=True,
+                       steem_args_for_upvote=None,
                        **kwargs):
     """ Tries to load a preprocessed frame if not found preprocessing starts.
 
@@ -400,6 +404,8 @@ def load_or_preprocess(post_frame, filename, *args, overwrite=False, store=True,
         Filename of data to load
     args: *args
         Arguments passed to normal preprocessing
+    steem_args_for_upvote: dict
+        Steem arguments, leave None to not load corrections
     overwrite: bool
         If preprocessing should be started and overwrite existing file
     store: bool
@@ -418,10 +424,59 @@ def load_or_preprocess(post_frame, filename, *args, overwrite=False, store=True,
     else:
         logger.info('File {} not found, will start prepocessing'.format(filename))
         post_frame = preprocess(post_frame, *args, **kwargs)
+        if steem_args_for_upvote:
+            logger.info('Looking for bought upvotes!')
+            min_datetime = post_frame.created.min()
+            max_datetime = post_frame.created.max() + pd.Timedelta(days=8)
+            upvote_payments = tfga.get_upvote_payments_to_bots(steem_args_for_upvote,
+                                                                min_datetime=min_datetime,
+                                                                max_datetime=max_datetime)
+            post_frame = compute_bidbot_correction(post_frame,
+                                                   upvote_payments)
         if store:
             directory = os.path.dirname(filename)
             if not os.path.isdir(directory):
                 os.makedirs(directory)
             logger.info('Storing file {} to disk'.format(filename))
             post_frame.to_pickle(filename, compression='gzip')
+    return post_frame
+
+
+def compute_bidbot_correction(post_frame, upvote_payments, sbd_punishment_factor=1.3,
+                              steem_punishment_factor=1.2):
+    post_frame['sbd_bought_reward'] = 0.
+    post_frame['steem_bought_reward'] = 0.
+    post_frame['bought_votes'] = 0
+
+    post_frame.set_index(['author', 'permalink'], inplace=True)
+
+    for (author, permalink), payments in upvote_payments.items():
+        if (author, permalink) in post_frame.index:
+            sbd = 0
+            steem = 0
+            votes = 0
+            for payment in payments:
+                amount = Amount(payment)
+                value = amount.amount
+                asset = amount.asset
+                votes += 1
+                if asset == 'SBD':
+                    sbd += value
+                elif asset == 'STEEM':
+                    steem += value
+                else:
+                    raise RuntimeError('W00t?')
+            post_frame.loc[(author, permalink),
+                       ['sbd_bought_reward',
+                        'steem_bought_reward',
+                        'bought_votes']] = sbd, steem, votes
+
+    post_frame.reset_index(inplace=True)
+    post_frame['adjusted_reward'] = post_frame.reward - \
+                                    post_frame.sbd_bought_reward * sbd_punishment_factor - \
+                                    post_frame.steem_bought_reward * steem_punishment_factor
+    post_frame.loc[post_frame.adjusted_reward < 0, 'adjusted_reward'] = 0
+    post_frame['adjusted_votes'] = post_frame.votes - post_frame.bought_votes
+    post_frame.loc[post_frame.adjusted_votes < 0, 'adjusted_votes'] = 0
+
     return post_frame

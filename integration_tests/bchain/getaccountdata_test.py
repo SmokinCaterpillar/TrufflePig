@@ -30,6 +30,18 @@ def test_payouts(steem):
 
 
 def test_bidbot_test(steem):
-    min_timestamp = pd.datetime.utcnow() - pd.Timedelta(days=14)
-    result = tpac.get_upvote_payments('brittuf', steem, min_timestamp)
+    min_datetime = pd.datetime.utcnow() - pd.Timedelta(days=14)
+    max_datetime = min_datetime + pd.Timedelta(days=13)
+    result = tpac.get_upvote_payments('brittuf', steem, min_datetime,
+                                      max_datetime)
+    assert result
+
+
+def test_get_upvote_payments_for_accounts(steem_kwargs):
+    current_datetime = pd.datetime.utcnow()
+    accounts = ['trufflepig', 'smcaterpillar', 'brittuf']
+    result = tpac.get_upvote_payments_for_accounts(accounts,
+                                                   steem_kwargs,
+                                                   current_datetime,
+                                                   5)
     assert result

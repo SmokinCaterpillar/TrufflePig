@@ -1,6 +1,7 @@
 *0.6.0a* - 2018-03-10
 
 * Two new readability scores
+* New correction for many bibots and vote selling services
 
 *0.5.0a* - 2018-03-07
 

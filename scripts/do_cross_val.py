@@ -26,7 +26,7 @@ def main():
 
     post_frame = tpgd.load_or_scrape_training_data(steem, directory,
                                                    current_datetime=current_datetime,
-                                                   days=12,
+                                                   days=1,
                                                    offset_days=0)
 
     gc.collect()
@@ -39,6 +39,7 @@ def main():
                         ngrams=(1, 2))
 
     post_frame = tppp.load_or_preprocess(post_frame, crossval_filename,
+                                         steem_args_for_upvote=steem,
                                          ncores=8, chunksize=500,
                                          min_en_prob=0.9)
 
@@ -57,7 +58,8 @@ def main():
     #                     n_jobs=4, targets=['reward'])
 
     pipe, test_frame = tpmo.train_test_pipeline(post_frame,  topic_kwargs=topic_kwargs,
-                         regressor_kwargs=regressor_kwargs, targets=['reward', 'votes'],
+                         regressor_kwargs=regressor_kwargs, targets=['adjusted_reward',
+                                                                     'adjusted_votes'],
                                                 random_state=42)
 
     tpmo.log_pipeline_info(pipe)
