@@ -26,7 +26,7 @@ def main():
 
     post_frame = tpgd.load_or_scrape_training_data(steem, directory,
                                                    current_datetime=current_datetime,
-                                                   days=12,
+                                                   days=10,
                                                    offset_days=0)
 
     gc.collect()
