@@ -37,6 +37,14 @@ def test_bidbot_test(steem):
     assert result
 
 
+def test_bidbot_test_max_time(steem):
+    min_datetime = pd.datetime.utcnow() - pd.Timedelta(days=14)
+    max_datetime = min_datetime + pd.Timedelta(days=13)
+    result = tpac.get_upvote_payments('brittuf', steem, min_datetime,
+                                      max_datetime, max_time=0.1)
+    assert len(result) <= 1
+
+
 def test_get_upvote_payments_for_accounts(steem_kwargs):
     min_datetime = pd.datetime.utcnow() - pd.Timedelta(days=14)
     max_datetime = min_datetime + pd.Timedelta(days=13)
