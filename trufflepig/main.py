@@ -83,7 +83,7 @@ def load_and_preprocess_2_frames(log_directory, current_datetime, steem_kwargs,
                                      steem_kwargs=steem_kwargs,
                                      data_directory=data_directory,
                                      days=days2,
-                                     offset_days=8 + days).result()
+                                     offset_days=offset_days + days).result()
 
     post_frame = pd.concat([post_frame, post_frame2], axis=0)
     # We need to reset the index because due to concatenation
@@ -227,6 +227,13 @@ def main():
     tfut.clean_up_directory(model_directoy, keep_last=3)
     tfut.clean_up_directory(data_directory, keep_last=25)
     tfut.clean_up_directory(log_directory, keep_last=14)
+
+    logger.info('Preloading -7 days for later training')
+    tpgd.load_or_scrape_training_data(steem_kwargs, data_directory,
+                                                       current_datetime=current_datetime,
+                                                       days=1,
+                                                       offset_days=8,
+                                                       ncores=20)
 
     logger.info('DONE at {}'.format(current_datetime))
 
