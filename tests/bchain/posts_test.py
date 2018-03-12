@@ -71,6 +71,10 @@ def test_weekly_update():
     total_votes = 99897788
     total_reward = 79898973
 
+    bid_bots_sbd = 4242
+    bid_bots_steem = 12
+    bid_bots_percent = 99.9998
+
     median_reward = 0.012
     mean_reward = 6.2987347329
     dollar_percent = 69.80921393
@@ -126,6 +130,9 @@ Topic 19: devices: -0.32, station: -0.30, lte: -0.29, base: -0.29, equipment: -0
                   total_posts=total_posts,
                   total_votes=total_votes,
                   total_reward=total_reward,
+                  bid_bots_sbd=bid_bots_sbd,
+                  bid_bots_steem=bid_bots_steem,
+                  bid_bots_percent=bid_bots_percent,
                   median_reward=median_reward,
                   mean_reward=mean_reward,
                   dollar_percent=dollar_percent,
