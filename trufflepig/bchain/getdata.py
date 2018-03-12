@@ -415,7 +415,7 @@ def get_all_posts_between_parallel(start_datetime, end_datetime, steem_args,
                 logger.info('Finished chunk {} '
                             'out of {} found so far {} '
                             'posts...'.format(kdx + 1, len(chunks), len(posts)))
-        except TimeoutError:
+        except Exception as e:
             logger.exception('Something went totally wrong dude!')
 
     pool.join()
