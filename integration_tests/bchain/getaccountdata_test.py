@@ -47,7 +47,7 @@ def test_bidbot_test_max_time(steem):
 
 def test_get_upvote_payments_for_accounts(steem_kwargs):
     min_datetime = pd.datetime.utcnow() - pd.Timedelta(days=14)
-    max_datetime = min_datetime + pd.Timedelta(days=13)
+    max_datetime = min_datetime + pd.Timedelta(days=5)
     accounts = ['trufflepig', 'smcaterpillar', 'brittuf']
     result = tpac.get_upvote_payments_for_accounts(accounts,
                                                    steem_kwargs,
