@@ -42,7 +42,7 @@ def pay_delegates(account, steem_args,
                                         current_datetime=current_datetime,
                                         min_days=min_days,
                                         investor_share=investor_share)
-    logger.info('Count the following payouts:\n{}'.format(payouts))
+    logger.info('Found the following payouts:\n{}'.format(payouts))
     claim_all_reward_balance(steem, account)
     for delegator, payout in payouts.items():
         try:
