@@ -154,7 +154,7 @@ def compute_weekly_statistics(post_frame, pipeline, N=10, topics_step=4):
 
 def return_overview_permalink_if_exists(account, steem_args, current_datetime):
     steem = tppd.check_and_convert_steem(steem_args)
-    permalink = PERMALINK_TEMPLATE.format(date=current_datetime.strftime('%Y-%V'))
+    permalink = PERMALINK_TEMPLATE.format(date=current_datetime.strftime('%Y-%U'))
     try:
         Post('@{}/{}'.format(account, permalink), steem)
         return permalink

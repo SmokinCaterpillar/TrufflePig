@@ -216,8 +216,10 @@ def get_upvote_payments(account, steem, min_datetime, max_datetime,
                 if author.startswith('@'):
                     author = author[1:]
                     if (author, permalink) not in upvote_payments:
-                        upvote_payments[(author, permalink)] = []
-                    upvote_payments[(author, permalink)].append(transfer['amount'])
+                        upvote_payments[(author, permalink)] = {}
+                    trx_id = transfer['trx_id']
+                    amount = transfer['amount']
+                    upvote_payments[(author, permalink)][trx_id] = amount
 
             timestamp = pd.to_datetime(transfer['timestamp'])
             if timestamp < min_datetime:
@@ -261,10 +263,10 @@ def history_reverse(account, steem, start_index, filter_by=None,
 
 
 def extend_upvotes_and_payments(upvote_payments, new_payments):
-    for author_permalink, upvote_list in new_payments.items():
+    for author_permalink, new_upvotes in new_payments.items():
             if author_permalink not in upvote_payments:
-                upvote_payments[author_permalink] = []
-            upvote_payments[author_permalink].extend(upvote_list)
+                upvote_payments[author_permalink] = {}
+            upvote_payments[author_permalink].update(new_upvotes)
     return upvote_payments
 
 
@@ -280,11 +282,13 @@ def _get_upvote_payments_parrallel(accounts, steem_args, min_datetime,
 
 
 def get_upvote_payments_for_accounts(accounts, steem_args, min_datetime, max_datetime,
-                                     chunksize=10, ncores=20, timeout=3600):
+                                     chunksize=10, ncores=20, timeout=3600,
+                                     time_chunks=4):
     logger.info('Querying upvote purchases between {} and '
                 '{} for {} accounts'.format(min_datetime,
                                             max_datetime,
                                             len(accounts)))
+
     if ncores > 1:
         chunks = [accounts[irun: irun + chunksize]
                   for irun in range(0, len(accounts), chunksize)]

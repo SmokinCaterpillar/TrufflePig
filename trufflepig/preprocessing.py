@@ -23,11 +23,11 @@ FILTER_TAGS = ('mitnebcurationtrail', 'informationwar', 'truth', 'conspiracy',
                # maybe I need a bot just to rate spiritual content
                # for simplicity let's ignore them for now,
                # sorry, no releigious truffles in the near future!
-               'bible', 'faith', 'spiritual', 'christianity')
+               'bible', 'faith', 'spiritual', 'christianity', 'steemchurch')
 
 
 # Stay out of the whale wars!
-FILTER_AUTHORS = ('haejin',)
+FILTER_AUTHORS = ('haejin', 'ew-and-patterns')
 
 
 def filter_duplicates(frame):
@@ -457,7 +457,7 @@ def compute_bidbot_correction(post_frame, upvote_payments, sbd_punishment_factor
             sbd = 0
             steem = 0
             votes = 0
-            for payment in payments:
+            for payment in payments.values():
                 amount = Amount(payment)
                 value = amount.amount
                 asset = amount.asset
