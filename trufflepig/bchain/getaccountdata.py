@@ -319,7 +319,7 @@ def get_upvote_payments_for_accounts(accounts, steem_args, min_datetime, max_dat
                     logger.info('Finished chunk {} '
                                 'out of {} found so far {} '
                                 'upvote buyers...'.format(kdx + 1, len(async_results), len(upvote_payments)))
-            except TimeoutError:
+            except Exception as e:
                 logger.exception('Something went totally wrong dude!')
 
         pool.join()
