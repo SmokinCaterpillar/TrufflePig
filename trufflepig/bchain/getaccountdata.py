@@ -193,7 +193,7 @@ def get_delegate_payouts(account, steem, current_datetime,
 
 
 def get_upvote_payments(account, steem, min_datetime, max_datetime,
-                        batch_size=1000, max_time=2000):
+                        batch_size=1000, max_time=1800):
 
     start = time.time()
     upvote_payments = {}
@@ -282,12 +282,15 @@ def _get_upvote_payments_parrallel(accounts, steem_args, min_datetime,
 
 
 def get_upvote_payments_for_accounts(accounts, steem_args, min_datetime, max_datetime,
-                                     chunksize=10, ncores=20, timeout=3600,
-                                     time_chunks=4):
+                                     chunksize=10, ncores=20, timeout=3600):
     logger.info('Querying upvote purchases between {} and '
                 '{} for {} accounts'.format(min_datetime,
                                             max_datetime,
                                             len(accounts)))
+
+    # do queries by day!
+    start_datetimes = pd.date_range(min_datetime, max_datetime).tolist()
+    end_datetimes = [x for x in start_datetimes[1:]] + [max_datetime]
 
     if ncores > 1:
         chunks = [accounts[irun: irun + chunksize]
@@ -297,11 +300,12 @@ def get_upvote_payments_for_accounts(accounts, steem_args, min_datetime, max_dat
         pool = ctx.Pool(ncores, initializer=tpbg.config_mp_logging)
 
         async_results = []
-        for idx, chunk in enumerate(chunks):
-            result = pool.apply_async(_get_upvote_payments_parrallel,
-                                      args=(chunk, steem_args,
-                                            min_datetime, max_datetime))
-            async_results.append(result)
+        for start_datetime, end_datetime in zip(start_datetimes, end_datetimes):
+            for idx, chunk in enumerate(chunks):
+                result = pool.apply_async(_get_upvote_payments_parrallel,
+                                          args=(chunk, steem_args,
+                                                start_datetime, end_datetime))
+                async_results.append(result)
 
         pool.close()
 
@@ -311,10 +315,10 @@ def get_upvote_payments_for_accounts(accounts, steem_args, min_datetime, max_dat
                 payments = async.get(timeout=timeout)
                 upvote_payments = extend_upvotes_and_payments(upvote_payments,
                                                               payments)
-                if progressbar(kdx, len(chunks), percentage_step=5, logger=logger):
+                if progressbar(kdx, len(async_results), percentage_step=5, logger=logger):
                     logger.info('Finished chunk {} '
                                 'out of {} found so far {} '
-                                'upvote buyers...'.format(kdx + 1, len(chunks), len(upvote_payments)))
+                                'upvote buyers...'.format(kdx + 1, len(async_results), len(upvote_payments)))
             except TimeoutError:
                 logger.exception('Something went totally wrong dude!')
 
