@@ -2,6 +2,7 @@
 
 * Two new readability scores
 * New correction for many bibots and vote selling services
+* Bid bot stats are listed in the weekly post
 
 *0.5.0a* - 2018-03-07
 

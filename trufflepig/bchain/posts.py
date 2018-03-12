@@ -250,6 +250,9 @@ def weekly_update(current_datetime,
                   total_posts,
                   total_votes,
                   total_reward,
+                  bid_bots_sbd,
+                  bid_bots_steem,
+                  bid_bots_percent,
                   median_reward,
                   mean_reward,
                   dollar_percent,
@@ -313,7 +316,7 @@ Such high dimensional input is usually not very useful for Machine Learning. I r
 
 After a bit of experimentation I chose an LSA projection with 128 dimensions. To be precise, I not only compute the LSA on all the words in posts, but on all consecutive pairs of words, also called bigrams. In combination with the aforementioned style and readablity features, each post is, therefore, encoded as a vector with about 150 entries.
 
-For training, I read all posts that were submitted to the blockchain between 7 and 17 days ago. These posts are first filtered and subsequently encoded. Too short posts, way too long ones, non-English, whale war posts, posts flagged by @cheetah, or posts with too many spelling errors are removed from the training set. This week I got a training set of {total_posts} contributions. The resulting matrix of {total_posts} by 150 entries is used as the input to a multi-output [Random Forest regressor from scikit learn](http://scikit-learn.org/stable/modules/generated/sklearn.ensemble.RandomForestRegressor.html). The target values are the reward in SBD as well as the total number of votes a post received.
+For training, I read all posts that were submitted to the blockchain between 7 and 17 days ago. These posts are first filtered and subsequently encoded. Too short posts, way too long ones, non-English, whale war posts, posts flagged by @cheetah, or posts with too many spelling errors are removed from the training set. This week I got a training set of {total_posts} contributions. The resulting matrix of {total_posts} by 150 entries is used as the input to a multi-output [Random Forest regressor from scikit learn](http://scikit-learn.org/stable/modules/generated/sklearn.ensemble.RandomForestRegressor.html). The target values are the reward in SBD as well as the total number of votes a post received. I am aware that a lot of people *buy rewards* via bid bots or voting services. Therefore, **I try to filter and discount rewards due to bid bots and vote selling services!**
 
 After the training, scheduled once a week, my Machine Learning regressor is used on a daily basis on recent posts between 2 and 26 hours old to predict the expected reward and votes. Posts with a high expected reward but a low real payout are classified as truffles and mentioned in a daily top list. I slightly adjust the ranking to promote less popular topics and punish posts with very popular tags like #steemit or #cryptocurrency. Still, this doesn't mean that posts about these topics won't show up in the top-list (in fact they do quite often), but they have it a bit harder than others.
 
@@ -325,7 +328,9 @@ Let's see what Steemit has to offer and if we can already draw some inferences f
 
 So this week I scraped posts with an initial publication date between **{start_date}** and **{end_date}**. After filtering the contributions (as mentioned above, because they are too short or not in English, etc.) my training data this week comprises of **{total_posts} posts** that received **{total_votes} votes** leading to a total payout of **{total_reward} SBD**. Wow, this is a lot!
 
-How are these payouts distributed among the posts? Well, on average a post received **{mean_reward:.3f} SBD**. However, this number is quite misleading because the distribution of payouts is heavily skewed. In fact, the median payout is **only {median_reward:.3f} SBD**! Moreover, **{dollar_percent}%** of posts are paid less than 1 SBD! Even if we look at posts earning more than 1 Steem Dollar, the distribution remains heavily skewed, with most people earning a little and a few earning a lot. Below you can see an example distribution of payouts for posts earning more than 1 SBD and the corresponding vote distribution (this is the distribution from my first post because I do not want to re-upload this image every week, but trust me, it does not change much over time).
+By the way, in my training data people spend **{bid_bots_sbd} SBD** and **{bid_bots_steem} STEEM** to promote their posts via **bid bots or vote selling services**. In fact, **{bid_bots_percent:.1f}% of the posts** were upvoted by these bot services.
+
+Let's leave the bots behind and focus more on the posts' payouts. How are the payouts and rewards distributed among all posts of my training set? Well, on average a post received **{mean_reward:.3f} SBD**. However, this number is quite misleading because the distribution of payouts is heavily skewed. In fact, the median payout is **only {median_reward:.3f} SBD**! Moreover, **{dollar_percent}%** of posts are paid less than 1 SBD! Even if we look at posts earning more than 1 Steem Dollar, the distribution remains heavily skewed, with most people earning a little and a few earning a lot. Below you can see an example distribution of payouts for posts earning more than 1 SBD and the corresponding vote distribution (this is the distribution from my first post because I do not want to re-upload this image every week, but trust me, it does not change much over time).
 
 ![earnings](https://raw.githubusercontent.com/SmokinCaterpillar/TrufflePig/feature/weekly_status/img/distribution.png)
 
@@ -426,6 +431,9 @@ Cheers,
                       total_posts=total_posts,
                       total_votes=total_votes,
                       total_reward=int(total_reward),
+                      bid_bots_sbd=int(bid_bots_sbd),
+                      bid_bots_steem=int(bid_bots_steem),
+                      bid_bots_percent=int(bid_bots_percent),
                       median_reward=median_reward,
                       mean_reward=mean_reward,
                       dollar_percent=int(dollar_percent),

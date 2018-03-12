@@ -58,6 +58,12 @@ def compute_weekly_statistics(post_frame, pipeline, N=10, topics_step=4):
                                           >= min_count].sort_values('per_post', ascending=False)
     top_tags_earnings = top_tags_earnings.iloc[:N, :]
 
+    logger.info('Computing bid bot stats...')
+    num_articles = (post_frame.bought_votes > 0).sum()
+    bid_bots_percent = num_articles / len(post_frame) * 100
+    bid_bots_steem = post_frame.steem_bought_reward.sum()
+    bid_bots_sbd = post_frame.sbd_bought_reward.sum()
+
     # get top tokens
     logger.info('Computing top words...')
     token_count_dict = {}
@@ -126,6 +132,9 @@ def compute_weekly_statistics(post_frame, pipeline, N=10, topics_step=4):
           total_posts=total_posts,
           total_votes=total_votes,
           total_reward=total_reward,
+          bid_bots_sbd=bid_bots_sbd,
+          bid_bots_steem=bid_bots_steem,
+          bid_bots_percent=bid_bots_percent,
           median_reward=median_reward,
           mean_reward=mean_reward,
           dollar_percent=dollar_percent,
