@@ -193,7 +193,7 @@ def get_delegate_payouts(account, steem, current_datetime,
 
 
 def get_upvote_payments(account, steem, min_datetime, max_datetime,
-                        batch_size=500, max_time=1800):
+                        batch_size=1000, max_time=2000):
 
     start = time.time()
     upvote_payments = {}
@@ -226,7 +226,12 @@ def get_upvote_payments(account, steem, min_datetime, max_datetime,
             now = time.time()
             if now - start > max_time:
                 logger.error('Reached max time of {} seconds '
-                             ' will stop!'.format(max_time))
+                             ' will stop! Account {} from {} until {} '
+                             'last timestamp {}'.format(max_time,
+                                                        account,
+                                                        min_datetime,
+                                                        max_datetime,
+                                                        timestamp))
                 break
 
         except Exception as e:
@@ -236,7 +241,7 @@ def get_upvote_payments(account, steem, min_datetime, max_datetime,
 
 
 def history_reverse(account, steem, start_index, filter_by=None,
-                    batch_size=10000, raw_output=False):
+                    batch_size=1000, raw_output=False):
         """ Stream account history in reverse chronological order."""
         acc = Account(account, steem)
         i = start_index
