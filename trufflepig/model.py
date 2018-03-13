@@ -747,8 +747,10 @@ def spelling_error_step_function(x):
         return 0.8
     elif x <= 0.1:
         return 0.7
+    elif x <= 0.125:
+        return 0.5
     elif x <= 0.15:
-        return 0.35
+        return 0.3
     else:
         return 0.1
 
