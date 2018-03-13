@@ -25,6 +25,11 @@ def test_statistics():
     post_frame = tppp.preprocess(post_frame, ncores=4, chunksize=50)
     pipeline = tpmo.train_pipeline(post_frame, topic_kwargs=topic_kwargs,
                                     regressor_kwargs=regressor_kwargs)
+
+    post_frame['steem_bought_reward'] = 0
+    post_frame['sbd_bought_reward'] = 0
+    post_frame['bought_votes'] = 0
+
     stats = tppw.compute_weekly_statistics(post_frame, pipeline)
     steem_per_mvests = 490
 
@@ -61,6 +66,10 @@ def test_weekly_post(steem_kwargs):
     post_frame = tppp.preprocess(post_frame, ncores=4, chunksize=50)
     pipeline = tpmo.train_pipeline(post_frame, topic_kwargs=topic_kwargs,
                                     regressor_kwargs=regressor_kwargs)
+
+    post_frame['steem_bought_reward'] = 0
+    post_frame['sbd_bought_reward'] = 0
+    post_frame['bought_votes'] = 0
 
     permalink = tppw.post_weakly_update(pipeline, post_frame,
                                         account=config.ACCOUNT,

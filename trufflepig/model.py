@@ -487,7 +487,7 @@ def compute_log_vote_weights(target_frame):
 
     """
     logger.info('Computing sample weights')
-    return 1 + np.log(1 + target_frame.votes)
+    return 1 + np.log(1 + target_frame.iloc[:, 1])
 
 
 def train_pipeline(post_frame, pipeline=None,

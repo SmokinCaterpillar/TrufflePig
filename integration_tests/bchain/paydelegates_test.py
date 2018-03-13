@@ -1,4 +1,5 @@
 import pytest
+import pandas as pd
 
 from trufflepig.testutils.pytest_fixtures import steem_kwargs
 import trufflepig.bchain.paydelegates as tppd
@@ -14,4 +15,5 @@ def test_pay_delegates(steem_kwargs):
 
     tppd.pay_delegates(account=config.ACCOUNT,
                        steem_args=steem_kwargs,
-                       current_datetime='2029-01-01')
+                       current_datetime=pd.datetime.utcnow()#'2029-01-01'
+                       )

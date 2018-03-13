@@ -279,18 +279,21 @@ def get_all_posts_from_block(block_num, steem,
     List of post dicts and set of authors and permalinks
 
     """
-    operations = steem.get_ops_in_block(block_num, False)
-    if operations:
-        authors_and_permalinks = extract_authors_and_permalinks(operations)
-        if exclude_authors_and_permalinks:
-            authors_and_permalinks -= exclude_authors_and_permalinks
-        if authors_and_permalinks:
-            return get_post_data(authors_and_permalinks, steem,
-                                 exclusion_voters), authors_and_permalinks
+    try:
+        operations = steem.get_ops_in_block(block_num, False)
+        if operations:
+            authors_and_permalinks = extract_authors_and_permalinks(operations)
+            if exclude_authors_and_permalinks:
+                authors_and_permalinks -= exclude_authors_and_permalinks
+            if authors_and_permalinks:
+                return get_post_data(authors_and_permalinks, steem,
+                                     exclusion_voters), authors_and_permalinks
+            else:
+                logger.debug('Could not find any posts for block {}'.format(block_num))
         else:
-            logger.debug('Could not find any posts for block {}'.format(block_num))
-    else:
-        logger.warning('Could not find any operations for block {}'.format(block_num))
+            logger.warning('Could not find any operations for block {}'.format(block_num))
+    except Exception as e:
+        logger.exception('Error for block {}'.format(block_num))
     return [], set()
 
 
@@ -412,7 +415,7 @@ def get_all_posts_between_parallel(start_datetime, end_datetime, steem_args,
                 logger.info('Finished chunk {} '
                             'out of {} found so far {} '
                             'posts...'.format(kdx + 1, len(chunks), len(posts)))
-        except TimeoutError:
+        except Exception as e:
             logger.exception('Something went totally wrong dude!')
 
     pool.join()

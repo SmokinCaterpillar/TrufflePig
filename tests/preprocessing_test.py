@@ -29,3 +29,22 @@ def test_preprocessing_random_parallel():
                                min_en_prob=0.8, max_errors_per_word=0.5)
 
     assert len(filtered) > 30
+
+
+def test_bid_bot_correction():
+    posts = create_n_random_posts(30)
+    post_frame = pd.DataFrame(posts)
+
+    bought = {}
+    bought[('hello', 'kitty')] = ['19 STEEM']
+    sample_frame = post_frame[['author', 'permalink']].sample(10)
+    for _, (author, permalink) in sample_frame.iterrows():
+        bought[(author, permalink)] = {'aaa':'3 STEEM', 'bbb': '4 SBD'}
+
+    post_frame = tppp.compute_bidbot_correction(post_frame,
+                                                bought)
+
+    assert post_frame.adjusted_reward.mean() < post_frame.reward.mean()
+    assert all(post_frame.adjusted_reward >= 0)
+    assert post_frame.adjusted_votes.mean() < post_frame.votes.mean()
+    assert all(post_frame.adjusted_votes >= 0)
