@@ -36,7 +36,7 @@ def main():
                               random_state=42)
 
     topic_kwargs = dict(num_topics=128, no_below=5, no_above=0.1,
-                        ngrams=(1, 2))
+                        ngrams=(1, 2), keep_n=250000)
 
     post_frame = tppp.load_or_preprocess(post_frame, crossval_filename,
                                          steem_args_for_upvote=steem,
