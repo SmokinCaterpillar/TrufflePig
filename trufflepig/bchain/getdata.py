@@ -487,7 +487,8 @@ def load_or_scrape_training_data(steem_or_args, directory,
                                  days=20, offset_days=8,
                                  ncores=8,
                                  current_datetime=None,
-                                 stop_after=None):
+                                 stop_after=None,
+                                 store=True):
     """ Loads full set of days from file or blockchain
 
     Parameters
@@ -505,6 +506,8 @@ def load_or_scrape_training_data(steem_or_args, directory,
         If None now is taken
     stop_after: int or None
         For debugging and testing to stop early
+    store bool:
+        If data should be stored
 
     Returns
     -------
@@ -525,7 +528,7 @@ def load_or_scrape_training_data(steem_or_args, directory,
                                         directory,
                                         exclusion_voters=exclusion_voters,
                                         overwrite=False,
-                                        store=True,
+                                        store=store,
                                         stop_after=stop_after,
                                         ncores=ncores)
         frames.append(frame)
