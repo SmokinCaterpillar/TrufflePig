@@ -745,8 +745,12 @@ def spelling_error_step_function(x):
         return 0.85
     elif x <= 0.075:
         return 0.8
-    else:
+    elif x <= 0.1:
         return 0.7
+    elif x <= 0.15:
+        return 0.35
+    else:
+        return 0.1
 
 
 def vote_score_step_function(x):
