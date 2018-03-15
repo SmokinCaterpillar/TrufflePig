@@ -40,13 +40,13 @@ def large_mp_preprocess(log_directory, current_datetime, steem_kwargs, data_dire
                                                        current_datetime=current_datetime,
                                                        days=days,
                                                        offset_days=offset_days,
-                                                       ncores=20)
-    return tppp.preprocess(post_frame, ncores=4)
+                                                       ncores=32)
+    return tppp.preprocess(post_frame, ncores=8)
 
 
 def load_and_preprocess_2_frames(log_directory, current_datetime, steem_kwargs,
                                  data_directory, offset_days=8,
-                                 days=5, days2=5):
+                                 days=7, days2=7):
     """ Function to load and preprocess the time span split into 2
     for better memory footprint
 
@@ -156,7 +156,7 @@ def main():
                               random_state=42)
 
     topic_kwargs = dict(num_topics=128, no_below=7, no_above=0.1,
-                        ngrams=(1,2), keep_n=250000)
+                        ngrams=(1,2), keep_n=500000)
 
     pipeline = tpmo.load_or_train_pipeline(post_frame, model_directoy,
                                            current_datetime,
@@ -192,9 +192,9 @@ def main():
 
     prediction_frame = tpgd.scrape_hour_data(steem_or_args=steem_kwargs,
                                              current_datetime=current_datetime,
-                                             ncores=20,
+                                             ncores=32,
                                              offset_hours=2)
-    prediction_frame = tppp.preprocess(prediction_frame, ncores=3)
+    prediction_frame = tppp.preprocess(prediction_frame, ncores=8)
 
     sorted_frame = tpmo.find_truffles(prediction_frame, pipeline,
                                       account=config.ACCOUNT)
@@ -233,7 +233,7 @@ def main():
                                                        current_datetime=current_datetime,
                                                        days=1,
                                                        offset_days=8,
-                                                       ncores=20)
+                                                       ncores=32)
 
     logger.info('DONE at {}'.format(current_datetime))
 
