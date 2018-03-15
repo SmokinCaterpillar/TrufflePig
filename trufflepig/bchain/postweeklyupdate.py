@@ -9,6 +9,7 @@ import trufflepig.model as tpmo
 import trufflepig.bchain.posts as tpbp
 import trufflepig.bchain.getdata as tppd
 import trufflepig.bchain.getaccountdata as tpaa
+from trufflepig.utils import rpcerror_retry
 
 logger = logging.getLogger(__name__)
 
@@ -186,11 +187,11 @@ def post_weakly_update(pipeline, post_frame, account, steem_args, current_dateti
     logger.info('Posting weekly update with permalink: {}'.format(permalink))
     logger.info(title)
     logger.info(body)
-    steem.commit.post(author=account,
-                      title=title,
-                      body=body,
-                      permlink=permalink,
-                      self_vote=True,
-                      tags=TAGS)
+    rpcerror_retry(steem.commit.post)(author=account,
+                                      title=title,
+                                      body=body,
+                                      permlink=permalink,
+                                      self_vote=True,
+                                      tags=TAGS)
 
     return permalink

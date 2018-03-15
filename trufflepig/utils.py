@@ -1,9 +1,10 @@
 import datetime
 import logging
 import os
+import time
 
 import numpy as np
-
+from steembase.exceptions import RPCError
 
 logger = logging.getLogger(__name__)
 
@@ -249,3 +250,18 @@ def configure_logging(directory, current_datetime):
     handlers = [logging.StreamHandler(), logging.FileHandler(filename)]
     logging.basicConfig(level=logging.INFO, format=format,
                         handlers=handlers)
+
+
+def rpcerror_retry(f, retries=16, sleep_time=16):
+    """Explicit decorator for RPC retries"""
+    def wrapped(*args, **kwargs):
+        for retry in range(retries):
+            try:
+                return f(*args, **kwargs)
+            except RPCError:
+                if retry + 1 == retries:
+                    raise
+                logger.exception('Failed retry {} out of {}!'.format(retry + 1,
+                                                                     retries))
+                time.sleep(sleep_time)
+    return wrapped
