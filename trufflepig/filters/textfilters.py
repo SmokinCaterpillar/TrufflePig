@@ -48,6 +48,8 @@ def filter_formatting(text):
     text = re.sub('href', '', text)
     text = re.sub('img', '', text)
     text = re.sub('src', '', text)
+    text = re.sub('div', '', text)
+    text = re.sub('classtextjustify', '', text)
     text = re.sub('h[1-6]', '', text)
 
     text = re.sub('&?NPSB', ' ',text)
@@ -56,6 +58,8 @@ def filter_formatting(text):
     text = re.sub('HREF', '', text)
     text = re.sub('IMG', '', text)
     text = re.sub('SRC', '', text)
+    text = re.sub('DIV', '', text)
+    text = re.sub('CLASSTEXTJUSTIFY', '', text)
     text = re.sub('H[1-6]', '', text)
 
     text = re.sub('&?Npsb', ' ',text)
@@ -63,6 +67,8 @@ def filter_formatting(text):
     text = re.sub('Styletextalign', '', text)
     text = re.sub('Href', '', text)
     text = re.sub('Img', '', text)
+    text = re.sub('Div', '', text)
+    text = re.sub('Classtextjustify', '', text)
     text = re.sub('Src', '', text)
 
     return text
