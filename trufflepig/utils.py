@@ -230,19 +230,21 @@ def clean_up_directory(directory, keep_last=25):
                     '({})'.format(nfiles, directory, keep_last))
 
 
-def configure_logging(directory, current_datetime):
+def configure_logging(directory, current_datetime, bot_account='trufflepig'):
     """ Configures logging to stdout and file
 
     Parameters
     ----------
     directory: str
     current_datetime: datetime
+    bot_account: str
 
     """
     if not os.path.isdir(directory):
         os.makedirs(directory)
 
-    filename = 'trufflepig_{time}.txt'.format(time=current_datetime.strftime('%Y-%m-%d'))
+    filename = '{bot_account}_{time}.txt'.format(bot_account=bot_account,
+                                                 time=current_datetime.strftime('%Y-%m-%d'))
     filename = os.path.join(directory, filename)
 
     format=('%(asctime)s %(processName)s:%(name)s:'
