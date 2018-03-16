@@ -228,7 +228,7 @@ def main():
     tfut.clean_up_directory(data_directory, keep_last=25)
     tfut.clean_up_directory(log_directory, keep_last=14)
 
-    logger.info('Preloading -7 days for later training')
+    logger.info('Preloading -8 days for later training')
     tpgd.load_or_scrape_training_data(steem_kwargs, data_directory,
                                                        current_datetime=current_datetime,
                                                        days=1,
