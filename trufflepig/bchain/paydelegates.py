@@ -7,7 +7,7 @@ from trufflepig.utils import rpcerror_retry
 from steem import Steem
 from steembase import operations
 from steem.account import Account
-from steembase.exceptions import RPCError
+from steem.amount import Amount
 
 
 logger = logging.getLogger(__name__)
@@ -71,9 +71,14 @@ def claim_all_reward_balance(steem, account):
                                        reward_steem=reward_steem,
                                        reward_sbd=reward_sbd,
                                        reward_vests=reward_vests)
-    try:
-        return rpcerror_retry(steem.commit.finalizeOp)(op, account, "posting")
-    except Exception:
-        logger.exception('Could not claim rewards {}'.format((reward_sbd,
-                                                              reward_vests,
-                                                              reward_steem)))
+
+    can_claim = any(Amount(x).amount > 0 for x in (reward_sbd, reward_vests, reward_steem))
+    if can_claim:
+        try:
+            return rpcerror_retry(steem.commit.finalizeOp)(op, account, "posting")
+        except Exception:
+            logger.exception('Could not claim rewards {}'.format((reward_sbd,
+                                                                  reward_vests,
+                                                                  reward_steem)))
+    else:
+        logger.info('Nothing to claim!')

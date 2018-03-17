@@ -69,11 +69,19 @@ def post_on_call(post_frame, account, steem, topN_link,
             else:
                 reply = I_WAS_HERE
 
-            logger.info('Replying to https://steemit.com/@{author}/{permalink} '
-                        'with {answer}...'.format(author=row.comment_author,
-                                               permalink=row.comment_permalink,
-                                               answer=reply[:256]))
-            rpcerror_retry(comment.reply)(body=reply, author=account)
+            replies = comment.steemd.get_content_replies(row.comment_author,
+                                                         row.comment_permalink)
+            reply_authors = set(x['author'] for x in replies)
+            if account not in reply_authors:
+                logger.info('Replying to https://steemit.com/@{author}/{permalink} '
+                            'with {answer}...'.format(author=row.comment_author,
+                                                   permalink=row.comment_permalink,
+                                                   answer=reply[:256]))
+                rpcerror_retry(comment.reply)(body=reply, author=account)
+            else:
+                logger.info('Already answered {} by {}, will '
+                            'skip!'.format(row.comment_author,
+                                           row.comment_permalink))
 
         except Exception as e:
             logger.exception('Something went wrong with row {}'.format(row))
