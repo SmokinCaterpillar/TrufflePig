@@ -22,6 +22,9 @@ import trufflepig.bchain.postweeklyupdate as tppw
 logger = logging.getLogger(__name__)
 
 
+MAX_DOCUMENTS = 99000
+
+
 def parse_args():
     """Parses command line arguments"""
     parser = argparse.ArgumentParser(description='TrufflePig Bot')
@@ -46,7 +49,7 @@ def large_mp_preprocess(log_directory, current_datetime, steem_kwargs, data_dire
 
 def load_and_preprocess_2_frames(log_directory, current_datetime, steem_kwargs,
                                  data_directory, offset_days=8,
-                                 days=7, days2=7):
+                                 days=7, days2=7, max_documents=MAX_DOCUMENTS):
     """ Function to load and preprocess the time span split into 2
     for better memory footprint
 
@@ -91,6 +94,12 @@ def load_and_preprocess_2_frames(log_directory, current_datetime, steem_kwargs,
     post_frame.reset_index(inplace=True, drop=True)
     logger.info('Combining 2 frames into 1')
     post_frame = tppp.filter_duplicates(post_frame)
+
+    if len(post_frame) > max_documents:
+        logger.info('Frame has {} Documents, too many, '
+                    'reducing to {}'.format(len(post_frame), max_documents))
+        post_frame.sort_values('created', inplace=True, ascending=False)
+        post_frame = post_frame.iloc[:max_documents, :]
 
     logger.info('Searching for bid bots and bought votes')
     min_datetime = post_frame.created.min()
