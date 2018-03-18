@@ -257,16 +257,18 @@ def configure_logging(directory, current_datetime, bot_account='trufflepig'):
 def error_retry(f, retries=16, sleep_time=16, errors=(RPCError,)):
     """Explicit decorator for Error retries"""
     def wrapped(*args, **kwargs):
-        for retry in range(retries):
+        for retry in range(retries + 1):
             try:
-                return f(*args, **kwargs)
+                result =  f(*args, **kwargs)
+                if retry > 0:
+                    logger.warning('Needed retry {} out of {} for '
+                                 '{}!'.format(retry, retries, f))
+                return result
             except errors:
                 if retry + 1 >= retries:
                     logger.exception('Failed all {} retries for '
                                      '{}!'.format(retries, f))
                     raise
-                logger.warning('Failed retry {} out of {} for '
-                                 '{}!'.format(retry + 1, retries, f))
                 time.sleep(sleep_time)
     return wrapped
 
@@ -274,18 +276,18 @@ def error_retry(f, retries=16, sleep_time=16, errors=(RPCError,)):
 def none_retry(f, retries=16, sleep_time=2):
     """Explicit decorator for not None retries"""
     def wrapped(*args, **kwargs):
-        for retry in range(retries):
+        for retry in range(retries + 1):
             result =  f(*args, **kwargs)
 
             if result is not None:
+                if retry > 0:
+                    logger.warning('Needed retry {} out of {} for '
+                                 '{}!'.format(retry, retries, f))
                 return result
 
             if retry + 1 >= retries:
                 logger.error('Failed all {} retries for '
                                  '{}! Return None!'.format(retries, f))
-            else:
-                logger.warning('Failed retry {} out of {} for '
-                                 '{}!'.format(retry + 1, retries, f))
             time.sleep(sleep_time)
         return None
     return wrapped
