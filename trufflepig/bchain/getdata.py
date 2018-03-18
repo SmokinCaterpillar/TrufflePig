@@ -232,7 +232,7 @@ def get_post_data(authors_and_permalinks, steem, exclusion_voters):
             p = error_retry(Post,
                             errors=Exception,
                             sleep_time=0.5,
-                            retries=7)('@{}/{}'.format(author, permalink), steem)
+                            retries=3)('@{}/{}'.format(author, permalink), steem)
         except PostDoesNotExist:
             # This happens to oftern we will suppress this
             logger.debug('Post {} by {} does not exist!'.format(permalink,
