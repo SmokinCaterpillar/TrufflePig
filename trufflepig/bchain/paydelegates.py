@@ -2,7 +2,7 @@ import logging
 
 import trufflepig.bchain.getaccountdata as tpga
 import trufflepig.bchain.getdata as tpdg
-from trufflepig.utils import rpcerror_retry
+from trufflepig.utils import error_retry
 
 from steem import Steem
 from steembase import operations
@@ -47,11 +47,11 @@ def pay_delegates(account, steem_args,
         try:
             if payout:
                 logger.info('Paying {} SBD to {}'.format(delegator, payout))
-                rpcerror_retry(steem.commit.transfer)(to=delegator,
-                                                      amount=payout,
-                                                      asset='SBD',
-                                                      memo=memo,
-                                                      account=account)
+                error_retry(steem.commit.transfer)(to=delegator,
+                                                   amount=payout,
+                                                   asset='SBD',
+                                                   memo=memo,
+                                                   account=account)
         except Exception as e:
             logger.exception('Could not pay {} SBD to {}!'.format(payout,
                                                                   delegator))
@@ -75,7 +75,7 @@ def claim_all_reward_balance(steem, account):
     can_claim = any(Amount(x).amount > 0 for x in (reward_sbd, reward_vests, reward_steem))
     if can_claim:
         try:
-            return rpcerror_retry(steem.commit.finalizeOp)(op, account, "posting")
+            return error_retry(steem.commit.finalizeOp)(op, account, "posting")
         except Exception:
             logger.exception('Could not claim rewards {}'.format((reward_sbd,
                                                                   reward_vests,

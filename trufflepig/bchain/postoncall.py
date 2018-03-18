@@ -5,7 +5,7 @@ from steem.post import Post
 
 import trufflepig.bchain.posts as tfbp
 import trufflepig.bchain.getdata as tfgd
-from trufflepig.utils import rpcerror_retry
+from trufflepig.utils import error_retry
 
 
 logger = logging.getLogger(__name__)
@@ -63,7 +63,7 @@ def post_on_call(post_frame, account, steem, topN_link,
 
                         # We cannot use this post.upvote(weight=weight, voter=account)
                         # because we need to vote on archived posts as a flag!
-                        rpcerror_retry(post.commit.vote)(post.identifier, weight, account=account)
+                        error_retry(post.commit.vote)(post.identifier, weight, account=account)
                 else:
                     reply = YOU_DID_NOT_MAKE_IT
             else:
@@ -77,7 +77,7 @@ def post_on_call(post_frame, account, steem, topN_link,
                             'with {answer}...'.format(author=row.comment_author,
                                                    permalink=row.comment_permalink,
                                                    answer=reply[:256]))
-                rpcerror_retry(comment.reply)(body=reply, author=account)
+                error_retry(comment.reply)(body=reply, author=account)
             else:
                 logger.info('Already answered {} by {}, will '
                             'skip!'.format(row.comment_author,

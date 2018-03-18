@@ -254,16 +254,38 @@ def configure_logging(directory, current_datetime, bot_account='trufflepig'):
                         handlers=handlers)
 
 
-def rpcerror_retry(f, retries=16, sleep_time=16):
-    """Explicit decorator for RPC retries"""
+def error_retry(f, retries=16, sleep_time=16, errors=(RPCError,)):
+    """Explicit decorator for Error retries"""
     def wrapped(*args, **kwargs):
         for retry in range(retries):
             try:
                 return f(*args, **kwargs)
-            except RPCError:
-                if retry + 1 == retries:
+            except errors:
+                if retry + 1 >= retries:
+                    logger.exception('Failed all {} retries for '
+                                     '{}!'.format(retries, f))
                     raise
-                logger.exception('Failed retry {} out of {}!'.format(retry + 1,
-                                                                     retries))
+                logger.warning('Failed retry {} out of {} for '
+                                 '{}!'.format(retry + 1, retries, f))
                 time.sleep(sleep_time)
+    return wrapped
+
+
+def none_retry(f, retries=16, sleep_time=2):
+    """Explicit decorator for not None retries"""
+    def wrapped(*args, **kwargs):
+        for retry in range(retries):
+            result =  f(*args, **kwargs)
+
+            if result is not None:
+                return result
+
+            if retry + 1 >= retries:
+                logger.error('Failed all {} retries for '
+                                 '{}! Return None!'.format(retries, f))
+            else:
+                logger.warning('Failed retry {} out of {} for '
+                                 '{}!'.format(retry + 1, retries, f))
+            time.sleep(sleep_time)
+        return None
     return wrapped

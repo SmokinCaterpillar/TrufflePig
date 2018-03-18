@@ -10,7 +10,7 @@ from steem.post import Post, PostDoesNotExist
 import json
 from json import JSONDecodeError
 
-from trufflepig.utils import progressbar
+from trufflepig.utils import progressbar, none_retry, error_retry
 
 
 logger = logging.getLogger(__name__)
@@ -61,7 +61,7 @@ def get_block_headers_between_offset_start(start_datetime, end_datetime,
     logger.info('Collecting header infos')
     while True:
         try:
-            header = steem.get_block_header(current_block_num)
+            header = none_retry(steem.get_block_header)(current_block_num)
             current_datetime = pd.to_datetime(header['timestamp'])
             if start_datetime <= current_datetime and current_datetime <= end_datetime:
                 header['timestamp'] = current_datetime
@@ -101,12 +101,12 @@ def find_nearest_block_num(target_datetime, steem,
 
     """
     if latest_block_num is None:
-        latest_block_num = Blockchain(steem).get_current_block_num()
+        latest_block_num = none_retry(Blockchain(steem).get_current_block_num)()
 
     current_block_num = latest_block_num
     best_largest_block_num = latest_block_num
 
-    header = steem.get_block_header(best_largest_block_num)
+    header = none_retry(steem.get_block_header)(best_largest_block_num)
     best_largest_datetime = pd.to_datetime(header['timestamp'])
     if target_datetime > best_largest_datetime:
         logger.warning('Target beyond largest block num')
@@ -116,7 +116,7 @@ def find_nearest_block_num(target_datetime, steem,
     increase = block_num_tolerance + 1
     for _ in range(max_tries):
         try:
-            header = steem.get_block_header(current_block_num)
+            header = none_retry(steem.get_block_header)(current_block_num)
             current_datetime = pd.to_datetime(header['timestamp'])
             if increase <= block_num_tolerance:
                 return current_block_num, current_datetime
@@ -229,7 +229,10 @@ def get_post_data(authors_and_permalinks, steem, exclusion_voters):
     posts = []
     for kdx, (author, permalink) in enumerate(authors_and_permalinks):
         try:
-            p = Post('@{}/{}'.format(author, permalink), steem)
+            p = error_retry(Post,
+                            errors=Exception,
+                            sleep_time=0.5,
+                            retries=7)('@{}/{}'.format(author, permalink), steem)
         except PostDoesNotExist:
             # This happens to oftern we will suppress this
             logger.debug('Post {} by {} does not exist!'.format(permalink,
@@ -280,7 +283,7 @@ def get_all_posts_from_block(block_num, steem,
 
     """
     try:
-        operations = steem.get_ops_in_block(block_num, False)
+        operations = none_retry(steem.get_ops_in_block)(block_num, False)
         if operations:
             authors_and_permalinks = extract_authors_and_permalinks(operations)
             if exclude_authors_and_permalinks:

@@ -4,7 +4,13 @@ import os
 NODE_URL = os.environ.get('STEEM_NODE_URL', 'https://api.steemit.com')
 NODE_URL2 = os.environ.get('STEEM_NODE_URL2', 'https://steemd.privex.io')
 NODE_URL3 = os.environ.get('STEEM_NODE_URL3', 'https://api.steem.house')
-NODES = [x for x in (NODE_URL, NODE_URL2, NODE_URL3) if x]
+NODE_URL4 = os.environ.get('STEEM_NODE_URL4', 'steemd.minnowsupportproject.org')
+NODE_URL5 = os.environ.get('STEEM_NODE_URL5', 'steemd.pevo.science')
+NODE_URL6 = os.environ.get('STEEM_NODE_URL6', 'rpc.curiesteem.com')
+NODE_URL7 = os.environ.get('STEEM_NODE_URL7', 'seed.bitcoiner.me')
+NODES = [x for x in (NODE_URL, NODE_URL2, NODE_URL3,
+                     NODE_URL4, NODE_URL5, NODE_URL6,
+                     NODE_URL7) if x]
 
 # The steemit bot account and password
 ACCOUNT = os.environ.get('STEEM_ACCOUNT', 'trufflepig')

@@ -8,7 +8,7 @@ from steem.converter import Converter
 import trufflepig.bchain.posts as tfbp
 import trufflepig.bchain.getdata as tfgd
 import trufflepig.filters.textfilters as tftf
-from trufflepig.utils import rpcerror_retry
+from trufflepig.utils import error_retry
 
 
 logger = logging.getLogger(__name__)
@@ -61,12 +61,12 @@ def post_topN_list(sorted_post_frame, steem_or_args, account,
     logger.info('Posting top post with permalink: {}'.format(permalink))
     logger.info(title)
     logger.info(body)
-    rpcerror_retry(steem.commit.post)(author=account,
-                                      title=title,
-                                      body=body,
-                                      permlink=permalink,
-                                      self_vote=True,
-                                      tags=tfbp.TAGS)
+    error_retry(steem.commit.post)(author=account,
+                                   title=title,
+                                   body=body,
+                                   permlink=permalink,
+                                   self_vote=True,
+                                   tags=tfbp.TAGS)
 
     return permalink
 
@@ -105,7 +105,7 @@ def comment_on_own_top_list(sorted_post_frame, steem_or_args, account,
         # to pass around the no broadcast setting otherwise it is lost
         # see https://github.com/steemit/steem-python/issues/155
         post.commit.no_broadcast = steem.commit.no_broadcast
-        rpcerror_retry(post.reply)(body=comment, author=account)
+        error_retry(post.reply)(body=comment, author=account)
     except PostDoesNotExist:
         logger.exception('No broadcast, heh?')
 
