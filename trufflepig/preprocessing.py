@@ -27,7 +27,7 @@ FILTER_TAGS = ('mitnebcurationtrail', 'informationwar', 'truth', 'conspiracy',
 
 
 # Stay out of the whale wars!
-FILTER_AUTHORS = ('haejin', 'ew-and-patterns', 'caladium')
+FILTER_AUTHORS = ('haejin', 'ew-and-patterns', 'caladium', 'cryptopassion')
 
 
 def filter_duplicates(frame):
