@@ -195,15 +195,15 @@ def get_parent_posts(comment_authors_and_permalinks, steem):
             post = {
                 'title': p.title,
                 'reward': p.reward.amount,
-                'votes': len(p.active_votes),
+                'votes': len([x for x in p.active_votes if x['percent'] > 0]),
+                'active_votes': p.active_votes,
                 'created': p.created,
                 'tags': p.tags,
                 'body': p.body,
                 'author': p.author,
                 'permalink': p.permlink,
                 'comment_author': comment_author,
-                'comment_permalink': comment_permalink,
-                'active_votes': p.active_votes
+                'comment_permalink': comment_permalink
             }
             posts.append(post)
 

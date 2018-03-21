@@ -251,7 +251,8 @@ def get_post_data(authors_and_permalinks, steem, exclusion_voters):
         post = {
             'title': p.title,
             'reward': p.reward.amount,
-            'votes': len(p.active_votes),
+            'votes': len([x for x in p.active_votes if x['percent'] > 0]),
+            'active_votes': p.active_votes,
             'created': p.created,
             'tags': p.tags,
             'body': p.body,
