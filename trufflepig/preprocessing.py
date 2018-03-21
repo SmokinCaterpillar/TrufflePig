@@ -19,6 +19,8 @@ logger = logging.getLogger(__name__)
 FILTER_TAGS = ('mitnebcurationtrail', 'informationwar', 'truth', 'conspiracy',
                'vaccines', 'contest', 'giveaway', 'deutsch', 'kr', 'kr-newbie',
                'nsfw', 'sex',
+               # other weird stuff
+               'steemsilvergold',
                # Somehow religious texts do not work in combination with others
                # maybe I need a bot just to rate spiritual content
                # for simplicity let's ignore them for now,
