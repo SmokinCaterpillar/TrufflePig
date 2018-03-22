@@ -18,7 +18,7 @@ INVESTOR_SHARE = 0.5
 MEMO = 'Thank you for your trust in TrufflePig the Artificial Intelligence bot to help content curators and minnows.'
 
 
-def pay_delegates(account, steem_args,
+def pay_delegates(account, steem,
                   current_datetime,
                   min_days=3,
                   investor_share=INVESTOR_SHARE,
@@ -28,7 +28,7 @@ def pay_delegates(account, steem_args,
     Parameters
     ----------
     account: str
-    steem_args: Steem or kwargs
+    steem: Steem or kwargs
     current_datetime: dateime
     min_days: int
     investor_share: float
@@ -36,7 +36,6 @@ def pay_delegates(account, steem_args,
 
     """
     logger.info('Computing payouts for delegates!')
-    steem = tpdg.check_and_convert_steem(steem_args)
     payouts = tpga.get_delegate_payouts(account, steem,
                                         current_datetime=current_datetime,
                                         min_days=min_days,
@@ -53,8 +52,9 @@ def pay_delegates(account, steem_args,
                                                    memo=memo,
                                                    account=account)
         except Exception as e:
-            logger.exception('Could not pay {} SBD to {}!'.format(payout,
-                                                                  delegator))
+            logger.exception('Could not pay {} SBD to {}! '
+                             'Reconnecting...'.format(payout, delegator))
+            steem.reconnect()
 
 
 def claim_all_reward_balance(steem, account):
@@ -77,8 +77,10 @@ def claim_all_reward_balance(steem, account):
         try:
             return error_retry(steem.commit.finalizeOp)(op, account, "posting")
         except Exception:
-            logger.exception('Could not claim rewards {}'.format((reward_sbd,
-                                                                  reward_vests,
-                                                                  reward_steem)))
+            logger.exception('Could not claim rewards {}. '
+                             'Reconnecting...'.format((reward_sbd,
+                                                      reward_vests,
+                                                      reward_steem)))
+            steem.reconnect()
     else:
         logger.info('Nothing to claim!')

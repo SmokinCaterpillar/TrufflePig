@@ -7,7 +7,7 @@ import trufflepig.bchain.getdata as tpbg
 import trufflepig.model as tpmo
 import trufflepig.preprocessing as tppp
 from trufflepig.testutils.random_data import create_n_random_posts
-from trufflepig.testutils.pytest_fixtures import steem_kwargs, temp_dir
+from trufflepig.testutils.pytest_fixtures import steem, temp_dir
 
 
 def test_pipeline_model():
@@ -146,8 +146,8 @@ class MockPipeline(object):
                                predicted_votes[:, np.newaxis]], axis=1)
 
 
-def test_find_truffles_with_real_data(steem_kwargs):
-    df = tpbg.scrape_hour_data(steem_kwargs, stop_after=20)
+def test_find_truffles_with_real_data(steem):
+    df = tpbg.scrape_hour_data(steem, stop_after=20)
 
     df = tppp.preprocess(df)
 

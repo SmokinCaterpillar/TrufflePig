@@ -3,17 +3,12 @@ from steem.blockchain import Blockchain
 
 from trufflepig import config
 from trufflepig.bchain import getdata as tpbg
-
-
-@pytest.fixture()
-def steem_kwargs():
-    return dict(nodes=config.NODES,
-                no_broadcast=True)
+from trufflepig.bchain.mpsteem import MPSteem
 
 
 @pytest.fixture
-def steem(steem_kwargs):
-    return tpbg.Steem(**steem_kwargs)
+def steem():
+    return MPSteem(nodes=config.NODES, no_broadcast=True)
 
 
 @pytest.fixture

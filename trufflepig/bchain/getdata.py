@@ -26,16 +26,6 @@ FILENAME_TEMPLATE = 'steemit_posts__{time}.gz'
 ################################### Block Utils #################################
 
 
-def check_and_convert_steem(steem_or_args_kwargs):
-    """Turns arguments into steem or just leaves steem as it is"""
-    if isinstance(steem_or_args_kwargs, dict):
-        return Steem(**steem_or_args_kwargs)
-    elif isinstance(steem_or_args_kwargs, (list, tuple)):
-        return Steem(*steem_or_args_kwargs)
-    else:
-        return steem_or_args_kwargs
-
-
 def get_block_headers_between_offset_start(start_datetime, end_datetime,
                                            end_offset_num, steem):
     """ Returns block headers between a date range
@@ -69,7 +59,8 @@ def get_block_headers_between_offset_start(start_datetime, end_datetime,
             if current_datetime < start_datetime:
                 break
         except Exception:
-            logger.exception('Error for block num {}'.format(current_block_num))
+            logger.exception('Error for block num {}. Reconnecting...'.format(current_block_num))
+            steem.reconnect()
         current_block_num -= 1
         if current_block_num % 100 == 99:
             logger.debug('Bin alread {} headers'.format(len(headers)))
@@ -133,9 +124,11 @@ def find_nearest_block_num(target_datetime, steem,
                 if current_block_num < 0 or current_block_num > latest_block_num:
                     raise RuntimeError('Seriously?')
         except Exception:
-            logger.exception('Problems for block num {}'.format(current_block_num))
+            logger.exception('Problems for block num {}. Reconnecting...'
+                             ''.format(current_block_num))
             current_block_num -= 1
             best_smallest_block_num -= 1
+            steem.reconnect()
 
 
 def get_block_headers_between(start_datetime, end_datetime, steem):
@@ -239,8 +232,9 @@ def get_post_data(authors_and_permalinks, steem, exclusion_voters):
                                                                 author))
             continue
         except Exception:
-            logger.exception('Error in loading post {} by {}'.format(permalink,
-                                                                     author))
+            logger.exception('Error in loading post {} by {}. '
+                             'Reconnecting...'.format(permalink, author))
+            steem.reconnect()
             continue
 
         if exclude_if_voted_by(p.active_votes, exclusion_voters):
@@ -272,7 +266,7 @@ def get_all_posts_from_block(block_num, steem,
     Parameters
     ----------
     block_num: int
-    steem: Steem
+    steem: MPSteem
     exclusion_voters: set
         If post is voted by any of them it is excluded (cheetah list!)
     exclude_authors_and_permalinks: set of tuples of strings
@@ -297,7 +291,8 @@ def get_all_posts_from_block(block_num, steem,
         else:
             logger.warning('Could not find any operations for block {}'.format(block_num))
     except Exception as e:
-        logger.exception('Error for block {}'.format(block_num))
+        logger.exception('Error for block {}. Reconnecting...'.format(block_num))
+        steem.reconnect()
     return [], set()
 
 
@@ -355,10 +350,9 @@ def config_mp_logging(level=logging.INFO):
     logging.basicConfig(level=level)
 
 
-def _get_all_posts_for_blocks_parallel(block_nums, steem_args, exclusion_voters,
+def _get_all_posts_for_blocks_parallel(block_nums, steem, exclusion_voters,
                                        stop_after=None):
     """Helper wrapper for multiprocessing"""
-    steem = check_and_convert_steem(steem_args)
     posts = []
     exclude_authors_and_permalinks = set()
     for block_num in block_nums:
@@ -373,7 +367,7 @@ def _get_all_posts_for_blocks_parallel(block_nums, steem_args, exclusion_voters,
     return posts
 
 
-def get_all_posts_between_parallel(start_datetime, end_datetime, steem_args,
+def get_all_posts_between_parallel(start_datetime, end_datetime, steem,
                                    exclusion_voters=EXCLUSION_VOTERS_SET,
                                    stop_after=None, ncores=8,
                                    chunksize=20, timeout=1200):
@@ -381,7 +375,6 @@ def get_all_posts_between_parallel(start_datetime, end_datetime, steem_args,
 
     Waits for posts unitl `timeout`.
     """
-    steem = check_and_convert_steem(steem_args)
     start_num, block_start_datetime = find_nearest_block_num(start_datetime, steem)
     end_num, block_end_datetime = find_nearest_block_num(end_datetime, steem)
 
@@ -401,7 +394,7 @@ def get_all_posts_between_parallel(start_datetime, end_datetime, steem_args,
     async_results = []
     for idx, chunk in enumerate(chunks):
         result = pool.apply_async(_get_all_posts_for_blocks_parallel,
-                                  args=(chunk, steem_args,
+                                  args=(chunk, steem,
                                         exclusion_voters,
                                         stop_after))
         async_results.append(result)
@@ -426,7 +419,7 @@ def get_all_posts_between_parallel(start_datetime, end_datetime, steem_args,
     return posts
 
 
-def load_or_scrape_full_day(date, steem_or_args, directory,
+def load_or_scrape_full_day(date, steem, directory,
                             exclusion_voters=EXCLUSION_VOTERS_SET,
                             overwrite=False,
                             store=True, stop_after=None, ncores=1):
@@ -436,7 +429,7 @@ def load_or_scrape_full_day(date, steem_or_args, directory,
     ----------
     date: datetime.date
         The date to load or scrape in UTC
-    steem_or_args: kwargs or Steem object
+    steem:  Steem object
     directory: str
         Directory to load posts from
     exclusion_voters: set
@@ -468,13 +461,12 @@ def load_or_scrape_full_day(date, steem_or_args, directory,
         logger.info('File {} not found, will start scraping'.format(filename))
 
         if ncores == 1:
-            steem = check_and_convert_steem(steem_or_args)
             posts = get_all_posts_between(start_datetime, end_datetime, steem,
                                           exclusion_voters=exclusion_voters,
                                           stop_after=stop_after)
         else:
             posts = get_all_posts_between_parallel(start_datetime, end_datetime,
-                                                   steem_or_args,
+                                                   steem,
                                                    exclusion_voters=exclusion_voters,
                                                    stop_after=stop_after,
                                                    ncores=ncores)
@@ -486,7 +478,7 @@ def load_or_scrape_full_day(date, steem_or_args, directory,
     return post_frame
 
 
-def load_or_scrape_training_data(steem_or_args, directory,
+def load_or_scrape_training_data(steem, directory,
                                  exclusion_voters=EXCLUSION_VOTERS_SET,
                                  days=20, offset_days=8,
                                  ncores=8,
@@ -497,7 +489,7 @@ def load_or_scrape_training_data(steem_or_args, directory,
 
     Parameters
     ----------
-    steem_or_args: kwargs or Steem object
+    steem:  Steem object
     directory: str
     exclusion_voters: set
         If post is voted by any of them it is excluded (cheetah list!)
@@ -528,7 +520,7 @@ def load_or_scrape_training_data(steem_or_args, directory,
     frames = []
     for day in range(days):
         next_date = (start_datetime + pd.Timedelta(days=day)).date()
-        frame = load_or_scrape_full_day(next_date, steem_or_args,
+        frame = load_or_scrape_full_day(next_date, steem,
                                         directory,
                                         exclusion_voters=exclusion_voters,
                                         overwrite=False,
@@ -543,7 +535,7 @@ def load_or_scrape_training_data(steem_or_args, directory,
     return frame
 
 
-def scrape_hour_data(steem_or_args,
+def scrape_hour_data(steem,
                      exclusion_voters=EXCLUSION_VOTERS_SET,
                      hours=24,
                      offset_hours=24,
@@ -553,7 +545,7 @@ def scrape_hour_data(steem_or_args,
 
     Parameters
     ----------
-    steem_or_args: Steem or kwargs
+    steem: Steem or kwargs
     exclusion_voters: set
         If post is voted by any of them it is excluded (cheetah list!)
     hours: int
@@ -579,7 +571,6 @@ def scrape_hour_data(steem_or_args,
     start_datetime = end_datetime - pd.Timedelta(hours=hours)
 
     if ncores == 1:
-        steem = check_and_convert_steem(steem_or_args)
         posts = get_all_posts_between(start_datetime,
                                       end_datetime,
                                       steem,
@@ -588,7 +579,7 @@ def scrape_hour_data(steem_or_args,
     else:
         posts = get_all_posts_between_parallel(start_datetime,
                                                end_datetime,
-                                               steem_or_args,
+                                               steem,
                                                exclusion_voters=exclusion_voters,
                                                stop_after=stop_after,
                                                ncores=ncores)

@@ -7,7 +7,7 @@ import trufflepig.model as tpmo
 import trufflepig.preprocessing as tppp
 from trufflepig import config
 from trufflepig.testutils.random_data import create_n_random_posts
-from trufflepig.testutils.pytest_fixtures import steem_kwargs
+from trufflepig.testutils.pytest_fixtures import steem
 
 
 def test_statistics():
@@ -43,15 +43,15 @@ def test_statistics():
     assert body
 
 
-def test_existence(steem_kwargs):
+def test_existence(steem):
     result = tppw.return_overview_permalink_if_exists(account=config.ACCOUNT,
-                                                      steem_args=steem_kwargs,
+                                                      steem=steem,
                                                       current_datetime=pd.datetime.utcnow())
     assert isinstance(result, str)
 
 
 @pytest.mark.skipif(config.PASSWORD is None, reason="needs posting key")
-def test_weekly_post(steem_kwargs):
+def test_weekly_post(steem):
     posts = create_n_random_posts(300)
 
     post_frame = pd.DataFrame(posts)
@@ -73,7 +73,7 @@ def test_weekly_post(steem_kwargs):
 
     permalink = tppw.post_weakly_update(pipeline, post_frame,
                                         account=config.ACCOUNT,
-                                        steem_args=steem_kwargs,
+                                        steem=steem,
                                         current_datetime=current_date)
 
     assert permalink

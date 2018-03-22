@@ -97,10 +97,9 @@ def check_all_ops_between(start_datetime, end_datetime, steem,
     return comment_authors_and_permalinks
 
 
-def _check_all_ops_parallel(block_nums, steem_args, account,
+def _check_all_ops_parallel(block_nums, steem, account,
                                        stop_after=None):
     """Helper wrapper for multiprocessing"""
-    steem = tpbg.check_and_convert_steem(steem_args)
     comment_authors_and_permalinks = []
     for idx, block_num in enumerate(block_nums):
         authors_and_permalinks = check_all_ops_in_block(block_num, steem, account)
@@ -110,14 +109,13 @@ def _check_all_ops_parallel(block_nums, steem_args, account,
     return comment_authors_and_permalinks
 
 
-def check_all_ops_between_parallel(start_datetime, end_datetime, steem_args,
+def check_all_ops_between_parallel(start_datetime, end_datetime, steem,
                                    account, stop_after=None, ncores=8,
                                    chunksize=20, timeout=1200):
     """As above but in parallel with `ncores` jobs of `chunksize`.
 
     Waits for comments unitl `timeout`.
     """
-    steem = tpbg.check_and_convert_steem(steem_args)
     start_num, block_start_datetime = tpbg.find_nearest_block_num(start_datetime, steem)
     end_num, block_end_datetime = tpbg.find_nearest_block_num(end_datetime, steem)
 
@@ -137,7 +135,7 @@ def check_all_ops_between_parallel(start_datetime, end_datetime, steem_args,
     async_results = []
     for idx, chunk in enumerate(chunks):
         result = pool.apply_async(_check_all_ops_parallel,
-                                  args=(chunk, steem_args,
+                                  args=(chunk, steem,
                                         account,
                                         stop_after))
         async_results.append(result)
@@ -209,6 +207,8 @@ def get_parent_posts(comment_authors_and_permalinks, steem):
 
         except Exception as e:
             logger.exception(('Could not work with comment {} by '
-                              '{}').format(comment_permalink, comment_author))
+                              '{}. Reconnecting...'
+                              '').format(comment_permalink, comment_author))
+            steem.reconnect()
 
     return posts
