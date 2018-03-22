@@ -7,6 +7,7 @@ import pandas as pd
 import trufflepig.model as tpmo
 import trufflepig.preprocessing as tppp
 import trufflepig.bchain.getdata as tpgd
+from trufflepig.bchain.mpsteem import MPSteem
 from trufflepig import config
 
 
@@ -43,8 +44,7 @@ def main():
     pipeline = tpmo.load_or_train_pipeline(None, model_directoy,
                                            current_datetime)
 
-    steem_kwargs = dict(nodes=config.NODES, no_broadcast=True)
-    steem = tpgd.check_and_convert_steem(steem_kwargs)
+    steem = MPSteem(nodes=config.NODES, no_broadcast=True)
     posts = tpgd.get_post_data([(author, permalink)], steem, {})
 
     posts = pd.DataFrame(posts)

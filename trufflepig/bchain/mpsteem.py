@@ -4,6 +4,7 @@ from steem.steemd import Steemd
 
 
 class MPSteem(Steem):
+    """Multiprocessing safe Steem"""
     def __init__(self, nodes: list, no_broadcast=False, **kwargs):
         self.nodes = nodes.copy()
         self.no_broadcast = no_broadcast

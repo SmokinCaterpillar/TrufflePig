@@ -17,14 +17,14 @@ logger = logging.getLogger(__name__)
 PERMALINK_TEMPLATE = 'daily-truffle-picks-{date}'
 
 
-def post_topN_list(sorted_post_frame, steem_or_args, account,
+def post_topN_list(sorted_post_frame, steem, account,
                    current_datetime, overview_permalink, N=10):
     """ Post the toplist to the blockchain
 
     Parameters
     ----------
     sorted_post_frame: DataFrame
-    steem_or_args: kwargs or Steem object
+    steem:  Steem object
     account: str
     current_datetime: datetime
     N: int
@@ -35,8 +35,6 @@ def post_topN_list(sorted_post_frame, steem_or_args, account,
     permalink to new post
 
     """
-    steem = tfgd.check_and_convert_steem(steem_or_args)
-
     df = sorted_post_frame.iloc[:N, :]
 
     logger.info('Creating top {} post'.format(N))
@@ -71,22 +69,20 @@ def post_topN_list(sorted_post_frame, steem_or_args, account,
     return permalink
 
 
-def comment_on_own_top_list(sorted_post_frame, steem_or_args, account,
+def comment_on_own_top_list(sorted_post_frame, steem, account,
                             topN_permalink, Kstart=10, Kend=25):
     """ Adds the more ranks as a comment
 
     Parameters
     ----------
     sorted_post_frame: DataFrame
-    steem_or_args: kwargs or Steem object
+    steem:  Steem object
     account: str
     topN_permalink: str
     Kstart: int
     Kend: int
 
     """
-    steem = tfgd.check_and_convert_steem(steem_or_args)
-
     df = sorted_post_frame.iloc[Kstart: Kend, :]
 
     comment = tfbp.topN_comment(topN_authors=df.author,
@@ -110,14 +106,14 @@ def comment_on_own_top_list(sorted_post_frame, steem_or_args, account,
         logger.exception('No broadcast, heh?')
 
 
-def vote_and_comment_on_topK(sorted_post_frame, steem_or_args, account,
+def vote_and_comment_on_topK(sorted_post_frame, steem, account,
                              topN_permalink, overview_permalink, K=25):
     """
 
     Parameters
     ----------
     sorted_post_frame: DataFrame
-    steem_or_args: kwargs or Steem object
+    steem:  Steem object
     account: str
     topN_permalink: str
     K: int
@@ -125,7 +121,6 @@ def vote_and_comment_on_topK(sorted_post_frame, steem_or_args, account,
 
     """
     logger.info('Voting and commenting on {} top truffles'.format(K))
-    steem = tfgd.check_and_convert_steem(steem_or_args)
     weight = min(800.0 / K, 100)
     topN_link = 'https://steemit.com/@{author}/{permalink}'.format(author=account,
                                                     permalink=topN_permalink)
@@ -163,7 +158,7 @@ def vote_and_comment_on_topK(sorted_post_frame, steem_or_args, account,
             logger.exception('W00t? row: {}'.format(row))
 
 
-def create_wallet(steem_or_args, password, posting_key,
+def create_wallet(steem, password, posting_key,
                   active_key=None):
     """ Creates a new wallet
 
@@ -171,7 +166,7 @@ def create_wallet(steem_or_args, password, posting_key,
 
     Parameters
     ----------
-    steem_or_args: kwargs or Steem object
+    steem:  Steem object
     password: str
     posting_key: str
     active_key: str
@@ -179,8 +174,6 @@ def create_wallet(steem_or_args, password, posting_key,
     """
     if posting_key is None or password is None:
         raise RuntimeError('Key or password are None!')
-
-    steem = tfgd.check_and_convert_steem(steem_or_args)
 
     logger.info('Unlocking or creating wallet')
     wallet = steem.wallet

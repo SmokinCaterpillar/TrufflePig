@@ -5,7 +5,7 @@ from pandas.testing import assert_frame_equal
 from steem.post import Post
 
 import trufflepig.bchain.getdata as tpbg
-from trufflepig.testutils.pytest_fixtures import steem, steem_kwargs, \
+from trufflepig.testutils.pytest_fixtures import steem, \
     bchain, temp_dir
 
 
@@ -56,9 +56,9 @@ def test_scrape_date(steem, temp_dir):
     assert len(p1) > 0
 
 
-def test_scrape_or_load_data_parallel(temp_dir, steem_kwargs):
+def test_scrape_or_load_data_parallel(temp_dir, steem):
 
-    frame = tpbg.load_or_scrape_training_data(steem_kwargs,
+    frame = tpbg.load_or_scrape_training_data(steem,
                                               temp_dir,
                                               days=3,
                                               stop_after=10,
@@ -66,8 +66,8 @@ def test_scrape_or_load_data_parallel(temp_dir, steem_kwargs):
     assert len(frame) >= 30
 
 
-def test_scrape_recent_date(steem_kwargs):
-    frame = tpbg.scrape_hour_data(steem_kwargs,
+def test_scrape_recent_date(steem):
+    frame = tpbg.scrape_hour_data(steem,
                                   stop_after=50,
                                   ncores=1)
     assert len(frame)

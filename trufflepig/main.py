@@ -18,6 +18,8 @@ import trufflepig.bchain.getaccountdata as tpad
 from trufflepig import config
 from trufflepig.utils import configure_logging
 import trufflepig.bchain.postweeklyupdate as tppw
+from trufflepig.bchain.mpsteem import MPSteem
+
 
 logger = logging.getLogger(__name__)
 
@@ -35,11 +37,11 @@ def parse_args():
     return args.broadcast, args.now
 
 
-def large_mp_preprocess(log_directory, current_datetime, steem_kwargs, data_directory,
+def large_mp_preprocess(log_directory, current_datetime, steem, data_directory,
                         days, offset_days):
     """Helper function to spawn in child process"""
     configure_logging(log_directory, current_datetime)
-    post_frame = tpgd.load_or_scrape_training_data(steem_kwargs, data_directory,
+    post_frame = tpgd.load_or_scrape_training_data(steem, data_directory,
                                                        current_datetime=current_datetime,
                                                        days=days,
                                                        offset_days=offset_days,
@@ -47,7 +49,7 @@ def large_mp_preprocess(log_directory, current_datetime, steem_kwargs, data_dire
     return tppp.preprocess(post_frame, ncores=8)
 
 
-def load_and_preprocess_2_frames(log_directory, current_datetime, steem_kwargs,
+def load_and_preprocess_2_frames(log_directory, current_datetime, steem,
                                  data_directory, offset_days=8,
                                  days=7, days2=7, max_documents=MAX_DOCUMENTS):
     """ Function to load and preprocess the time span split into 2
@@ -57,7 +59,7 @@ def load_and_preprocess_2_frames(log_directory, current_datetime, steem_kwargs,
     ----------
     log_directory: str
     current_datetime: datetime
-    steem_kwargs: dict
+    steem: MPSteem
     data_directory: str
     offset_days: int
     days: int
@@ -75,7 +77,7 @@ def load_and_preprocess_2_frames(log_directory, current_datetime, steem_kwargs,
         post_frame = executor.submit(large_mp_preprocess,
                                      log_directory=log_directory,
                                      current_datetime=current_datetime,
-                                     steem_kwargs=steem_kwargs,
+                                     steem=steem,
                                      data_directory=data_directory,
                                      days=days,
                                      offset_days=offset_days).result()
@@ -83,7 +85,7 @@ def load_and_preprocess_2_frames(log_directory, current_datetime, steem_kwargs,
         post_frame2 = executor.submit(large_mp_preprocess,
                                      log_directory=log_directory,
                                      current_datetime=current_datetime,
-                                     steem_kwargs=steem_kwargs,
+                                     steem=steem,
                                      data_directory=data_directory,
                                      days=days2,
                                      offset_days=offset_days + days).result()
@@ -104,7 +106,7 @@ def load_and_preprocess_2_frames(log_directory, current_datetime, steem_kwargs,
     logger.info('Searching for bid bots and bought votes')
     min_datetime = post_frame.created.min()
     max_datetime = post_frame.created.max() + pd.Timedelta(days=8)
-    upvote_payments = tpad.get_upvote_payments_to_bots(steem_args=steem_kwargs,
+    upvote_payments = tpad.get_upvote_payments_to_bots(steem=steem,
                                                   min_datetime=min_datetime,
                                                   max_datetime=max_datetime)
     logger.info('Adjusting votes and reward')
@@ -136,16 +138,16 @@ def main():
         logger.info('ATTENTION I WILL BROADCAST TO STEEMIT!!!')
     time.sleep(2)
 
-    steem_kwargs = dict(nodes=config.NODES, no_broadcast=no_broadcast)
+    steem = MPSteem(nodes=config.NODES, no_broadcast=no_broadcast)
 
-    tppd.create_wallet(steem_kwargs, config.PASSWORD,
+    tppd.create_wallet(steem, config.PASSWORD,
                        posting_key=config.POSTING_KEY,
                        active_key=config.ACTIVE_KEY)
 
     logger.info('Paying out investors')
     account = config.ACCOUNT
     tpde.pay_delegates(account=account,
-                       steem_args=steem_kwargs,
+                       steem=steem,
                        current_datetime=current_datetime)
 
     if not tpmo.model_exists(current_datetime, model_directoy):
@@ -153,7 +155,7 @@ def main():
         post_frame = load_and_preprocess_2_frames(
             log_directory=log_directory,
             current_datetime=current_datetime,
-            steem_kwargs=steem_kwargs,
+            steem=steem,
             data_directory=data_directory)
         logger.info('Garbage collecting')
         gc.collect()
@@ -177,7 +179,7 @@ def main():
 
     overview_permalink = tppw.return_overview_permalink_if_exists(account=account,
                                                                   current_datetime=current_datetime,
-                                                                  steem_args=steem_kwargs)
+                                                                  steem=steem)
 
     if not overview_permalink:
         if post_frame is None:
@@ -185,21 +187,21 @@ def main():
             post_frame = load_and_preprocess_2_frames(
             log_directory=log_directory,
             current_datetime=current_datetime,
-            steem_kwargs=steem_kwargs,
+            steem=steem,
             data_directory=data_directory)
 
         logger.info('I want to post my weekly overview')
         overview_permalink = tppw.post_weakly_update(pipeline=pipeline,
                                                      post_frame=post_frame,
                                                      account=account,
-                                                     steem_args=steem_kwargs,
+                                                     steem=steem,
                                                      current_datetime=current_datetime)
 
     logger.info('Garbage collecting')
     del post_frame
     gc.collect()
 
-    prediction_frame = tpgd.scrape_hour_data(steem_or_args=steem_kwargs,
+    prediction_frame = tpgd.scrape_hour_data(steem=steem,
                                              current_datetime=current_datetime,
                                              ncores=32,
                                              offset_hours=2)
@@ -207,23 +209,23 @@ def main():
 
     sorted_frame = tpmo.find_truffles(prediction_frame, pipeline,
                                       account=config.ACCOUNT)
-    permalink = tppd.post_topN_list(sorted_frame, steem_kwargs,
+    permalink = tppd.post_topN_list(sorted_frame, steem,
                                     account=account,
                                     current_datetime=current_datetime,
                                     overview_permalink=overview_permalink)
 
-    tppd.comment_on_own_top_list(sorted_frame, steem_kwargs,
+    tppd.comment_on_own_top_list(sorted_frame, steem,
                                  account=account,
                                  topN_permalink=permalink)
 
     tppd.vote_and_comment_on_topK(sorted_frame,
-                                  steem_kwargs,
+                                  steem,
                                   topN_permalink=permalink,
                                   account=account,
                                   overview_permalink=overview_permalink)
 
     logger.info('Done with normal duty, answering manual calls!')
-    tfod.call_a_pig(steem_kwargs=steem_kwargs,
+    tfod.call_a_pig(steem=steem,
                     account=account,
                     pipeline=pipeline,
                     topN_permalink=permalink,
@@ -238,7 +240,7 @@ def main():
     tfut.clean_up_directory(log_directory, keep_last=14)
 
     logger.info('Preloading -8 days for later training')
-    tpgd.load_or_scrape_training_data(steem_kwargs, data_directory,
+    tpgd.load_or_scrape_training_data(steem, data_directory,
                                                        current_datetime=current_datetime,
                                                        days=1,
                                                        offset_days=8,

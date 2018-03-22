@@ -6,6 +6,7 @@ from steem import Steem
 import trufflepig.model as tpmo
 import trufflepig.preprocessing as tppp
 import trufflepig.bchain.getdata as tpgd
+from trufflepig.bchain.mpsteem import MPSteem
 from trufflepig import config
 
 
@@ -16,7 +17,7 @@ def main():
     logging.basicConfig(level=logging.INFO, format=format)
     directory = os.path.join(config.PROJECT_DIRECTORY, 'scraped_data')
 
-    steem = dict(nodes=config.NODES)
+    steem = MPSteem(nodes=config.NODES)
     current_datetime = '2018-02-01'
 
     crossval_filename = os.path.join(directory, 'xval_{}.gz'.format(current_datetime))

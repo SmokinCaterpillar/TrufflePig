@@ -1,3 +1,7 @@
+*0.6.1a* - 2018-03-22
+
+* New multiprocessing sage Steem object
+
 *0.6.0a* - 2018-03-12
 
 * Two new readability scores

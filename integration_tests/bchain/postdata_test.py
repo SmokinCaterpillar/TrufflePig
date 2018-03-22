@@ -6,7 +6,7 @@ import trufflepig.bchain.postdata as tbpd
 import trufflepig.preprocessing as tppp
 from trufflepig import config
 from trufflepig.testutils import random_data
-from trufflepig.testutils.pytest_fixtures import steem_kwargs, steem
+from trufflepig.testutils.pytest_fixtures import steem
 
 
 @pytest.mark.skipif(config.PASSWORD is None, reason="needs posting key")
@@ -31,13 +31,11 @@ def test_test_top10post(steem):
 
 
 @pytest.mark.skipif(config.PASSWORD is None, reason="needs posting key")
-def test_test_all_top_with_real_data(steem_kwargs):
-
-    steem = tpbg.check_and_convert_steem(steem_kwargs)
+def test_test_all_top_with_real_data(steem):
 
     steem.wallet.unlock(config.PASSWORD)
 
-    df = tpbg.scrape_hour_data(steem_kwargs, stop_after=10)
+    df = tpbg.scrape_hour_data(steem, stop_after=10)
 
     df = tppp.preprocess(df)
 

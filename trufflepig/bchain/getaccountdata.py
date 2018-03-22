@@ -270,9 +270,8 @@ def extend_upvotes_and_payments(upvote_payments, new_payments):
     return upvote_payments
 
 
-def _get_upvote_payments_parrallel(accounts, steem_args, min_datetime,
+def _get_upvote_payments_parrallel(accounts, steem, min_datetime,
                                    max_datetime):
-    steem = tpbg.check_and_convert_steem(steem_args)
     results = {}
     for account in accounts:
         result = get_upvote_payments(account, steem, min_datetime, max_datetime)
@@ -281,7 +280,7 @@ def _get_upvote_payments_parrallel(accounts, steem_args, min_datetime,
     return result
 
 
-def get_upvote_payments_for_accounts(accounts, steem_args, min_datetime, max_datetime,
+def get_upvote_payments_for_accounts(accounts, steem, min_datetime, max_datetime,
                                      chunksize=10, ncores=20, timeout=3600):
     logger.info('Querying upvote purchases between {} and '
                 '{} for {} accounts'.format(min_datetime,
@@ -303,7 +302,7 @@ def get_upvote_payments_for_accounts(accounts, steem_args, min_datetime, max_dat
         for start_datetime, end_datetime in zip(start_datetimes, end_datetimes):
             for idx, chunk in enumerate(chunks):
                 result = pool.apply_async(_get_upvote_payments_parrallel,
-                                          args=(chunk, steem_args,
+                                          args=(chunk, steem,
                                                 start_datetime, end_datetime))
                 async_results.append(result)
 
@@ -324,18 +323,18 @@ def get_upvote_payments_for_accounts(accounts, steem_args, min_datetime, max_dat
 
         pool.join()
     else:
-        return _get_upvote_payments_parrallel(accounts, steem_args, min_datetime,
+        return _get_upvote_payments_parrallel(accounts, steem, min_datetime,
                                               max_datetime)
 
     logger.info('Found {} upvote bought articles'.format(len(upvote_payments)))
     return upvote_payments
 
 
-def get_upvote_payments_to_bots(steem_args, min_datetime, max_datetime,
+def get_upvote_payments_to_bots(steem, min_datetime, max_datetime,
                                 bots=BITBOTS, ncores=30):
     logger.info('Getting payments to following bots {}'.format(bots))
     return get_upvote_payments_for_accounts(accounts=bots,
-                                            steem_args=steem_args,
+                                            steem=steem,
                                             min_datetime=min_datetime,
                                             max_datetime=max_datetime,
                                             ncores=ncores,

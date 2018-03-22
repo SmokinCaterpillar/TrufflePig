@@ -162,8 +162,7 @@ def compute_weekly_statistics(post_frame, pipeline, N=10, topics_step=4):
     return result
 
 
-def return_overview_permalink_if_exists(account, steem_args, current_datetime):
-    steem = tppd.check_and_convert_steem(steem_args)
+def return_overview_permalink_if_exists(account, steem, current_datetime):
     permalink = PERMALINK_TEMPLATE.format(date=current_datetime.strftime('%Y-%U'))
     try:
         Post('@{}/{}'.format(account, permalink), steem)
@@ -172,8 +171,7 @@ def return_overview_permalink_if_exists(account, steem_args, current_datetime):
         return ''
 
 
-def post_weakly_update(pipeline, post_frame, account, steem_args, current_datetime):
-    steem = tppd.check_and_convert_steem(steem_args)
+def post_weakly_update(pipeline, post_frame, account, steem, current_datetime):
     steem_per_mvests = Converter(steem).steem_per_mvests()
     stats = compute_weekly_statistics(post_frame, pipeline)
 
