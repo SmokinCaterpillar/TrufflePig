@@ -74,6 +74,10 @@ def filter_formatting(text):
     return text
 
 
+def filter_quotes(text):
+    return re.sub('\n[ \t]*>[^\n]+\n', '\n', text)
+
+
 def replace_newlines(text):
     return re.sub('\s+', ' ', text)
 

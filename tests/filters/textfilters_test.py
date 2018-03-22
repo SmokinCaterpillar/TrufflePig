@@ -75,3 +75,23 @@ jdd
     
 jdd"""
     assert new_text == expected
+
+
+def test_filter_quotes():
+    text= """I like this
+    
+      > lksajdlksajdls743289473()/)(   /((/dads"!§"!§  432     )(/)(
+      4 > 3
+      
+      Heyho!
+      """
+    new_text = tptf.filter_quotes(text)
+
+    expected = """I like this
+    
+      4 > 3
+      
+      Heyho!
+      """
+
+    assert new_text == expected
