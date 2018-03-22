@@ -84,6 +84,11 @@ def test_filter_quotes():
       4 > 3
       
       Heyho!
+      >When the total post value reaches $75 the winner will be chosen by random draw on @topkpop's Friday evening radio show. We will announce the winner and I will make contact through DM to find out where to send your awesome coin! Thank you all for your understanding. I want to support the Mothership and also not lose my shirt on my coin lol!!
+
+>Everyone is welcome to support myself and themothership project But in order to be eligible to win the coin you must:
+
+>Follow Me
       """
     new_text = tptf.filter_quotes(text)
 
@@ -92,6 +97,8 @@ def test_filter_quotes():
       4 > 3
       
       Heyho!
+
+
       """
 
     assert new_text == expected
