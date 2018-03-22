@@ -59,7 +59,8 @@ def get_block_headers_between_offset_start(start_datetime, end_datetime,
             if current_datetime < start_datetime:
                 break
         except Exception:
-            logger.exception('Error for block num {}'.format(current_block_num))
+            logger.exception('Error for block num {}. Reconnecting...'.format(current_block_num))
+            steem.reconnect()
         current_block_num -= 1
         if current_block_num % 100 == 99:
             logger.debug('Bin alread {} headers'.format(len(headers)))
@@ -123,9 +124,11 @@ def find_nearest_block_num(target_datetime, steem,
                 if current_block_num < 0 or current_block_num > latest_block_num:
                     raise RuntimeError('Seriously?')
         except Exception:
-            logger.exception('Problems for block num {}'.format(current_block_num))
+            logger.exception('Problems for block num {}. Reconnecting...'
+                             ''.format(current_block_num))
             current_block_num -= 1
             best_smallest_block_num -= 1
+            steem.reconnect()
 
 
 def get_block_headers_between(start_datetime, end_datetime, steem):
@@ -229,8 +232,9 @@ def get_post_data(authors_and_permalinks, steem, exclusion_voters):
                                                                 author))
             continue
         except Exception:
-            logger.exception('Error in loading post {} by {}'.format(permalink,
-                                                                     author))
+            logger.exception('Error in loading post {} by {}. '
+                             'Reconnecting...'.format(permalink, author))
+            steem.reconnect()
             continue
 
         if exclude_if_voted_by(p.active_votes, exclusion_voters):
@@ -262,7 +266,7 @@ def get_all_posts_from_block(block_num, steem,
     Parameters
     ----------
     block_num: int
-    steem: Steem
+    steem: MPSteem
     exclusion_voters: set
         If post is voted by any of them it is excluded (cheetah list!)
     exclude_authors_and_permalinks: set of tuples of strings
@@ -287,7 +291,8 @@ def get_all_posts_from_block(block_num, steem,
         else:
             logger.warning('Could not find any operations for block {}'.format(block_num))
     except Exception as e:
-        logger.exception('Error for block {}'.format(block_num))
+        logger.exception('Error for block {}. Reconnecting...'.format(block_num))
+        steem.reconnect()
     return [], set()
 
 

@@ -113,9 +113,11 @@ def find_nearest_index(target_datetime,
                                                                 current_index,
                                                                 latest_index))
         except Exception:
-            logger.exception('Problems for index {}'.format(current_index))
+            logger.exception('Problems for index {}. Reconeccting...'.format(current_index))
             current_index += 1
             best_largest_index += 1
+            steem.reconnect()
+            acc = Account(account, steem)
 
 
 def get_delegates_and_shares(account, steem):
@@ -237,7 +239,8 @@ def get_upvote_payments(account, steem, min_datetime, max_datetime,
                 break
 
         except Exception as e:
-            logger.exception('Could not parse {}'.format(transfer))
+            logger.exception('Could not parse {}. Reconnecting...'.format(transfer))
+            steem.reconnect()
 
     return upvote_payments
 

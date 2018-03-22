@@ -84,4 +84,6 @@ def post_on_call(post_frame, account, steem, topN_link,
                                            row.comment_permalink))
 
         except Exception as e:
-            logger.exception('Something went wrong with row {}'.format(row))
+            logger.exception('Something went wrong with row {}.'
+                             'Reconnecting...'.format(row))
+            steem.reconnect()

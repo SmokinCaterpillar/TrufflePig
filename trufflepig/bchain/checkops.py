@@ -207,6 +207,8 @@ def get_parent_posts(comment_authors_and_permalinks, steem):
 
         except Exception as e:
             logger.exception(('Could not work with comment {} by '
-                              '{}').format(comment_permalink, comment_author))
+                              '{}. Reconnecting...'
+                              '').format(comment_permalink, comment_author))
+            steem.reconnect()
 
     return posts

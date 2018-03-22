@@ -153,9 +153,11 @@ def vote_and_comment_on_topK(sorted_post_frame, steem, account,
         except VotingInvalidOnArchivedPost:
             logger.exception('Post archived of row {}'.format(row))
         except RPCError:
-            logger.exception('Could not post row {}'.format(row))
+            logger.exception('Could not post row {}. Reconnecting...'.format(row))
+            steem.reconnect()
         except Exception:
-            logger.exception('W00t? row: {}'.format(row))
+            logger.exception('W00t? row: {}. Reconnecting...'.format(row))
+            steem.reconnect()
 
 
 def create_wallet(steem, password, posting_key,
