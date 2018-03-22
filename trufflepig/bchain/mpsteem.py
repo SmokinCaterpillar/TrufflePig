@@ -11,29 +11,24 @@ class MPSteem(Steem):
         self.kwargs = kwargs.copy()
         super().__init__(nodes=nodes, no_broadcast=no_broadcast, **kwargs)
 
-    def connect(self):
+    def reconnect(self):
+        """Creates a new Steemd and Commit"""
         self.steemd = Steemd(
-            nodes=self.nodes,
-            **self.kwargs
+            nodes=self.nodes.copy(),
+            **self.kwargs.copy()
         )
         self.commit = Commit(
             steemd_instance=self.steemd,
             no_broadcast=self.no_broadcast,
-            **self.kwargs
+            **self.kwargs.copy()
         )
 
-    def disconnect(self):
-        self.steemd = None
-        self.commit = None
-
-    def reconnect(self):
-        self.disconnect()
-        self.connect()
-
     def __getstate__(self):
-        self.disconnect()
-        return self.__dict__.copy()
+        result = self.__dict__.copy()
+        del result['steemd']
+        del result['commit']
+        return result
 
     def __setstate__(self, state):
         self.__dict__ = state.copy()
-        self.connect()
+        self.reconnect()
