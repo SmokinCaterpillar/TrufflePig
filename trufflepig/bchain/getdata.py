@@ -11,6 +11,7 @@ import json
 from json import JSONDecodeError
 
 from trufflepig.utils import progressbar, none_retry, error_retry
+import trufflepig.persist as tppe
 
 
 logger = logging.getLogger(__name__)
@@ -18,9 +19,9 @@ logger = logging.getLogger(__name__)
 
 MIN_CHARACTERS = 500
 
-EXCLUSION_VOTERS_SET = {'cheetah'}
+FILENAME_TEMPLATE = 'steemit_posts__{time}.sqlite'
 
-FILENAME_TEMPLATE = 'steemit_posts__{time}.gz'
+TABLENAME = 'steemit_posts'
 
 
 ################################### Block Utils #################################
@@ -176,34 +177,13 @@ def extract_authors_and_permalinks(operations):
     return authors_and_permalinks
 
 
-def exclude_if_voted_by(active_votes, voted_by):
-    """ Checks if a post as been voted by someone like cheetah
-
-    Parameters
-    ----------
-    active_votes: list of dict
-        List of all votes cast
-    voted_by: set
-        Set of voters that lead to exclusion, e.g. cheetah
-
-    Returns
-    -------
-    bool if post should be excluded
-
-    """
-    in_exclusion = [vote['voter'] in voted_by for vote in active_votes]
-    return any(in_exclusion)
-
-
-def get_post_data(authors_and_permalinks, steem, exclusion_voters):
+def get_post_data(authors_and_permalinks, steem):
     """ Queries posts from `steem`
 
     Parameters
     ----------
     authors_and_permalinks: set of tuples of authors and permalink strings
     steem: Steem object
-    exclusion_voters: set
-        If post is voted by any of them it is excluded (cheetah list!)
 
     Returns
     -------
@@ -237,15 +217,14 @@ def get_post_data(authors_and_permalinks, steem, exclusion_voters):
             steem.reconnect()
             continue
 
-        if exclude_if_voted_by(p.active_votes, exclusion_voters):
-            logger.debug('Excluding {} by {} because voted by '
-                         '{}'.format(permalink, author, exclusion_voters))
-            continue
+        # Add positive votes and subtract negative
+        votes = sum(1 if x['percent'] > 0 else -1 for x in p.active_votes)
+        votes = max(votes, 0)
 
         post = {
             'title': p.title,
             'reward': p.reward.amount,
-            'votes': len([x for x in p.active_votes if x['percent'] > 0]),
+            'votes':votes,
             'active_votes': p.active_votes,
             'created': p.created,
             'tags': p.tags,
@@ -259,7 +238,6 @@ def get_post_data(authors_and_permalinks, steem, exclusion_voters):
 
 
 def get_all_posts_from_block(block_num, steem,
-                             exclusion_voters,
                              exclude_authors_and_permalinks=None):
     """ Gets all posts from one block
 
@@ -267,8 +245,6 @@ def get_all_posts_from_block(block_num, steem,
     ----------
     block_num: int
     steem: MPSteem
-    exclusion_voters: set
-        If post is voted by any of them it is excluded (cheetah list!)
     exclude_authors_and_permalinks: set of tuples of strings
         Exclude these authors and permalinks to get less duplicates
 
@@ -284,8 +260,7 @@ def get_all_posts_from_block(block_num, steem,
             if exclude_authors_and_permalinks:
                 authors_and_permalinks -= exclude_authors_and_permalinks
             if authors_and_permalinks:
-                return get_post_data(authors_and_permalinks, steem,
-                                     exclusion_voters), authors_and_permalinks
+                return get_post_data(authors_and_permalinks, steem), authors_and_permalinks
             else:
                 logger.debug('Could not find any posts for block {}'.format(block_num))
         else:
@@ -297,7 +272,6 @@ def get_all_posts_from_block(block_num, steem,
 
 
 def get_all_posts_between(start_datetime, end_datetime, steem,
-                          exclusion_voters=EXCLUSION_VOTERS_SET,
                           stop_after=None):
     """ Queries all posts found in blocks between start and end
 
@@ -306,8 +280,6 @@ def get_all_posts_between(start_datetime, end_datetime, steem,
     start_datetime: datetime
     end_datetime: datetime
     steem: Steem
-    exclusion_voters: set
-        If post is voted by any of them it is excluded (cheetah list!)
     stop_after: int or None
         For debugging and shorter tests, stop after only a few iterations
 
@@ -330,7 +302,6 @@ def get_all_posts_between(start_datetime, end_datetime, steem,
     for idx, block_num in enumerate(range(start_num, end_num+1)):
         posts_in_block, authors_and_permalinks = get_all_posts_from_block(block_num,
                                                                           steem,
-                                                                          exclusion_voters,
                                                                           exclude_authors_and_permalinks)
         exclude_authors_and_permalinks |= authors_and_permalinks
         posts.extend(posts_in_block)
@@ -350,7 +321,7 @@ def config_mp_logging(level=logging.INFO):
     logging.basicConfig(level=level)
 
 
-def _get_all_posts_for_blocks_parallel(block_nums, steem, exclusion_voters,
+def _get_all_posts_for_blocks_parallel(block_nums, steem,
                                        stop_after=None):
     """Helper wrapper for multiprocessing"""
     posts = []
@@ -358,7 +329,6 @@ def _get_all_posts_for_blocks_parallel(block_nums, steem, exclusion_voters,
     for block_num in block_nums:
         posts_in_block, authors_and_permalinks = get_all_posts_from_block(block_num,
                                                                           steem,
-                                                                          exclusion_voters,
                                                                           exclude_authors_and_permalinks)
         exclude_authors_and_permalinks |= authors_and_permalinks
         posts.extend(posts_in_block)
@@ -368,7 +338,6 @@ def _get_all_posts_for_blocks_parallel(block_nums, steem, exclusion_voters,
 
 
 def get_all_posts_between_parallel(start_datetime, end_datetime, steem,
-                                   exclusion_voters=EXCLUSION_VOTERS_SET,
                                    stop_after=None, ncores=8,
                                    chunksize=20, timeout=1200):
     """As above but in parallel with `ncores` jobs of `chunksize`.
@@ -395,7 +364,6 @@ def get_all_posts_between_parallel(start_datetime, end_datetime, steem,
     for idx, chunk in enumerate(chunks):
         result = pool.apply_async(_get_all_posts_for_blocks_parallel,
                                   args=(chunk, steem,
-                                        exclusion_voters,
                                         stop_after))
         async_results.append(result)
         if stop_after is not None and idx >= stop_after:
@@ -420,7 +388,6 @@ def get_all_posts_between_parallel(start_datetime, end_datetime, steem,
 
 
 def load_or_scrape_full_day(date, steem, directory,
-                            exclusion_voters=EXCLUSION_VOTERS_SET,
                             overwrite=False,
                             store=True, stop_after=None, ncores=1):
     """ Loads posts of a full day or queries them from steem blockchain
@@ -432,8 +399,6 @@ def load_or_scrape_full_day(date, steem, directory,
     steem:  Steem object
     directory: str
         Directory to load posts from
-    exclusion_voters: set
-        If post is voted by any of them it is excluded (cheetah list!)
     overwrite: bool
         If stored posts should be replaced
     store: bool
@@ -456,30 +421,30 @@ def load_or_scrape_full_day(date, steem, directory,
     filename = os.path.join(directory,filename)
     if os.path.isfile(filename) and not overwrite:
         logger.info('Found file {} will load it'.format(filename))
-        post_frame = pd.read_pickle(filename, compression='gzip')
+        post_frame = tppe.from_sqlite(filename=filename,
+                                      tablename=TABLENAME)
     else:
         logger.info('File {} not found, will start scraping'.format(filename))
 
         if ncores == 1:
             posts = get_all_posts_between(start_datetime, end_datetime, steem,
-                                          exclusion_voters=exclusion_voters,
                                           stop_after=stop_after)
         else:
             posts = get_all_posts_between_parallel(start_datetime, end_datetime,
                                                    steem,
-                                                   exclusion_voters=exclusion_voters,
                                                    stop_after=stop_after,
                                                    ncores=ncores)
 
         post_frame = pd.DataFrame(data=posts, columns=sorted(posts[0].keys()))
         if store:
             logger.info('Storing file {} to disk'.format(filename))
-            post_frame.to_pickle(filename, compression='gzip')
+            tppe.to_sqlite(post_frame,
+                           filename=filename,
+                           tablename=TABLENAME)
     return post_frame
 
 
 def load_or_scrape_training_data(steem, directory,
-                                 exclusion_voters=EXCLUSION_VOTERS_SET,
                                  days=20, offset_days=8,
                                  ncores=8,
                                  current_datetime=None,
@@ -491,8 +456,6 @@ def load_or_scrape_training_data(steem, directory,
     ----------
     steem:  Steem object
     directory: str
-    exclusion_voters: set
-        If post is voted by any of them it is excluded (cheetah list!)
     days: int
         Number of consecutive days to load or scrape
     offset_days: int
@@ -522,7 +485,6 @@ def load_or_scrape_training_data(steem, directory,
         next_date = (start_datetime + pd.Timedelta(days=day)).date()
         frame = load_or_scrape_full_day(next_date, steem,
                                         directory,
-                                        exclusion_voters=exclusion_voters,
                                         overwrite=False,
                                         store=store,
                                         stop_after=stop_after,
@@ -536,7 +498,6 @@ def load_or_scrape_training_data(steem, directory,
 
 
 def scrape_hour_data(steem,
-                     exclusion_voters=EXCLUSION_VOTERS_SET,
                      hours=24,
                      offset_hours=24,
                      current_datetime=None,
@@ -546,8 +507,6 @@ def scrape_hour_data(steem,
     Parameters
     ----------
     steem: Steem or kwargs
-    exclusion_voters: set
-        If post is voted by any of them it is excluded (cheetah list!)
     hours: int
         Number of consecutive hours to scrape
     offset_hours: int
@@ -574,13 +533,11 @@ def scrape_hour_data(steem,
         posts = get_all_posts_between(start_datetime,
                                       end_datetime,
                                       steem,
-                                      exclusion_voters=exclusion_voters,
                                       stop_after=stop_after)
     else:
         posts = get_all_posts_between_parallel(start_datetime,
                                                end_datetime,
                                                steem,
-                                               exclusion_voters=exclusion_voters,
                                                stop_after=stop_after,
                                                ncores=ncores)
 

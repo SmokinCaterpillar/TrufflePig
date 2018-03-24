@@ -55,6 +55,10 @@ def test_is_in_tags_typerror():
     assert result
 
 
+def test_voted_by():
+    assert tptf.voted_by([{'voter': 'cheetah'}], {'cheetah'})
+
+
 def test_filter_headdings():
     text= """# heading nheadings
 heyho

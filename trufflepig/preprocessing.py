@@ -31,6 +31,9 @@ FILTER_TAGS = ('mitnebcurationtrail', 'informationwar', 'truth', 'conspiracy',
 # Stay out of the whale wars!
 FILTER_AUTHORS = ('haejin', 'ew-and-patterns', 'caladium', 'cryptopassion')
 
+# Get out plagiarismos!
+FILTER_VOTERS = ('cheetah',)
+
 
 def filter_duplicates(frame):
     """ Filters out duplicate entries based on author and permalink
@@ -99,7 +102,8 @@ def preprocess(post_df, ncores=4, chunksize=500,
                min_max_average_punctuation=(1.05, 5),
                min_max_average_sentence_length=(10, 350),
                filter_tags=FILTER_TAGS,
-               filter_authors=FILTER_AUTHORS):
+               filter_authors=FILTER_AUTHORS,
+               filter_voters=FILTER_VOTERS):
     """ Preprocessing of raw steemit posts, filters and adds features
 
     All filtering happening inplace!
@@ -148,6 +152,8 @@ def preprocess(post_df, ncores=4, chunksize=500,
         'vaccines'.
     filter_authors: tuple of string
         Authors to be filtered...
+    filter_voters: tuple of string
+        If vored by one of them post is excluded
 
     Returns
     -------
@@ -161,6 +167,13 @@ def preprocess(post_df, ncores=4, chunksize=500,
     filter_authors = set(filter_authors)
     author_filter = post_df.author.apply(lambda x: x in filter_authors)
     to_drop = post_df.loc[author_filter]
+    post_df.drop(to_drop.index, inplace=True)
+    logger.info('Kept {} posts'.format(len(post_df)))
+
+    logger.info('Filtering voted by {}'.format(filter_voters))
+    filter_voters = set(filter_voters)
+    voted_by = post_df.active_votes.apply(lambda x: tftf.voted_by(x, filter_voters))
+    to_drop = post_df.loc[voted_by]
     post_df.drop(to_drop.index, inplace=True)
     logger.info('Kept {} posts'.format(len(post_df)))
 

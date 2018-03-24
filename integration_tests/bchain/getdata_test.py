@@ -71,17 +71,3 @@ def test_scrape_recent_date(steem):
                                   stop_after=50,
                                   ncores=1)
     assert len(frame)
-
-
-def test_cheetah_exclusion(steem):
-    p = Post('@neuehorizonte/das-betrugmodell-unseres-'
-             'finanzsystem-und-der-ausweg-prof-franz-hrmann--azk-20180225t104415261z',
-             steem)
-    assert tpbg.exclude_if_voted_by(p.active_votes, tpbg.EXCLUSION_VOTERS_SET)
-
-
-def test_not_cheetah_exclusion(steem):
-    p = Post('@@smcaterpillar/trufflepig-introducing-the-artificial-'
-             'intelligence-for-content-curation-and-minnow-support',
-             steem)
-    assert not tpbg.exclude_if_voted_by(p.active_votes, tpbg.EXCLUSION_VOTERS_SET)

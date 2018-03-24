@@ -5,7 +5,9 @@ from steem.post import Post
 
 import trufflepig.bchain.posts as tfbp
 import trufflepig.bchain.getdata as tfgd
+import trufflepig.filters.textfilters as tftf
 from trufflepig.utils import error_retry
+import trufflepig.preprocessing as tppp
 
 
 logger = logging.getLogger(__name__)
@@ -18,7 +20,7 @@ YOU_DID_NOT_MAKE_IT = """I am sorry, I cannot evaluate your post. This can have 
 
 def post_on_call(post_frame, account, steem, topN_link,
                  overview_permalink,
-                 exclusion_set=tfgd.EXCLUSION_VOTERS_SET,
+                 filter_voters=tppp.FILTER_VOTERS,
                  sleep_time=20.1):
     """ Replies to users calling @trufflepig
 
@@ -28,7 +30,7 @@ def post_on_call(post_frame, account, steem, topN_link,
     account: str
     steem: Steem object
     topN_link: str
-    exclusion_set: set of str
+    filter_voters: set of str
     sleep_time: float
         Bot can only post every 20 seconds,
         should only be lowered for debugging
@@ -45,8 +47,8 @@ def post_on_call(post_frame, account, steem, topN_link,
             comment.commit.no_broadcast = steem.commit.no_broadcast
             # Wait a bit Steemit nodes hate comments in quick succession
             time.sleep(sleep_time)
-            if not tfgd.exclude_if_voted_by(row.active_votes, {account}):
-                if row.passed and not tfgd.exclude_if_voted_by(row.active_votes, exclusion_set):
+            if not tftf.voted_by(row.active_votes, {account}):
+                if row.passed and not tftf.voted_by(row.active_votes, filter_voters):
 
                         logger.info('Voting and commenting on https://steemit.com/@{author}/{permalink}'
                                         ''.format(author=row.author, permalink=row.permalink))
