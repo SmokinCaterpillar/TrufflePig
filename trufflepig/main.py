@@ -163,7 +163,7 @@ def main():
     topic_kwargs = dict(num_topics=128, no_below=7, no_above=0.1,
                         ngrams=(1,2), keep_n=333000)
 
-    if len(post_frame) > MAX_DOCUMENTS:
+    if post_frame is not None and len(post_frame) > MAX_DOCUMENTS:
         logger.info('Frame has {} Documents, too many, '
                     'reducing to {}'.format(len(post_frame), MAX_DOCUMENTS))
         post_frame.sort_values('created', inplace=True, ascending=False)
