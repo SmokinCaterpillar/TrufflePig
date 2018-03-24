@@ -43,7 +43,7 @@ def to_sqlite(frame, filename, tablename, index=True):
     gc.collect()
 
 
-def from_sqlite(filename, tablename, query=None,
+def from_sqlite(filename, tablename=None, query=None,
                 index_col='index', indexname=None):
     """ Loads a DataFrame from SQLite file
 
@@ -60,6 +60,11 @@ def from_sqlite(filename, tablename, query=None,
     DataFrame
 
     """
+    if query is None and tablename is None:
+        raise ValueError('Need table or query')
+    elif query is not None and tablename is not None:
+        raise ValueError('Select either tablename or query')
+
     con = sqlite3.connect(filename)
 
     if query is None:
