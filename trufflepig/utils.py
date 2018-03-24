@@ -4,7 +4,7 @@ import os
 import time
 
 import numpy as np
-from steembase.exceptions import RPCError
+from steembase.exceptions import RPCError, PostDoesNotExist
 
 logger = logging.getLogger(__name__)
 
@@ -254,7 +254,8 @@ def configure_logging(directory, current_datetime, bot_account='trufflepig'):
                         handlers=handlers)
 
 
-def error_retry(f, retries=16, sleep_time=16, errors=(RPCError,)):
+def error_retry(f, retries=16, sleep_time=16, errors=(RPCError,),
+                not_log_errors=(PostDoesNotExist,)):
     """Explicit decorator for Error retries"""
     def wrapped(*args, **kwargs):
         for retry in range(retries + 1):
@@ -264,10 +265,11 @@ def error_retry(f, retries=16, sleep_time=16, errors=(RPCError,)):
                     logger.warning('Needed retry {} out of {} for '
                                  '{}!'.format(retry, retries, f))
                 return result
-            except errors:
+            except errors as exc:
                 if retry + 1 >= retries:
-                    logger.exception('Failed all {} retries for '
-                                     '{}!'.format(retries, f))
+                    if not isinstance(exc, not_log_errors):
+                        logger.exception('Failed all {} retries for '
+                                         '{}!'.format(retries, f))
                     raise
                 time.sleep(sleep_time)
     return wrapped

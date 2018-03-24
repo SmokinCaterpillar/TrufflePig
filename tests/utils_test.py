@@ -25,6 +25,12 @@ def test_rpc_retry():
         error_retry(f, sleep_time=0.01, errors=RPCError)()
 
 
+def test_no_logrpc_retry():
+    with pytest.raises(RPCError):
+        error_retry(f, sleep_time=0.01, errors=RPCError,
+                    not_log_errors=(RPCError,))()
+
+
 def test_none_retry():
     result = none_retry(g, sleep_time=0.01)()
     assert result is None
