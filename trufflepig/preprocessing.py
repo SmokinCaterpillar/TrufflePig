@@ -476,7 +476,7 @@ def compute_bidbot_correction(post_frame, upvote_payments, sbd_punishment_factor
             steem = 0
             votes = 0
             for payment in payments.values():
-                amount = Amount(payment)
+                amount = Amount(payment['amount'])
                 value = amount.amount
                 asset = amount.asset
                 votes += 1

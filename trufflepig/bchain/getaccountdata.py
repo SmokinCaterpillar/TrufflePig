@@ -213,6 +213,8 @@ def get_upvote_payments(account, steem, min_datetime, max_datetime,
     for transfer in transfers:
         try:
             memo = transfer['memo']
+            timestamp = pd.to_datetime(transfer['timestamp'])
+
             if memo.startswith(MEMO_START):
                 author, permalink = memo.split('/')[-2:]
                 if author.startswith('@'):
@@ -221,9 +223,15 @@ def get_upvote_payments(account, steem, min_datetime, max_datetime,
                         upvote_payments[(author, permalink)] = {}
                     trx_id = transfer['trx_id']
                     amount = transfer['amount']
-                    upvote_payments[(author, permalink)][trx_id] = amount
 
-            timestamp = pd.to_datetime(transfer['timestamp'])
+                    transaction_dict = dict(
+                            timestamp=timestamp,
+                            amount=amount,
+                            payer=transfer['from'],
+                            payee=transfer['to']
+                        )
+                    upvote_payments[(author, permalink)][trx_id] = transaction_dict
+
             if timestamp < min_datetime:
                 break
 
