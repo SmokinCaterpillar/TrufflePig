@@ -8,9 +8,10 @@ NODE_URL4 = os.environ.get('STEEM_NODE_URL4', 'steemd.minnowsupportproject.org')
 NODE_URL5 = os.environ.get('STEEM_NODE_URL5', 'steemd.pevo.science')
 NODE_URL6 = os.environ.get('STEEM_NODE_URL6', 'rpc.curiesteem.com')
 NODE_URL7 = os.environ.get('STEEM_NODE_URL7', 'seed.bitcoiner.me')
+NODE_URL8 = os.environ.get('STEEM_NODE_URL8', 'steemd.steemitstage.com')
 NODES = [x for x in (NODE_URL, NODE_URL2, NODE_URL3,
                      NODE_URL4, NODE_URL5, NODE_URL6,
-                     NODE_URL7) if x]
+                     NODE_URL7, NODE_URL8) if x]
 
 # The steemit bot account and password
 ACCOUNT = os.environ.get('STEEM_ACCOUNT', 'trufflepig')

@@ -254,7 +254,7 @@ def configure_logging(directory, current_datetime, bot_account='trufflepig'):
                         handlers=handlers)
 
 
-def error_retry(f, retries=16, sleep_time=16, errors=(RPCError,),
+def error_retry(f, retries=3, sleep_time=11, errors=(RPCError,),
                 not_log_errors=(PostDoesNotExist,)):
     """Explicit decorator for Error retries"""
     def wrapped(*args, **kwargs):
