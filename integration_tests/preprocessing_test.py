@@ -7,6 +7,7 @@ import trufflepig.preprocessing as tppp
 import trufflepig.bchain.getdata as tpgd
 from trufflepig.testutils.random_data import create_n_random_posts
 from trufflepig.testutils.pytest_fixtures import temp_dir, steem
+import trufflepig.bchain.getaccountdata as tpac
 
 
 def test_load_or_preproc(temp_dir):
@@ -49,3 +50,19 @@ def test_load_or_preproc_with_real_data(steem, temp_dir):
 
     assert len(os.listdir(temp_dir)) == 1
     assert_frame_equal(frame, frame2)
+
+
+def test_bid_bot_correction_real_data(steem):
+    min_datetime = pd.datetime.utcnow() - pd.Timedelta(days=14)
+    max_datetime = min_datetime + pd.Timedelta(days=13)
+    upvotes = tpac.get_upvote_payments('brittuf', steem, min_datetime,
+                                      max_datetime)
+
+    author, permalink = list(upvotes.keys())[0]
+    data = tpgd.get_post_data([(author, permalink)], steem)
+    df = pd.DataFrame(data)
+
+    tppp.compute_bidbot_correction(df, upvotes)
+
+    assert upvotes
+    assert (df.sbd_bought_reward.mean() > 0) or (df.steem_bought_reward.mean() > 0)
