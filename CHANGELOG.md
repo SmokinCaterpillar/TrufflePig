@@ -1,3 +1,7 @@
+* 0.6.2a* - 2018-03-26
+
+* SQLite is now used to store blockchain data
+
 *0.6.1a* - 2018-03-22
 
 * New multiprocessing sage Steem object
