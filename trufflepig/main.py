@@ -133,6 +133,8 @@ def main():
     time.sleep(2)
 
     steem = MPSteem(nodes=config.NODES, no_broadcast=no_broadcast)
+    # hack to allow for payments, because of https://github.com/steemit/steem-python/issues/191
+    noapisteem = MPSteem(nodes=config.NODES[1:], no_broadcast=no_broadcast)
 
     tppd.create_wallet(steem, config.PASSWORD,
                        posting_key=config.POSTING_KEY,
@@ -141,7 +143,7 @@ def main():
     logger.info('Paying out investors')
     account = config.ACCOUNT
     tpde.pay_delegates(account=account,
-                       steem=steem,
+                       steem=noapisteem, # use a steem instance without api.steem!
                        current_datetime=current_datetime)
 
     if not tpmo.model_exists(current_datetime, model_directoy):
