@@ -233,7 +233,7 @@ def main():
     logger.info('Computing the top trending without bidbots')
     logger.info('Searching for bid bots and bought votes')
     min_datetime = sorted_frame.created.min()
-    max_datetime = sorted_frame.created.max() + pd.Timedelta(days=8)
+    max_datetime = sorted_frame.created.max() + pd.Timedelta(days=1)
     upvote_payments = tpad.get_upvote_payments_to_bots(steem=steem,
                                                   min_datetime=min_datetime,
                                                   max_datetime=max_datetime)
@@ -244,7 +244,8 @@ def main():
                               upvote_payments=upvote_payments,
                               poster=poster,
                               topN_permalink=permalink,
-                              overview_permalink=overview_permalink)
+                              overview_permalink=overview_permalink,
+                              current_datetime=current_datetime)
 
 
     logger.info('Done with normal duty, answering manual calls!')
