@@ -8,6 +8,7 @@ import trufflepig.preprocessing as tppp
 from trufflepig import config
 from trufflepig.testutils.random_data import create_n_random_posts
 from trufflepig.testutils.pytest_fixtures import steem
+from trufflepig.bchain.poster import Poster
 
 
 def test_statistics():
@@ -71,9 +72,9 @@ def test_weekly_post(steem):
     post_frame['sbd_bought_reward'] = 0
     post_frame['bought_votes'] = 0
 
+    poster = Poster(account=config.ACCOUNT, steem=steem)
     permalink = tppw.post_weakly_update(pipeline, post_frame,
-                                        account=config.ACCOUNT,
-                                        steem=steem,
+                                        poster=poster,
                                         current_datetime=current_date)
 
     assert permalink

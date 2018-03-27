@@ -10,6 +10,7 @@ import trufflepig.bchain.posts as tpbp
 import trufflepig.bchain.getdata as tppd
 import trufflepig.bchain.getaccountdata as tpaa
 from trufflepig.utils import error_retry
+from trufflepig.bchain.poster import Poster
 
 logger = logging.getLogger(__name__)
 
@@ -171,25 +172,22 @@ def return_overview_permalink_if_exists(account, steem, current_datetime):
         return ''
 
 
-def post_weakly_update(pipeline, post_frame, account, steem, current_datetime):
-    steem_per_mvests = Converter(steem).steem_per_mvests()
+def post_weakly_update(pipeline, post_frame, poster, current_datetime):
+    steem_per_mvests = Converter(poster.steem).steem_per_mvests()
     stats = compute_weekly_statistics(post_frame, pipeline)
 
-    delegator_list = tpaa.get_delegates_and_shares(account, steem).keys()
+    delegator_list = tpaa.get_delegates_and_shares(poster.account, poster.steem).keys()
 
     title, body = tpbp.weekly_update(steem_per_mvests=steem_per_mvests,
                                      current_datetime=current_datetime,
                                      delegator_list=delegator_list,
                                      **stats)
     permalink = PERMALINK_TEMPLATE.format(date=current_datetime.strftime('%Y-%V'))
-    logger.info('Posting weekly update with permalink: {}'.format(permalink))
-    logger.info(title)
-    logger.info(body)
-    error_retry(steem.commit.post)(author=account,
-                                   title=title,
-                                   body=body,
-                                   permlink=permalink,
-                                   self_vote=True,
-                                   tags=TAGS)
+
+    poster.post(body=body,
+                title=title,
+                permalink=permalink,
+                self_vote=True,
+                tags=TAGS)
 
     return permalink
