@@ -9,6 +9,7 @@ import trufflepig.bchain.posts as tfbp
 import trufflepig.bchain.getdata as tfgd
 import trufflepig.filters.textfilters as tftf
 from trufflepig.utils import error_retry
+from trufflepig.bchain.poster import Poster
 
 
 logger = logging.getLogger(__name__)
@@ -17,15 +18,14 @@ logger = logging.getLogger(__name__)
 PERMALINK_TEMPLATE = 'daily-truffle-picks-{date}'
 
 
-def post_topN_list(sorted_post_frame, steem, account,
+def post_topN_list(sorted_post_frame, poster,
                    current_datetime, overview_permalink, N=10):
     """ Post the toplist to the blockchain
 
     Parameters
     ----------
     sorted_post_frame: DataFrame
-    steem:  Steem object
-    account: str
+    poster: Poster
     current_datetime: datetime
     N: int
         Size of top list
@@ -40,8 +40,8 @@ def post_topN_list(sorted_post_frame, steem, account,
     logger.info('Creating top {} post'.format(N))
     df.first_image_url = df.body.apply(lambda x: tftf.get_image_urls(x))
 
-    steem_per_mvests = Converter(steem).steem_per_mvests()
-    truffle_link = 'https://steemit.com/steemit/@{}/{}'.format(account,
+    steem_per_mvests = Converter(poster.steem).steem_per_mvests()
+    truffle_link = 'https://steemit.com/steemit/@{}/{}'.format(poster.account,
                                                                overview_permalink)
 
     title, body = tfbp.topN_post(topN_authors=df.author,
@@ -59,25 +59,23 @@ def post_topN_list(sorted_post_frame, steem, account,
     logger.info('Posting top post with permalink: {}'.format(permalink))
     logger.info(title)
     logger.info(body)
-    error_retry(steem.commit.post)(author=account,
-                                   title=title,
-                                   body=body,
-                                   permlink=permalink,
-                                   self_vote=True,
-                                   tags=tfbp.TAGS)
+    poster.post(body=body,
+                permalink=permalink,
+                title=title,
+                tags=tfbp.TAGS,
+                self_vote=True)
 
     return permalink
 
 
-def comment_on_own_top_list(sorted_post_frame, steem, account,
+def comment_on_own_top_list(sorted_post_frame, poster,
                             topN_permalink, Kstart=10, Kend=25):
     """ Adds the more ranks as a comment
 
     Parameters
     ----------
     sorted_post_frame: DataFrame
-    steem:  Steem object
-    account: str
+    poster: Poster
     topN_permalink: str
     Kstart: int
     Kend: int
@@ -95,26 +93,22 @@ def comment_on_own_top_list(sorted_post_frame, steem, account,
 
     logger.info('Commenting on top {} post with \n '
                 '{}'.format(topN_permalink, comment))
-    time.sleep(25)
     try:
-        post = Post('@{}/{}'.format(account, topN_permalink), steem)
-        # to pass around the no broadcast setting otherwise it is lost
-        # see https://github.com/steemit/steem-python/issues/155
-        post.commit.no_broadcast = steem.commit.no_broadcast
-        error_retry(post.reply)(body=comment, author=account)
+        poster.reply(body=comment,
+                     parent_author=poster.account,
+                     parent_permalink=topN_permalink)
     except PostDoesNotExist:
         logger.exception('No broadcast, heh?')
 
 
-def vote_and_comment_on_topK(sorted_post_frame, steem, account,
+def vote_and_comment_on_topK(sorted_post_frame, poster,
                              topN_permalink, overview_permalink, K=25):
     """
 
     Parameters
     ----------
     sorted_post_frame: DataFrame
-    steem:  Steem object
-    account: str
+    poster: Poster,
     topN_permalink: str
     K: int
         number of truffles to comment and upvote
@@ -122,9 +116,9 @@ def vote_and_comment_on_topK(sorted_post_frame, steem, account,
     """
     logger.info('Voting and commenting on {} top truffles'.format(K))
     weight = min(800.0 / K, 100)
-    topN_link = 'https://steemit.com/@{author}/{permalink}'.format(author=account,
+    topN_link = 'https://steemit.com/@{author}/{permalink}'.format(author=poster.account,
                                                     permalink=topN_permalink)
-    truffle_link = 'https://steemit.com/steemit/@{}/{}'.format(account,
+    truffle_link = 'https://steemit.com/steemit/@{}/{}'.format(poster.account,
                                                                overview_permalink)
 
     for kdx, (_, row) in enumerate(sorted_post_frame.iterrows()):
@@ -138,26 +132,21 @@ def vote_and_comment_on_topK(sorted_post_frame, steem, account,
                                          rank=kdx + 1,
                                          topN_link=topN_link,
                                          truffle_link=truffle_link)
-            post = Post('@{}/{}'.format(row.author, row.permalink), steem)
-            # to pass around the no broadcast setting otherwise it is lost
-            # see https://github.com/steemit/steem-python/issues/155
-            post.commit.no_broadcast = steem.commit.no_broadcast
 
-            # Wait a bit Steemit nodes hate comments in quick succession
-            time.sleep(25)
-
-            post.upvote(weight=weight, voter=account)
-            post.reply(body=reply, author=account)
+            poster.reply(body=reply,
+                         parent_author=row.author,
+                         parent_permalink=row.permalink,
+                         parent_vote_weight=weight)
         except PostDoesNotExist:
             logger.exception('Post not found of row {}'.format(row))
         except VotingInvalidOnArchivedPost:
             logger.exception('Post archived of row {}'.format(row))
         except RPCError:
             logger.exception('Could not post row {}. Reconnecting...'.format(row))
-            steem.reconnect()
+            poster.steem.reconnect()
         except Exception:
             logger.exception('W00t? row: {}. Reconnecting...'.format(row))
-            steem.reconnect()
+            poster.steem.reconnect()
 
 
 def create_wallet(steem, password, posting_key,

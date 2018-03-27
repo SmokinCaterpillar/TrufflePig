@@ -8,6 +8,7 @@ import trufflepig.bchain.getdata as tfgd
 import trufflepig.filters.textfilters as tftf
 from trufflepig.utils import error_retry
 import trufflepig.preprocessing as tppp
+from trufflepig.bchain.poster import Poster
 
 
 logger = logging.getLogger(__name__)
@@ -18,36 +19,30 @@ I_WAS_HERE = 'Huh? Seems like I already voted on this post, thanks for calling a
 YOU_DID_NOT_MAKE_IT = """I am sorry, I cannot evaluate your post. This can have several reasons, for example, it may not be long enough, it's not in English, or has been filtered, etc."""
 
 
-def post_on_call(post_frame, account, steem, topN_link,
+def post_on_call(post_frame, topN_link,
+                 poster,
                  overview_permalink,
-                 filter_voters=tppp.FILTER_VOTERS,
-                 sleep_time=20.1):
+                 filter_voters=tppp.FILTER_VOTERS):
     """ Replies to users calling @trufflepig
 
     Parameters
     ----------
     post_frame: DataFrame
-    account: str
-    steem: Steem object
+    poster: Poster
     topN_link: str
     filter_voters: set of str
-    sleep_time: float
-        Bot can only post every 20 seconds,
-        should only be lowered for debugging
 
     """
     weight = min(75 / len(post_frame), 10)
-    truffle_link = 'https://steemit.com/steemit/@{}/{}'.format(account,
+    truffle_link = 'https://steemit.com/steemit/@{}/{}'.format(poster.account,
                                                                overview_permalink)
 
     for kdx, (_, row) in enumerate(post_frame.iterrows()):
         try:
             comment = Post('@{}/{}'.format(row.comment_author,
-                                           row.comment_permalink), steem)
-            comment.commit.no_broadcast = steem.commit.no_broadcast
-            # Wait a bit Steemit nodes hate comments in quick succession
-            time.sleep(sleep_time)
-            if not tftf.voted_by(row.active_votes, {account}):
+                                           row.comment_permalink), poster.steem)
+
+            if not tftf.voted_by(row.active_votes, {poster.account}):
                 if row.passed and not tftf.voted_by(row.active_votes, filter_voters):
 
                         logger.info('Voting and commenting on https://steemit.com/@{author}/{permalink}'
@@ -58,14 +53,7 @@ def post_on_call(post_frame, account, steem, topN_link,
                                                      topN_link=topN_link,
                                                      truffle_link=truffle_link)
 
-                        post = Post('@{}/{}'.format(row.author, row.permalink), steem)
-                        # to pass around the no broadcast setting otherwise it is lost
-                        # see https://github.com/steemit/steem-python/issues/155
-                        post.commit.no_broadcast = steem.commit.no_broadcast
-
-                        # We cannot use this post.upvote(weight=weight, voter=account)
-                        # because we need to vote on archived posts as a flag!
-                        error_retry(post.commit.vote)(post.identifier, weight, account=account)
+                        poster.vote(row.author, row.permalink, weight)
                 else:
                     reply = YOU_DID_NOT_MAKE_IT
             else:
@@ -74,12 +62,10 @@ def post_on_call(post_frame, account, steem, topN_link,
             replies = comment.steemd.get_content_replies(row.comment_author,
                                                          row.comment_permalink)
             reply_authors = set(x['author'] for x in replies)
-            if account not in reply_authors:
-                logger.info('Replying to https://steemit.com/@{author}/{permalink} '
-                            'with {answer}...'.format(author=row.comment_author,
-                                                   permalink=row.comment_permalink,
-                                                   answer=reply[:256]))
-                error_retry(comment.reply)(body=reply, author=account)
+            if poster.account not in reply_authors:
+                poster.reply(body=reply,
+                             parent_author=row.comment_author,
+                             parent_permalink=row.comment_permalink)
             else:
                 logger.info('Already answered {} by {}, will '
                             'skip!'.format(row.comment_author,
@@ -88,4 +74,4 @@ def post_on_call(post_frame, account, steem, topN_link,
         except Exception as e:
             logger.exception('Something went wrong with row {}.'
                              'Reconnecting...'.format(row))
-            steem.reconnect()
+            poster.steem.reconnect()

@@ -9,6 +9,7 @@ import trufflepig.bchain.getdata as tpbg
 import trufflepig.preprocessing as tppp
 import trufflepig.model as tpmo
 import trufflepig.bchain.postoncall as tpoc
+from trufflepig.bchain.poster import Poster
 
 
 logger = logging.getLogger(__name__)
@@ -17,17 +18,15 @@ logger = logging.getLogger(__name__)
 MAX_COMMENTS = 3000
 
 
-def call_a_pig(steem, account, pipeline, topN_permalink, current_datetime,
+def call_a_pig(poster, pipeline, topN_permalink, current_datetime,
                overview_permalink,
                offset_hours=2, hours=24,
-               max_comments=MAX_COMMENTS,
-               sleep_time=20.1):
+               max_comments=MAX_COMMENTS):
     """ Scans for user mentioning the bot and answers
 
     Parameters
     ----------
-    steem: MPSteem
-    account: str
+    poster: Poster
     pipeline: sklearn pipeline
     topN_link: str
     current_datetime: datetime
@@ -35,7 +34,6 @@ def call_a_pig(steem, account, pipeline, topN_permalink, current_datetime,
     offset_hours: int
     hours: int
     max_comments: int
-    sleep_time: float
 
     """
 
@@ -45,42 +43,40 @@ def call_a_pig(steem, account, pipeline, topN_permalink, current_datetime,
     start_datetime = end_datetime - pd.Timedelta(hours=hours)
 
     logger.info('Scanning for mentions of {} between {} and '
-                '{}'.format(account, start_datetime, end_datetime))
+                '{}'.format(poster.account, start_datetime, end_datetime))
 
     comment_authors_and_permalinks = tpco.check_all_ops_between_parallel(
-        account=account,
+        account=poster.account,
         start_datetime=start_datetime,
         end_datetime=end_datetime,
-        steem=steem,
+        steem=poster.steem,
         ncores=20
     )
 
     if comment_authors_and_permalinks:
         execute_call(comment_authors_and_permalinks=comment_authors_and_permalinks,
-                     account=account,
+                     poster=poster,
                      pipeline=pipeline,
-                     steem=steem,
                      topN_permalink=topN_permalink,
-                     sleep_time=sleep_time,
                      max_comments=max_comments,
                      overview_permalink=overview_permalink)
     else:
-        logger.info('No mentions of {} found, good bye!'.format(account))
+        logger.info('No mentions of {} found, good bye!'.format(poster.account))
 
 
-def execute_call(comment_authors_and_permalinks, account, pipeline,
-                 steem, topN_permalink, sleep_time, max_comments,
+def execute_call(comment_authors_and_permalinks, poster, pipeline,
+                 topN_permalink,  max_comments,
                  overview_permalink):
     """Executes the pig on duty call"""
     ncomments = len(comment_authors_and_permalinks)
 
     logger.info('Found {} comments mentioning {}'.format(ncomments,
-                                                         account))
+                                                         poster.account))
     if ncomments > max_comments:
         logger.info('To many comments, reducing to {}'.format(max_comments))
         comment_authors_and_permalinks = comment_authors_and_permalinks[:max_comments]
 
-    posts = tpco.get_parent_posts(comment_authors_and_permalinks, steem)
+    posts = tpco.get_parent_posts(comment_authors_and_permalinks, poster.steem)
 
     initial_frame = pd.DataFrame(posts)
     post_frame = initial_frame.copy()
@@ -99,11 +95,9 @@ def execute_call(comment_authors_and_permalinks, account, pipeline,
 
     combined = pd.concat([truffle_frame, filtered_posts], axis=0)
 
-    topN_link = 'https://steemit.com/@{author}/{permalink}'.format(author=account,
+    topN_link = 'https://steemit.com/@{author}/{permalink}'.format(author=poster.account,
                                                     permalink=topN_permalink)
 
-    tpoc.post_on_call(combined, account=account,
-                          steem=steem,
+    tpoc.post_on_call(combined, poster=poster,
                           topN_link=topN_link,
-                          sleep_time=sleep_time,
                           overview_permalink=overview_permalink)

@@ -19,6 +19,7 @@ from trufflepig import config
 from trufflepig.utils import configure_logging
 import trufflepig.bchain.postweeklyupdate as tppw
 from trufflepig.bchain.mpsteem import MPSteem
+from trufflepig.bchain.poster import Poster
 
 
 logger = logging.getLogger(__name__)
@@ -135,13 +136,15 @@ def main():
     steem = MPSteem(nodes=config.NODES, no_broadcast=no_broadcast)
     # hack to allow for payments, because of https://github.com/steemit/steem-python/issues/191
     noapisteem = MPSteem(nodes=config.NODES[1:], no_broadcast=no_broadcast)
+    # To post stuff
+    account = config.ACCOUNT
+    poster = Poster(account=account, steem=steem)
 
     tppd.create_wallet(steem, config.PASSWORD,
                        posting_key=config.POSTING_KEY,
                        active_key=config.ACTIVE_KEY)
 
     logger.info('Paying out investors')
-    account = config.ACCOUNT
     tpde.pay_delegates(account=account,
                        steem=noapisteem, # use a steem instance without api.steem!
                        current_datetime=current_datetime)
@@ -197,8 +200,7 @@ def main():
         logger.info('I want to post my weekly overview')
         overview_permalink = tppw.post_weakly_update(pipeline=pipeline,
                                                      post_frame=post_frame,
-                                                     account=account,
-                                                     steem=steem,
+                                                     poster=poster,
                                                      current_datetime=current_datetime)
 
     logger.info('Garbage collecting')
@@ -212,25 +214,23 @@ def main():
     prediction_frame = tppp.preprocess(prediction_frame, ncores=8)
 
     sorted_frame = tpmo.find_truffles(prediction_frame, pipeline,
-                                      account=config.ACCOUNT)
-    permalink = tppd.post_topN_list(sorted_frame, steem,
-                                    account=account,
+                                      account=account)
+
+
+    permalink = tppd.post_topN_list(sorted_frame, poster=poster,
                                     current_datetime=current_datetime,
                                     overview_permalink=overview_permalink)
 
-    tppd.comment_on_own_top_list(sorted_frame, steem,
-                                 account=account,
+    tppd.comment_on_own_top_list(sorted_frame, poster=poster,
                                  topN_permalink=permalink)
 
     tppd.vote_and_comment_on_topK(sorted_frame,
-                                  steem,
+                                  poster=poster,
                                   topN_permalink=permalink,
-                                  account=account,
                                   overview_permalink=overview_permalink)
 
     logger.info('Done with normal duty, answering manual calls!')
-    tfod.call_a_pig(steem=steem,
-                    account=account,
+    tfod.call_a_pig(poster=poster,
                     pipeline=pipeline,
                     topN_permalink=permalink,
                     current_datetime=current_datetime,
