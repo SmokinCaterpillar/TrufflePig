@@ -78,8 +78,6 @@ def test_test_top20_vote_and_comment(steem):
 
     df = tppp.preprocess(df, ncores=1)
 
-    account = config.ACCOUNT
-
     tbpd.vote_and_comment_on_topK(df, poster, 'laida',
                                   overview_permalink='lll')
 
@@ -87,3 +85,28 @@ def test_test_top20_vote_and_comment(steem):
 @pytest.mark.skipif(config.PASSWORD is None, reason="needs posting key")
 def test_create_wallet(steem):
     tbpd.create_wallet(steem, config.PASSWORD, config.POSTING_KEY)
+
+
+@pytest.mark.skipif(config.PASSWORD is None, reason="needs posting key")
+def test_test_top_trending_post(steem):
+
+    steem.wallet.unlock(config.PASSWORD)
+
+    poster = Poster(steem=steem,
+                    account=config.ACCOUNT,
+                    waiting_time=0.1)
+
+    posts = random_data.create_n_random_posts(10)
+    df = pd.DataFrame(posts)
+    df['reward'] = df.reward
+    df['predicted_votes'] = df.votes
+
+    df = tppp.preprocess(df, ncores=1)
+
+    date = pd.datetime.utcnow().date()
+
+    tbpd.post_top_trending_list(df, poster, date,
+                                overview_permalink='iii',
+                                trufflepicks_permalink='kkk',
+                                steem_amount=10,
+                                sbd_amount=10)

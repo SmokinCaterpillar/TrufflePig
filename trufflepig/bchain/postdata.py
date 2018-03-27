@@ -17,6 +17,8 @@ logger = logging.getLogger(__name__)
 
 PERMALINK_TEMPLATE = 'daily-truffle-picks-{date}'
 
+TRENDING_PERMALINK_TEMPLATE = 'non-bot-trending-{date}'
+
 
 def post_topN_list(sorted_post_frame, poster,
                    current_datetime, overview_permalink, N=10):
@@ -38,7 +40,7 @@ def post_topN_list(sorted_post_frame, poster,
     df = sorted_post_frame.iloc[:N, :]
 
     logger.info('Creating top {} post'.format(N))
-    df.first_image_url = df.body.apply(lambda x: tftf.get_image_urls(x))
+    first_image_urls = df.body.apply(lambda x: tftf.get_image_urls(x))
 
     steem_per_mvests = Converter(poster.steem).steem_per_mvests()
     truffle_link = 'https://steemit.com/steemit/@{}/{}'.format(poster.account,
@@ -48,7 +50,7 @@ def post_topN_list(sorted_post_frame, poster,
                                  topN_permalinks=df.permalink,
                                  topN_titles=df.title,
                                  topN_filtered_bodies=df.filtered_body,
-                                 topN_image_urls=df.first_image_url,
+                                 topN_image_urls=first_image_urls,
                                  topN_rewards=df.predicted_reward,
                                  topN_votes=df.predicted_votes,
                                  title_date=current_datetime,
@@ -57,8 +59,6 @@ def post_topN_list(sorted_post_frame, poster,
 
     permalink = PERMALINK_TEMPLATE.format(date=current_datetime.strftime('%Y-%m-%d'))
     logger.info('Posting top post with permalink: {}'.format(permalink))
-    logger.info(title)
-    logger.info(body)
     poster.post(body=body,
                 permalink=permalink,
                 title=title,
@@ -149,6 +149,46 @@ def vote_and_comment_on_topK(sorted_post_frame, poster,
             poster.steem.reconnect()
 
 
+def post_top_trending_list(sorted_post_frame, poster,
+                            current_datetime, trufflepicks_permalink,
+                           overview_permalink, sbd_amount,
+                           steem_amount, N=10):
+    """ Post the no bot trending toplist to the blockchain"""
+    df = sorted_post_frame.iloc[:N, :]
+
+    logger.info('Creating top {} post'.format(N))
+    first_image_urls = df.body.apply(lambda x: tftf.get_image_urls(x))
+
+    steem_per_mvests = Converter(poster.steem).steem_per_mvests()
+    truffle_link = 'https://steemit.com/steemit/@{}/{}'.format(poster.account,
+                                                               overview_permalink)
+    trufflepicks_link = 'https://steemit.com/steemit/@{}/{}'.format(poster.account,
+                                                               trufflepicks_permalink)
+
+    title, body = tfbp.top_trending_post(topN_authors=df.author,
+                                 topN_permalinks=df.permalink,
+                                 topN_titles=df.title,
+                                 topN_filtered_bodies=df.filtered_body,
+                                 topN_image_urls=first_image_urls,
+                                 topN_rewards=df.reward,
+                                 title_date=current_datetime,
+                                 truffle_link=truffle_link,
+                                 steem_per_mvests=steem_per_mvests,
+                                 trufflepicks_link=trufflepicks_link,
+                                 sbd_amount=sbd_amount,
+                                 steem_amount=steem_amount)
+
+    permalink = TRENDING_PERMALINK_TEMPLATE.format(date=current_datetime.strftime('%Y-%m-%d'))
+    logger.info('Posting top trending post with permalink: {}'.format(permalink))
+    poster.post(body=body,
+                permalink=permalink,
+                title=title,
+                tags=tfbp.TRENDING_TAGS,
+                self_vote=False)
+
+    return permalink
+
+
 def create_wallet(steem, password, posting_key,
                   active_key=None):
     """ Creates a new wallet
@@ -184,3 +224,6 @@ def create_wallet(steem, password, posting_key,
             logger.info('Key already present')
 
     logger.info('Wallet is ready')
+
+
+

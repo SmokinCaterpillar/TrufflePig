@@ -20,6 +20,7 @@ from trufflepig.utils import configure_logging
 import trufflepig.bchain.postweeklyupdate as tppw
 from trufflepig.bchain.mpsteem import MPSteem
 from trufflepig.bchain.poster import Poster
+import trufflepig.trending0bidbots as tt0b
 
 
 logger = logging.getLogger(__name__)
@@ -228,6 +229,23 @@ def main():
                                   poster=poster,
                                   topN_permalink=permalink,
                                   overview_permalink=overview_permalink)
+
+    logger.info('Computing the top trending without bidbots')
+    logger.info('Searching for bid bots and bought votes')
+    min_datetime = sorted_frame.created.min()
+    max_datetime = sorted_frame.created.max() + pd.Timedelta(days=8)
+    upvote_payments = tpad.get_upvote_payments_to_bots(steem=steem,
+                                                  min_datetime=min_datetime,
+                                                  max_datetime=max_datetime)
+    logger.info('Adjusting votes and reward')
+    sorted_frame = tppp.compute_bidbot_correction(post_frame=sorted_frame,
+                                                upvote_payments=upvote_payments)
+    tt0b.create_trending_post(sorted_frame,
+                              upvote_payments=upvote_payments,
+                              poster=poster,
+                              topN_permalink=permalink,
+                              overview_permalink=overview_permalink)
+
 
     logger.info('Done with normal duty, answering manual calls!')
     tfod.call_a_pig(poster=poster,
