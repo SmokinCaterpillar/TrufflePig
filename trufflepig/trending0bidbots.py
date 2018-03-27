@@ -35,8 +35,19 @@ def create_trending_post(post_frame, upvote_payments, poster, topN_permalink,
     for idx, row in no_bid_bots_frame.iterrows():
         self_votes.append(row.author in {x['voter'] for x in row.active_votes})
     self_votes = np.array(self_votes)
-    no_bid_bots_frame = post_frame.loc[~self_votes, :]
+    no_bid_bots_frame = no_bid_bots_frame.loc[~self_votes, :]
     no_bid_bots_frame.sort_values('reward', inplace=True, ascending=False)
+
+    logger.info('TOPLIST NO SELF-VOTES')
+    for x in range(10):
+        what = no_bid_bots_frame.iloc[x]
+        logger.info('{rank}. [{title}](https://steemit.com/@{author}/{permalink})  --  '
+                    '**by @{author} with a current reward of {reward:d} '
+                    'SBD'.format(rank=x+1,
+                                 title=what.title,
+                                 author=what.author,
+                                 permalink=what.permalink,
+                                 reward=what.reward))
 
     logger.info('Voted Posts {} out of {}'.format(len(post_frame) - len(no_bid_bots_frame),
                                                   len(post_frame)))
