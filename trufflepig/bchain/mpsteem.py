@@ -1,6 +1,11 @@
+import logging
+
 from steem import Steem
 from steem.commit import Commit
 from steem.steemd import Steemd
+
+
+logger = logging.getLogger(__name__)
 
 
 class MPSteem(Steem):
@@ -10,6 +15,7 @@ class MPSteem(Steem):
         self.no_broadcast = no_broadcast
         self.kwargs = kwargs.copy()
         super().__init__(nodes=nodes, no_broadcast=no_broadcast, **kwargs)
+        logger.info('Steem is ready, I am connected to {}.'.format(self.nodes))
 
     def reconnect(self):
         """Creates a new Steemd and Commit"""
