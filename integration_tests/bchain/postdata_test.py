@@ -10,14 +10,15 @@ from trufflepig.testutils.pytest_fixtures import steem
 from trufflepig.bchain.poster import Poster
 
 
-@pytest.mark.skipif(config.PASSWORD is None, reason="needs posting key")
 def test_test_top10post(steem):
 
-    steem.wallet.unlock(config.PASSWORD)
+    if config.PASSWORD:
+        steem.wallet.unlock(config.PASSWORD)
 
     poster = Poster(steem=steem,
                     account=config.ACCOUNT,
-                    waiting_time=0.1)
+                    waiting_time=0.1,
+                    no_posting_key_mode=config.PASSWORD is None)
 
     posts = random_data.create_n_random_posts(10)
     df = pd.DataFrame(posts)
@@ -35,14 +36,15 @@ def test_test_top10post(steem):
     tbpd.comment_on_own_top_list(df, poster, permalink)
 
 
-@pytest.mark.skipif(config.PASSWORD is None, reason="needs posting key")
 def test_test_all_top_with_real_data(steem):
 
-    steem.wallet.unlock(config.PASSWORD)
+    if config.PASSWORD:
+        steem.wallet.unlock(config.PASSWORD)
 
     poster = Poster(steem=steem,
                     account=config.ACCOUNT,
-                    waiting_time=0.1)
+                    waiting_time=0.1,
+                    no_posting_key_mode=config.PASSWORD is None)
 
     df = tpbg.scrape_hour_data(steem, stop_after=10)
 
@@ -64,7 +66,8 @@ def test_test_all_top_with_real_data(steem):
 
 def test_test_top20_vote_and_comment(steem):
 
-    steem.wallet.unlock(config.PASSWORD)
+    if config.PASSWORD:
+        steem.wallet.unlock(config.PASSWORD)
 
     poster = Poster(steem=steem,
                     account=config.ACCOUNT,
@@ -89,7 +92,8 @@ def test_create_wallet(steem):
 
 def test_test_top_trending_post(steem):
 
-    steem.wallet.unlock(config.PASSWORD)
+    if config.PASSWORD:
+        steem.wallet.unlock(config.PASSWORD)
 
     poster = Poster(steem=steem,
                     account=config.ACCOUNT,
