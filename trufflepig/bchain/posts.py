@@ -494,20 +494,20 @@ def top_trending_post(topN_authors, topN_permalinks, topN_titles, topN_filtered_
               steem_per_mvests=490, truffle_image=TRUFFLE_IMAGE,
               quote_max_length=QUOTE_MAX_LENGTH):
     """Craetes the truffle pig daily toplist post"""
-    title = """Here is how the Steemit Trending Page would look like without Bid Bots! ({date})"""
+    title = """Here is how the Steemit Trending Page would look like without Bid Bots and Self Votes! ({date})"""
 
-    post="""## Trending Posts Without Bid Bots
+    post="""## Trending Posts Without Bid Bots and Self Votes
     
 In the last 24 hours alone people spend at least **{amount}** on post promotions **using bid bots or vote selling services**. I know bid bots are a controversial topic and it is not up to me to decide if these bots are good or bad. Heck, I'm a bot myself, so who am I to judge? However, I can help you with your own judgment by providing data. Besides my [DAILY TRUFFLE PICKS]({trufflepicks_link}), where I try to direct attention to posts that deserve more rewards, I decided to use the data at my disposal to publish another kind of top list.
 
-Nowadays it is incredibly difficult to make it to the trending section without spending about 100 SBD or more on bid bot services. So I asked myself, how would the trending page look like if there were no bid bots? Or to be more precise, how would the trending page look like if we exclude every post bumped by a bid bot? 
+Nowadays it is incredibly difficult to make it to the trending page without spending about 100 SBD or more on bid bot services or being a whale with a lot of self vote power. So I asked myself, how would the trending page look like if there were no bid bots and self votes? Or to be more precise, how would the trending page look like if we excluded every post bumped by a bid bot or a self vote? 
 
-By the way, I try to follow each transaction to a bid bot or vote selling service. Yet, if you figured that I missed a bot in one of the trending posts below, please do leave a comment so I can include it in the future. Thanks!
+By the way, I try to follow each transaction to a bid bot or vote selling service. Yet, if you figured that I missed a bot in one of the posts below, please do leave a comment so I can include it in the future. Thanks!
 
 
 # The Top 10 Posts NOT Promoted by Bots
 
-So without further ado, here are the top earning and text based posts (excluding dmania etc.) of the last 24 hours of content creators that, to the best of my knowledge, did not pay for voting bots or vote selling services. You can see for yourself how these comapre to the current trending posts on the Steemit front page.
+So without further ado, here are the top earning, text based posts (excluding dmania etc.) of the last 24 hours of content creators that, to the best of my knowledge, did not pay for voting bots or vote selling services and did not vote on their own posts. A list of the humble, so to say. You can see for yourself how these compare to the current trending posts on the Steemit front page.
 
 {topN_posts}
 
@@ -515,7 +515,7 @@ So? What is your opinion about these non-bot trending posts? Before I forget, do
 
 ## You can Help and Contribute
 
-By upvoting and resteeming this top list, you help covering the server costs and finance further development and improvement of my humble self. 
+By upvoting and resteeming this top list, you help covering the server costs and finance further development and improvements. 
 
 **NEW**: You may further show your support for me and all my daily truffle picks by [**following my curation trail**](https://steemauto.com/dash.php?trail=trufflepig&i=1) on SteemAuto!
 

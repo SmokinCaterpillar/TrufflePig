@@ -30,7 +30,10 @@ def create_trending_post(post_frame, upvote_payments, poster, topN_permalink,
     logger.info('People spend {} SBD and {} Steem on Bid Bots the last 24 '
                 'hours.'.format(total_paid_sbd, total_paid_steem))
 
+    # exclude bit bots
     no_bid_bots_frame = post_frame.loc[post_frame.bought_votes == 0, :].copy()
+
+    # exclude self votes
     self_votes = []
     for idx, row in no_bid_bots_frame.iterrows():
         self_votes.append(row.author in {x['voter'] for x in row.active_votes})
@@ -38,7 +41,11 @@ def create_trending_post(post_frame, upvote_payments, poster, topN_permalink,
     no_bid_bots_frame = no_bid_bots_frame.loc[~self_votes, :]
     no_bid_bots_frame.sort_values('reward', inplace=True, ascending=False)
 
-    logger.info('TOPLIST NO SELF-VOTES')
+    logger.info('Self/Bot Voted Posts {} out of '
+                '{}'.format(len(post_frame) - len(no_bid_bots_frame),
+                                                  len(post_frame)))
+
+    logger.info('TOPLIST NO BID-BOTS AND SELF-VOTES')
     for x in range(10):
         what = no_bid_bots_frame.iloc[x]
         logger.info('{rank}. [{title}](https://steemit.com/@{author}/{permalink})  --  '
@@ -48,9 +55,6 @@ def create_trending_post(post_frame, upvote_payments, poster, topN_permalink,
                                  author=what.author,
                                  permalink=what.permalink,
                                  reward=what.reward))
-
-    logger.info('Voted Posts {} out of {}'.format(len(post_frame) - len(no_bid_bots_frame),
-                                                  len(post_frame)))
 
     tbpd.post_top_trending_list(no_bid_bots_frame, poster, current_datetime,
                                 overview_permalink=overview_permalink,
