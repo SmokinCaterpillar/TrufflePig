@@ -42,7 +42,7 @@ def create_trending_post(post_frame, upvote_payments, poster, topN_permalink,
     for x in range(10):
         what = no_bid_bots_frame.iloc[x]
         logger.info('{rank}. [{title}](https://steemit.com/@{author}/{permalink})  --  '
-                    '**by @{author} with a current reward of {reward:d} '
+                    '**by @{author} with a current reward of {reward} '
                     'SBD'.format(rank=x+1,
                                  title=what.title,
                                  author=what.author,
