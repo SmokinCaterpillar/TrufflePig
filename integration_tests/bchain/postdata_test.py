@@ -62,14 +62,14 @@ def test_test_all_top_with_real_data(steem):
                                   overview_permalink='jjj')
 
 
-@pytest.mark.skipif(config.PASSWORD is None, reason="needs posting key")
 def test_test_top20_vote_and_comment(steem):
 
     steem.wallet.unlock(config.PASSWORD)
 
     poster = Poster(steem=steem,
                     account=config.ACCOUNT,
-                    waiting_time=0.1)
+                    waiting_time=0.1,
+                    no_posting_key_mode=config.PASSWORD is None)
 
     posts = random_data.create_n_random_posts(10)
     df = pd.DataFrame(posts)
@@ -87,14 +87,14 @@ def test_create_wallet(steem):
     tbpd.create_wallet(steem, config.PASSWORD, config.POSTING_KEY)
 
 
-@pytest.mark.skipif(config.PASSWORD is None, reason="needs posting key")
 def test_test_top_trending_post(steem):
 
     steem.wallet.unlock(config.PASSWORD)
 
     poster = Poster(steem=steem,
                     account=config.ACCOUNT,
-                    waiting_time=0.1)
+                    waiting_time=0.1,
+                    no_posting_key_mode=config.PASSWORD is None)
 
     posts = random_data.create_n_random_posts(10)
     df = pd.DataFrame(posts)

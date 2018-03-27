@@ -10,7 +10,6 @@ from trufflepig.testutils.pytest_fixtures import steem
 from trufflepig import config
 
 
-@pytest.mark.skipif(config.PASSWORD is None, reason="needs posting key")
 def test_create_trending_post(steem):
 
     current_datetime = pd.datetime.utcnow()
@@ -34,7 +33,8 @@ def test_create_trending_post(steem):
     data_frame = tppp.compute_bidbot_correction(post_frame=data_frame,
                                                 upvote_payments=upvote_payments)
     account = config.ACCOUNT
-    poster = Poster(account=account, steem=steem)
+    poster = Poster(account=account, steem=steem,
+                    no_posting_key_mode=config.PASSWORD is None)
 
     tt0b.create_trending_post(data_frame, upvote_payments, poster, 'test',
                          'test', current_datetime)
