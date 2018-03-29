@@ -462,8 +462,8 @@ def load_or_preprocess(post_frame, filename, *args,
     return post_frame
 
 
-def compute_bidbot_correction(post_frame, upvote_payments, sbd_punishment_factor=1.3,
-                              steem_punishment_factor=1.2):
+def compute_bidbot_correction(post_frame, upvote_payments, sbd_punishment_factor=2.2,
+                              steem_punishment_factor=2.0):
     post_frame['sbd_bought_reward'] = 0.
     post_frame['steem_bought_reward'] = 0.
     post_frame['bought_votes'] = 0
