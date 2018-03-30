@@ -103,7 +103,8 @@ def preprocess(post_df, ncores=4, chunksize=500,
                min_max_average_sentence_length=(10, 350),
                filter_tags=FILTER_TAGS,
                filter_authors=FILTER_AUTHORS,
-               filter_voters=FILTER_VOTERS):
+               filter_voters=FILTER_VOTERS,
+               dropna=True):
     """ Preprocessing of raw steemit posts, filters and adds features
 
     All filtering happening inplace!
@@ -154,6 +155,8 @@ def preprocess(post_df, ncores=4, chunksize=500,
         Authors to be filtered...
     filter_voters: tuple of string
         If vored by one of them post is excluded
+    dropna: bool
+        If NaN rows should be dropped
 
     Returns
     -------
@@ -403,7 +406,9 @@ def preprocess(post_df, ncores=4, chunksize=500,
                                                             num_words=post_df.num_words,
                                                             num_sentences=post_df.num_sentences)
 
-    post_df.dropna(inplace=True)
+    if dropna:
+        logger.info('Dropping NaN rows')
+        post_df.dropna(inplace=True)
     logger.info('Final data set has {} shape'.format(post_df.shape))
 
     return post_df
