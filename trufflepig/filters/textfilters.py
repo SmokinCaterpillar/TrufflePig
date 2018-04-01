@@ -41,35 +41,24 @@ def filter_special_characters(text):
     return re.sub('[^A-Za-z0-9\s;,.?!]+', '', text)
 
 
+EXPRESSIONS = (
+    '&?nbsp',
+    'aligncenter',
+    'styletextalign',
+    'href',
+    'img',
+    'src',
+    'div',
+    """class=["']text-justify["']""",
+    'h[1-6]',
+)
+
+
 def filter_formatting(text):
-    text = re.sub('&?nbsp', ' ',text)
-    text = re.sub('aligncenter', '', text)
-    text = re.sub('styletextalign', '', text)
-    text = re.sub('href', '', text)
-    text = re.sub('img', '', text)
-    text = re.sub('src', '', text)
-    text = re.sub('div', '', text)
-    text = re.sub('classtextjustify', '', text)
-    text = re.sub('h[1-6]', '', text)
-
-    text = re.sub('&?NPSB', ' ',text)
-    text = re.sub('ALIGNCENTER', '', text)
-    text = re.sub('STYLETEXTALIGN', '', text)
-    text = re.sub('HREF', '', text)
-    text = re.sub('IMG', '', text)
-    text = re.sub('SRC', '', text)
-    text = re.sub('DIV', '', text)
-    text = re.sub('CLASSTEXTJUSTIFY', '', text)
-    text = re.sub('H[1-6]', '', text)
-
-    text = re.sub('&?Npsb', ' ',text)
-    text = re.sub('Aligncenter', '', text)
-    text = re.sub('Styletextalign', '', text)
-    text = re.sub('Href', '', text)
-    text = re.sub('Img', '', text)
-    text = re.sub('Div', '', text)
-    text = re.sub('Classtextjustify', '', text)
-    text = re.sub('Src', '', text)
+    for expression in EXPRESSIONS:
+        text = re.sub(expression, '', text)
+        text = re.sub(expression.upper(), '', text)
+        text = re.sub(expression.capitalize(), '', text)
 
     return text
 
