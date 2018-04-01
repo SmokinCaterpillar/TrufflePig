@@ -36,9 +36,9 @@ def topN_list(topN_authors, topN_permalinks, topN_titles,
               topN_filtered_bodies, topN_image_urls,
               topN_rewards, topN_votes, quote_max_length, nstart=1):
     """Creates a toplist string"""
-    topN_entry="""{rank}. [{title}](https://steemit.com/@{author}/{permalink})  --  **by @{author} with an estimated worth of {reward:d} SBD and {votes:d} votes**
+    topN_entry="""**#{rank}** [{title}](https://steemit.com/@{author}/{permalink})  --  **by @{author} with an estimated worth of {reward:d} SBD and {votes:d} votes**
     
-    {image}{quote}
+{image}{quote}
 
 """
 
@@ -54,7 +54,7 @@ def topN_list(topN_authors, topN_permalinks, topN_titles,
         title = tftf.replace_newlines(title)
         title = tftf.filter_special_characters(title)
         if len(img_urls) >= 1:
-            imgstr = """ <div class="pull-right"><img src="{img}" /></div>\n\n    """.format(img=img_urls[0])
+            imgstr = """ <div class="pull-right"><img src="{img}" /></div>\n\n""".format(img=img_urls[0])
         else:
             imgstr=''
         entry = topN_entry.format(rank=rank, author=author, permalink=permalink,
@@ -460,9 +460,9 @@ def top_trending_list(topN_authors, topN_permalinks, topN_titles,
               topN_filtered_bodies, topN_image_urls,
               topN_rewards, quote_max_length, nstart=1):
     """Creates a toplist string"""
-    topN_entry="""{rank}. [{title}](https://steemit.com/@{author}/{permalink})  --  **by @{author} with a current reward of {reward:d} SBD**
+    topN_entry="""**#{rank}** [{title}](https://steemit.com/@{author}/{permalink})  --  **by @{author} with a current reward of {reward:d} SBD**
     
-    {image}{quote}
+{image}{quote}
 
 """
 
@@ -478,7 +478,7 @@ def top_trending_list(topN_authors, topN_permalinks, topN_titles,
         title = tftf.replace_newlines(title)
         title = tftf.filter_special_characters(title)
         if len(img_urls) >= 1:
-            imgstr = """ <div class="pull-right"><img src="{img}" /></div>\n\n    """.format(img=img_urls[0])
+            imgstr = """ <div class="pull-right"><img src="{img}" /></div>\n\n""".format(img=img_urls[0])
         else:
             imgstr=''
         entry = topN_entry.format(rank=rank, author=author, permalink=permalink,

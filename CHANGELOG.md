@@ -4,6 +4,7 @@
 * New Poster class to allow for waiting
 * New posting of trending without bots
 * BUG FIX: Images and links are now properly fitlered
+* BUG FIX: Better displaying on busy!
 
 *0.6.1a* - 2018-03-22
 
