@@ -90,6 +90,7 @@ def find_nearest_index(target_datetime,
 
     best_smallest_index = 1
     increase = index_tolerance + 1
+    current_datetime = None
     for _ in range(max_tries):
         try:
             action = next(acc.get_account_history(current_index, limit=1))
@@ -114,10 +115,13 @@ def find_nearest_index(target_datetime,
                                                                 latest_index))
         except Exception:
             logger.exception('Problems for index {}. Reconeccting...'.format(current_index))
-            current_index += 1
-            best_largest_index += 1
+            current_index -= 1
+            best_largest_index -= 1
             steem.reconnect()
             acc = Account(account, steem)
+            if current_index <= 1:
+                return 1, current_datetime
+
 
 
 def get_delegates_and_shares(account, steem):
