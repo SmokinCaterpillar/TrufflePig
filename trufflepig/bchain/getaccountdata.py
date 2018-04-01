@@ -120,8 +120,8 @@ def find_nearest_index(target_datetime,
             steem.reconnect()
             acc = Account(account, steem)
             if current_index <= 1:
+                logger.error('Could not find index returning 1')
                 return 1, current_datetime
-
 
 
 def get_delegates_and_shares(account, steem):

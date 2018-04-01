@@ -2,7 +2,7 @@ import pytest
 
 from steembase.exceptions import RPCError
 
-from trufflepig.utils import progressbar, error_retry, none_retry
+from trufflepig.utils import progressbar, error_retry, none_retry, none_error_retry
 
 
 def test_progressbar():
@@ -33,4 +33,9 @@ def test_no_logrpc_retry():
 
 def test_none_retry():
     result = none_retry(g, sleep_time=0.01)()
+    assert result is None
+
+
+def test_none_error_retry():
+    result = none_error_retry(g, sleep_time=0.1)()
     assert result is None
