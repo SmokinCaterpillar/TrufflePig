@@ -19,6 +19,8 @@ PERMALINK_TEMPLATE = 'daily-truffle-picks-{date}'
 
 TRENDING_PERMALINK_TEMPLATE = 'non-bot-trending-{date}'
 
+COMMUNITY_PERMALINK_TEMPLATE = 'community-trending-{date}'
+
 
 def post_topN_list(sorted_post_frame, poster,
                    current_datetime, overview_permalink, N=10):
@@ -179,6 +181,43 @@ def post_top_trending_list(sorted_post_frame, poster,
                                  steem_amount=steem_amount)
 
     permalink = TRENDING_PERMALINK_TEMPLATE.format(date=current_datetime.strftime('%Y-%m-%d'))
+    logger.info('Posting top trending post with permalink: {}'.format(permalink))
+    poster.post(body=body,
+                permalink=permalink,
+                title=title,
+                tags=tfbp.TRENDING_TAGS,
+                self_vote=False)
+
+    return permalink
+
+
+def post_top_rep_votes_score_list(sorted_post_frame, poster,
+                            current_datetime, trufflepicks_permalink,
+                           overview_permalink, N=10):
+    """ Post the no bot trending toplist to the blockchain"""
+    df = sorted_post_frame.iloc[:N, :]
+
+    logger.info('Creating top {} post'.format(N))
+    first_image_urls = df.body.apply(lambda x: tftf.get_image_urls(x))
+
+    steem_per_mvests = Converter(poster.steem).steem_per_mvests()
+    truffle_link = 'https://steemit.com/steemit/@{}/{}'.format(poster.account,
+                                                               overview_permalink)
+    trufflepicks_link = 'https://steemit.com/steemit/@{}/{}'.format(poster.account,
+                                                               trufflepicks_permalink)
+
+    title, body = tfbp.top_contributor_vote_post(topN_authors=df.author,
+                                 topN_permalinks=df.permalink,
+                                 topN_titles=df.title,
+                                 topN_filtered_bodies=df.filtered_body,
+                                 topN_image_urls=first_image_urls,
+                                 topN_rep_votes_score=df.reputation_votes_score,
+                                 title_date=current_datetime,
+                                 truffle_link=truffle_link,
+                                 steem_per_mvests=steem_per_mvests,
+                                 trufflepicks_link=trufflepicks_link)
+
+    permalink = COMMUNITY_PERMALINK_TEMPLATE.format(date=current_datetime.strftime('%Y-%m-%d'))
     logger.info('Posting top trending post with permalink: {}'.format(permalink))
     poster.post(body=body,
                 permalink=permalink,

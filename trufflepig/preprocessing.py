@@ -516,3 +516,21 @@ def compute_bidbot_correction(post_frame, upvote_payments, sbd_punishment_factor
                                                                        total_sbd,
                                                                        total_votes))
     return post_frame
+
+
+def compute_adjusted_simple_reputation(x):
+    """Maps raw author reputation to simple reputation - 24"""
+    result = (np.log10(x) - 9) * 9 + 1
+    return result
+
+
+def compute_reputation_vote_score(post_frame):
+    """Adds the reputation vote score"""
+
+    logger.info('Computing Reputation vote score')
+    repvote_score = post_frame.active_votes.apply(lambda x: [y['percent']/10000. *
+                                                            max(0, compute_adjusted_simple_reputation(int(y['reputation'])))
+                                                        for y in x])
+    repvote_score = repvote_score.apply(lambda x: sum(x))
+    post_frame['reputation_votes_score'] = repvote_score
+    return post_frame

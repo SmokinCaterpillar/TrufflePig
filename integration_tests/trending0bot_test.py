@@ -28,7 +28,7 @@ def test_create_trending_post(steem):
                                                   max_datetime=max_datetime,
                                                  bots=['booster'])
 
-    data_frame = df = tppp.preprocess(data_frame, ncores=1)
+    data_frame = tppp.preprocess(data_frame, ncores=1)
 
     data_frame = tppp.compute_bidbot_correction(post_frame=data_frame,
                                                 upvote_payments=upvote_payments)
@@ -37,4 +37,26 @@ def test_create_trending_post(steem):
                     no_posting_key_mode=config.PASSWORD is None)
 
     tt0b.create_trending_post(data_frame, upvote_payments, poster, 'test',
+                         'test', current_datetime)
+
+
+def test_create_community_trending_post(steem):
+
+    current_datetime = pd.datetime.utcnow()
+
+    data_frame = tpgd.scrape_hour_data(steem=steem,
+                                             current_datetime=current_datetime,
+                                             ncores=32,
+                                             offset_hours=8,
+                                       hours=1, stop_after=20)
+
+    data_frame = tppp.preprocess(data_frame, ncores=1)
+
+    data_frame = tppp.compute_reputation_vote_score(data_frame)
+
+    account = config.ACCOUNT
+    poster = Poster(account=account, steem=steem,
+                    no_posting_key_mode=config.PASSWORD is None)
+
+    tt0b.create_contributor_top_post(data_frame, poster, 'test',
                          'test', current_datetime)

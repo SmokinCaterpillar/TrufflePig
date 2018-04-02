@@ -6,7 +6,7 @@ import trufflepig.filters.textfilters as tftf
 TRUFFLE_IMAGE_SMALL = '![trufflepig](https://raw.githubusercontent.com/SmokinCaterpillar/TrufflePig/master/img/trufflepig17_small.png)'
 TRUFFLE_IMAGE = '![trufflepig](https://raw.githubusercontent.com/SmokinCaterpillar/TrufflePig/master/img/trufflepig17.png)'
 DELEGATION_LINK = 'https://v2.steemconnect.com/sign/delegateVestingShares?delegator=&delegatee=trufflepig&vesting_shares={shares}%20VESTS'
-QUOTE_MAX_LENGTH = 496
+QUOTE_MAX_LENGTH = 596
 TAGS = ['steemit', 'curation', 'minnowsupport', 'technology', 'community']
 TRENDING_TAGS = ['steemit', 'curation', 'bots', 'technology', 'community']
 
@@ -557,6 +557,100 @@ Cheers,
                           trufflepicks_link=trufflepicks_link,
                           truffle_link=truffle_link,
                           amount=amount,
+                          **link_dict)
+    post = BODY_PREFIX + post
+    return title, post
+
+
+def top_rep_vote_list(topN_authors, topN_permalinks, topN_titles,
+              topN_filtered_bodies, topN_image_urls,
+              topN_rep_votes_score, quote_max_length, nstart=1):
+    """Creates a toplist string"""
+    topN_entry="""**#{rank}** [{title}](https://steemit.com/@{author}/{permalink})  --  **by @{author} with a reputation votes score of {score:d}**
+    
+{image}{quote}
+
+"""
+
+    result_string = ""
+
+    iterable = zip(topN_authors, topN_permalinks, topN_titles,
+                   topN_filtered_bodies, topN_image_urls,
+                   topN_rep_votes_score)
+
+    for idx, (author, permalink, title, filtered_body, img_urls, score) in enumerate(iterable):
+        rank = idx + nstart
+        quote = '>' + filtered_body[:quote_max_length].replace('\n', ' ').replace('  ', ' ').replace('  ', ' ').replace('  ', ' ') + '...'
+        title = tftf.replace_newlines(title)
+        title = tftf.filter_special_characters(title)
+        if len(img_urls) >= 1:
+            imgstr = """ <div class="pull-right"><img src="{img}" /></div>\n\n""".format(img=img_urls[0])
+        else:
+            imgstr=''
+        entry = topN_entry.format(rank=rank, author=author, permalink=permalink,
+                                   title=title, quote=quote,
+                                   score=int(score), image=imgstr)
+        result_string += entry
+    return result_string
+
+
+def top_contributor_vote_post(topN_authors, topN_permalinks, topN_titles, topN_filtered_bodies,
+              topN_image_urls, topN_rep_votes_score, title_date,
+              trufflepicks_link, truffle_link,
+              steem_per_mvests=490, truffle_image=TRUFFLE_IMAGE,
+              quote_max_length=QUOTE_MAX_LENGTH):
+    """Craetes the truffle pig daily toplist post"""
+    title = """Here is how the Steemit Trending Page would look like if Reputation and not Money counts! ({date})"""
+
+    post="""## Trending Posts According to Votes by Active Community Members
+    
+Well, I do publish a lot of top lists, I admit that. However, my aim is to help promote good content and top lists are a perfect tool to achieve this. Besides my [DAILY TRUFFLE PICKS]({trufflepicks_link}) and how the trending page would look like without bots, I want to show you what posts the Steemit community really favors. So on alternating days, I publish either this or the non-bot top list!
+
+Here I ask the question how would Steemit look like if not money talked, but reputation!? In the following, I will order the posts according to a metric I call **reputation votes score**. It is simply the weight of a vote times the voter's reputation. I slightly adjust the reputation by subtracting 24, so that new members have a voting power of only 1 and the major voting power is in the hands of the active and established Steemit members. For instance, if your post got a 100% vote by someone with a reputation of 49 and a 50% vote by someone with 74 reputation, the score would be `1.0 * (49 - 24) + 0.5 * (74 - 24) = 50`.
+
+
+# The Top 10 Posts Selected by the Community
+
+So without further ado, here are the top text based posts (excluding dmania etc.) of the last 24 hours of content creators that are voted by active users of this community and ranked according to my **reputation votes score**. A list of what the active Steemit community really prefers, so to say. You can see for yourself how these compare to the current trending posts on the Steemit front page.
+
+{topN_posts}
+
+So? What is your opinion about these community trending posts? Before I forget, do not miss out on checking my other top list of [DAILY TRUFFLE PICKS]({trufflepicks_link}) to help minnows and promote good content! Moreover, if you want to find out more about me, [here I give a detailed explanation about my inner workings]({truffle_link}).
+
+## You can Help and Contribute
+
+By upvoting and resteeming this top list, you help covering the server costs and finance further development and improvements. 
+
+**NEW**: You may further show your support for me and all my daily truffle picks by [**following my curation trail**](https://steemauto.com/dash.php?trail=trufflepig&i=1) on SteemAuto!
+
+## Delegate and Invest in the Bot
+
+If you feel generous, you can delegate Steem Power to me and boost my daily upvotes on the truffle posts in my other top list. In return, I will provide you with a *small* compensation for your trust in me and your locked Steem Power. **Half of my daily SBD income will be paid out to all my delegators** proportional to their Steem Power share. Payouts will start 3 days after your delegation.
+
+Click on one of the following links to delegate **[2]({sp2}), [5]({sp5}), [10]({sp10}), [20]({sp20}), [50]({sp50}), [100]({sp100}), [200]({sp200}), [500]({sp500}), [1000]({sp1000}), [2000]({sp2000}),** or even **[5000 Steem Power]({sp5000})**. Thank You!
+
+Cheers,
+
+{truffle_image}
+
+*`TrufflePig`*
+    """
+
+    link_dict = get_delegation_link(steem_per_mvests=steem_per_mvests)
+
+    topN_posts = top_rep_vote_list(topN_authors=topN_authors,
+                              topN_permalinks=topN_permalinks,
+                              topN_titles=topN_titles,
+                              topN_filtered_bodies=topN_filtered_bodies,
+                              topN_image_urls=topN_image_urls,
+                              topN_rep_votes_score=topN_rep_votes_score,
+                              quote_max_length=quote_max_length)
+
+    title = title.format(date=title_date.strftime('%d.%m.%Y'))
+    post = post.format(topN_posts=topN_posts,
+                          truffle_image=truffle_image,
+                          trufflepicks_link=trufflepicks_link,
+                          truffle_link=truffle_link,
                           **link_dict)
     post = BODY_PREFIX + post
     return title, post

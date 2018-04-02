@@ -230,23 +230,31 @@ def main():
                                   topN_permalink=permalink,
                                   overview_permalink=overview_permalink)
 
-    logger.info('Computing the top trending without bidbots')
-    logger.info('Searching for bid bots and bought votes')
-    min_datetime = sorted_frame.created.min()
-    max_datetime = sorted_frame.created.max() + pd.Timedelta(days=1)
-    upvote_payments = tpad.get_upvote_payments_to_bots(steem=steem,
-                                                  min_datetime=min_datetime,
-                                                  max_datetime=max_datetime)
-    logger.info('Adjusting votes and reward')
-    sorted_frame = tppp.compute_bidbot_correction(post_frame=sorted_frame,
-                                                upvote_payments=upvote_payments)
-    tt0b.create_trending_post(sorted_frame,
-                              upvote_payments=upvote_payments,
-                              poster=poster,
-                              topN_permalink=permalink,
-                              overview_permalink=overview_permalink,
-                              current_datetime=current_datetime)
-
+    if current_datetime.day % 2 == 1:
+        logger.info('Computing the top trending without bidbots')
+        logger.info('Searching for bid bots and bought votes')
+        min_datetime = sorted_frame.created.min()
+        max_datetime = sorted_frame.created.max() + pd.Timedelta(days=1)
+        upvote_payments = tpad.get_upvote_payments_to_bots(steem=steem,
+                                                      min_datetime=min_datetime,
+                                                      max_datetime=max_datetime)
+        logger.info('Adjusting votes and reward')
+        sorted_frame = tppp.compute_bidbot_correction(post_frame=sorted_frame,
+                                                    upvote_payments=upvote_payments)
+        tt0b.create_trending_post(sorted_frame,
+                                  upvote_payments=upvote_payments,
+                                  poster=poster,
+                                  topN_permalink=permalink,
+                                  overview_permalink=overview_permalink,
+                                  current_datetime=current_datetime)
+    else:
+        logger.info('Computing community vote rep top list')
+        sorted_frame = tppp.compute_reputation_vote_score(sorted_frame)
+        tt0b.create_contributor_top_post(sorted_frame,
+                                         poster=poster,
+                                         topN_permalink=permalink,
+                                         overview_permalink=overview_permalink,
+                                         current_datetime=current_datetime)
 
     logger.info('Done with normal duty, answering manual calls!')
     tfod.call_a_pig(poster=poster,
