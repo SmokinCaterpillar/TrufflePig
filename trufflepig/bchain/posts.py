@@ -8,6 +8,7 @@ TRUFFLE_IMAGE = '![trufflepig](https://raw.githubusercontent.com/SmokinCaterpill
 DELEGATION_LINK = 'https://v2.steemconnect.com/sign/delegateVestingShares?delegator=&delegatee=trufflepig&vesting_shares={shares}%20VESTS'
 QUOTE_MAX_LENGTH = 496
 TAGS = ['steemit', 'curation', 'minnowsupport', 'technology', 'community']
+TRENDING_TAGS = ['steemit', 'curation', 'bots', 'technology', 'community']
 
 BODY_PREFIX = ''  # to announce tests etc.
 
@@ -35,9 +36,9 @@ def topN_list(topN_authors, topN_permalinks, topN_titles,
               topN_filtered_bodies, topN_image_urls,
               topN_rewards, topN_votes, quote_max_length, nstart=1):
     """Creates a toplist string"""
-    topN_entry="""{rank}. [{title}](https://steemit.com/@{author}/{permalink})  --  **by @{author} with an estimated worth of {reward:d} SBD and {votes:d} votes**
+    topN_entry="""**#{rank}** [{title}](https://steemit.com/@{author}/{permalink})  --  **by @{author} with an estimated worth of {reward:d} SBD and {votes:d} votes**
     
-    {image}{quote}
+{image}{quote}
 
 """
 
@@ -53,7 +54,7 @@ def topN_list(topN_authors, topN_permalinks, topN_titles,
         title = tftf.replace_newlines(title)
         title = tftf.filter_special_characters(title)
         if len(img_urls) >= 1:
-            imgstr = """ <div class="pull-right"><img src="{img}" /></div>\n\n    """.format(img=img_urls[0])
+            imgstr = """ <div class="pull-right"><img src="{img}" /></div>\n\n""".format(img=img_urls[0])
         else:
             imgstr=''
         entry = topN_entry.format(rank=rank, author=author, permalink=permalink,
@@ -452,3 +453,110 @@ Cheers,
 
     return title, post
 
+
+############### Trending Posts ################################################
+
+def top_trending_list(topN_authors, topN_permalinks, topN_titles,
+              topN_filtered_bodies, topN_image_urls,
+              topN_rewards, quote_max_length, nstart=1):
+    """Creates a toplist string"""
+    topN_entry="""**#{rank}** [{title}](https://steemit.com/@{author}/{permalink})  --  **by @{author} with a current reward of {reward:d} SBD**
+    
+{image}{quote}
+
+"""
+
+    result_string = ""
+
+    iterable = zip(topN_authors, topN_permalinks, topN_titles,
+                   topN_filtered_bodies, topN_image_urls,
+                   topN_rewards)
+
+    for idx, (author, permalink, title, filtered_body, img_urls, reward) in enumerate(iterable):
+        rank = idx + nstart
+        quote = '>' + filtered_body[:quote_max_length].replace('\n', ' ').replace('  ', ' ').replace('  ', ' ').replace('  ', ' ') + '...'
+        title = tftf.replace_newlines(title)
+        title = tftf.filter_special_characters(title)
+        if len(img_urls) >= 1:
+            imgstr = """ <div class="pull-right"><img src="{img}" /></div>\n\n""".format(img=img_urls[0])
+        else:
+            imgstr=''
+        entry = topN_entry.format(rank=rank, author=author, permalink=permalink,
+                                   title=title, quote=quote,
+                                   reward=int(reward), image=imgstr)
+        result_string += entry
+    return result_string
+
+
+def top_trending_post(topN_authors, topN_permalinks, topN_titles, topN_filtered_bodies,
+              topN_image_urls, topN_rewards, title_date,
+              trufflepicks_link, truffle_link, sbd_amount, steem_amount,
+              steem_per_mvests=490, truffle_image=TRUFFLE_IMAGE,
+              quote_max_length=QUOTE_MAX_LENGTH):
+    """Craetes the truffle pig daily toplist post"""
+    title = """Here is how the Steemit Trending Page would look like without Bid Bots and Self Votes! ({date})"""
+
+    post="""## Trending Posts Without Bid Bots and Self Votes
+    
+In the last 24 hours alone people spent at least **{amount}** on post promotions **using bid bots or vote selling services**. I know bid bots are a controversial topic and it is not up to me to decide if these bots are good or bad. Heck, I'm a bot myself, so who am I to judge? However, I can help you with your own judgment by providing data. Besides my [DAILY TRUFFLE PICKS]({trufflepicks_link}), where I try to direct attention to posts that deserve more rewards, I decided to use the data at my disposal to publish another kind of top list.
+
+Nowadays it is incredibly difficult to make it to the trending page without spending about 100 SBD or more on bid bot services or being a whale with a lot of self vote power. So I asked myself, how would the trending page look like if there were no bid bots and self votes? Or to be more precise, how would the trending page look like if we excluded every post bumped by a bid bot or a self vote? 
+
+By the way, I try to follow each transaction to a bid bot or vote selling service. Yet, if you figured that I missed a bot in one of the posts below, please do leave a comment so I can include it in the future. Thanks!
+
+
+# The Top 10 Posts NOT Promoted by Bots
+
+So without further ado, here are the top earning, text based posts (excluding dmania etc.) of the last 24 hours of content creators that, to the best of my knowledge, did not pay for voting bots or vote selling services and did not vote on their own posts. A list of the humble, so to say. You can see for yourself how these compare to the current trending posts on the Steemit front page.
+
+{topN_posts}
+
+So? What is your opinion about these non-bot trending posts? Before I forget, do not miss out on checking my other top list of [DAILY TRUFFLE PICKS]({trufflepicks_link}) to help minnows and promote good content! Moreover, if you want to find out more about me, [here I give a detailed explanation about my inner workings]({truffle_link}).
+
+## You can Help and Contribute
+
+By upvoting and resteeming this top list, you help covering the server costs and finance further development and improvements. 
+
+**NEW**: You may further show your support for me and all my daily truffle picks by [**following my curation trail**](https://steemauto.com/dash.php?trail=trufflepig&i=1) on SteemAuto!
+
+## Delegate and Invest in the Bot
+
+If you feel generous, you can delegate Steem Power to me and boost my daily upvotes on the truffle posts in my other top list. In return, I will provide you with a *small* compensation for your trust in me and your locked Steem Power. **Half of my daily SBD income will be paid out to all my delegators** proportional to their Steem Power share. Payouts will start 3 days after your delegation.
+
+Click on one of the following links to delegate **[2]({sp2}), [5]({sp5}), [10]({sp10}), [20]({sp20}), [50]({sp50}), [100]({sp100}), [200]({sp200}), [500]({sp500}), [1000]({sp1000}), [2000]({sp2000}),** or even **[5000 Steem Power]({sp5000})**. Thank You!
+
+Cheers,
+
+{truffle_image}
+
+*`TrufflePig`*
+    """
+
+    if sbd_amount > 0 and steem_amount > 0:
+        amount = '{} SBD and {} STEEM'.format(int(sbd_amount), int(steem_amount))
+    elif sbd_amount > 0:
+        amount = '{} SBD'.format(int(sbd_amount))
+    elif steem_amount > 0:
+        amount = '{} STEEM'.format(int(steem_amount))
+    else:
+        raise RuntimeError('Should not happen!')
+
+    link_dict = get_delegation_link(steem_per_mvests=steem_per_mvests)
+
+    topN_posts = top_trending_list(topN_authors=topN_authors,
+                              topN_permalinks=topN_permalinks,
+                              topN_titles=topN_titles,
+                              topN_filtered_bodies=topN_filtered_bodies,
+                              topN_image_urls=topN_image_urls,
+                              topN_rewards=topN_rewards,
+                              quote_max_length=quote_max_length)
+
+    title = title.format(date=title_date.strftime('%d.%m.%Y'))
+    post = post.format(topN_posts=topN_posts,
+                          truffle_image=truffle_image,
+                          trufflepicks_link=trufflepicks_link,
+                          truffle_link=truffle_link,
+                          amount=amount,
+                          **link_dict)
+    post = BODY_PREFIX + post
+    return title, post

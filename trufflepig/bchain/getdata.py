@@ -10,7 +10,7 @@ from steem.post import Post, PostDoesNotExist
 import json
 from json import JSONDecodeError
 
-from trufflepig.utils import progressbar, none_retry, error_retry
+from trufflepig.utils import progressbar, error_retry, none_error_retry
 import trufflepig.persist as tppe
 
 
@@ -52,7 +52,7 @@ def get_block_headers_between_offset_start(start_datetime, end_datetime,
     logger.info('Collecting header infos')
     while True:
         try:
-            header = none_retry(steem.get_block_header)(current_block_num)
+            header = none_error_retry(steem.get_block_header)(current_block_num)
             current_datetime = pd.to_datetime(header['timestamp'])
             if start_datetime <= current_datetime and current_datetime <= end_datetime:
                 header['timestamp'] = current_datetime
@@ -93,12 +93,12 @@ def find_nearest_block_num(target_datetime, steem,
 
     """
     if latest_block_num is None:
-        latest_block_num = none_retry(Blockchain(steem).get_current_block_num)()
+        latest_block_num = none_error_retry(Blockchain(steem).get_current_block_num)()
 
     current_block_num = latest_block_num
     best_largest_block_num = latest_block_num
 
-    header = none_retry(steem.get_block_header)(best_largest_block_num)
+    header = none_error_retry(steem.get_block_header)(best_largest_block_num)
     best_largest_datetime = pd.to_datetime(header['timestamp'])
     if target_datetime > best_largest_datetime:
         logger.warning('Target beyond largest block num')
@@ -106,9 +106,10 @@ def find_nearest_block_num(target_datetime, steem,
 
     best_smallest_block_num = 1
     increase = block_num_tolerance + 1
+    current_datetime = None
     for _ in range(max_tries):
         try:
-            header = none_retry(steem.get_block_header)(current_block_num)
+            header = none_error_retry(steem.get_block_header)(current_block_num)
             current_datetime = pd.to_datetime(header['timestamp'])
             if increase <= block_num_tolerance:
                 return current_block_num, current_datetime
@@ -130,6 +131,9 @@ def find_nearest_block_num(target_datetime, steem,
             current_block_num -= 1
             best_smallest_block_num -= 1
             steem.reconnect()
+            if current_block_num <= 1:
+                logger.error('Could not find block num returning 1')
+                return 1, current_datetime
 
 
 def get_block_headers_between(start_datetime, end_datetime, steem):
@@ -219,7 +223,6 @@ def get_post_data(authors_and_permalinks, steem):
 
         # Add positive votes and subtract negative
         votes = sum(1 if x['percent'] > 0 else -1 for x in p.active_votes)
-        votes = max(votes, 0)
 
         post = {
             'title': p.title,
@@ -254,7 +257,7 @@ def get_all_posts_from_block(block_num, steem,
 
     """
     try:
-        operations = none_retry(steem.get_ops_in_block)(block_num, False)
+        operations = none_error_retry(steem.get_ops_in_block)(block_num, False)
         if operations:
             authors_and_permalinks = extract_authors_and_permalinks(operations)
             if exclude_authors_and_permalinks:

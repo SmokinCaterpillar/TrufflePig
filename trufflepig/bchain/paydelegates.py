@@ -8,6 +8,7 @@ from steem import Steem
 from steembase import operations
 from steem.account import Account
 from steem.amount import Amount
+from steembase.exceptions import RPCError
 
 
 logger = logging.getLogger(__name__)
@@ -46,11 +47,12 @@ def pay_delegates(account, steem,
         try:
             if payout:
                 logger.info('Paying {} SBD to {}'.format(delegator, payout))
-                error_retry(steem.commit.transfer)(to=delegator,
-                                                   amount=payout,
-                                                   asset='SBD',
-                                                   memo=memo,
-                                                   account=account)
+                error_retry(steem.commit.transfer,
+                            errors=(RPCError, TypeError))(to=delegator,
+                                                         amount=payout,
+                                                         asset='SBD',
+                                                         memo=memo,
+                                                         account=account)
         except Exception as e:
             logger.exception('Could not pay {} SBD to {}! '
                              'Reconnecting...'.format(payout, delegator))

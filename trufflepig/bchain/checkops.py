@@ -4,7 +4,7 @@ import multiprocessing as mp
 from steem import Steem
 from steem.post import Post
 
-from trufflepig.utils import progressbar, none_retry, error_retry
+from trufflepig.utils import progressbar, error_retry, none_error_retry
 import trufflepig.bchain.getdata as tpbg
 
 
@@ -44,7 +44,7 @@ def check_all_ops_in_block(block_num, steem, account):
     List of tuples with comment authors and permalinks
 
     """
-    operations = none_retry(steem.get_ops_in_block)(block_num, False)
+    operations = none_error_retry(steem.get_ops_in_block)(block_num, False)
     if operations:
         return extract_comment_authors_and_permalinks(operations, account)
     else:

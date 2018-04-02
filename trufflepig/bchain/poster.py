@@ -14,7 +14,9 @@ THRESHOLD = 'threshold'
 
 class Poster(object):
     """A class to allow for posting and taking care of posting intervals"""
-    def __init__(self, steem, account, self_vote_limit=94, waiting_time=WAIT):
+    def __init__(self, steem, account, self_vote_limit=94, waiting_time=WAIT,
+                 no_posting_key_mode=False):
+        self.no_posting_key_mode = no_posting_key_mode
         self.waiting_time = waiting_time
         self.last_post_time = time.time() - self.waiting_time
         self.steem = steem
@@ -36,7 +38,10 @@ class Poster(object):
             self_vote = self.check_if_self_vote()
         self.time2last_post()
         logger.info('Posting: `{}` (`{}`)\n{}'.format(title, permalink, body))
-        return error_retry(self.steem.commit.post, retries=10,
+        if self.no_posting_key_mode:
+            logger.warning('Test mode NOT TRYING TO POST')
+        else:
+            return error_retry(self.steem.commit.post, retries=10,
                         sleep_time=4, errors=Exception)(author=self.account,
                                                title=title,
                                                body=body,
@@ -55,7 +60,10 @@ class Poster(object):
         identifier = '@{author}/{permalink}'.format(author=author,
                                                     permalink=permalink)
         logger.info('Voting on {} with weight {}.'.format(identifier,weight))
-        error_retry(self.steem.commit.vote, retries=5,
+        if self.no_posting_key_mode:
+            logger.warning('Test mode NOT TRYING TO VOTE!')
+        else:
+            error_retry(self.steem.commit.vote, retries=5,
                         sleep_time=4)(identifier=identifier,
                                                 weight=weight,
                                                 account=self.account)
@@ -73,7 +81,10 @@ class Poster(object):
 
         self.time2last_post()
         logger.info('Replying to {} with\n{}'.format(identifier, body))
-        return error_retry(self.steem.commit.post, retries=10,
+        if self.no_posting_key_mode:
+            logger.warning('Test mode NOT TRYING TO REPLY')
+        else:
+            return error_retry(self.steem.commit.post, retries=10,
                         sleep_time=4, errors=Exception)("",
                                               body,
                                               json_metadata=None,

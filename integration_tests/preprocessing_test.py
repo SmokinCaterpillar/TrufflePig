@@ -66,3 +66,29 @@ def test_bid_bot_correction_real_data(steem):
 
     assert upvotes
     assert (df.sbd_bought_reward.mean() > 0) or (df.steem_bought_reward.mean() > 0)
+
+
+def test_filtered_body_no_images_regression(steem):
+    """ Test for error in filtering as in these quotes: https://steemit.com/steemit/@trufflepig/daily-truffle-picks-2018-03-31"""
+    posts = tpgd.get_post_data([('colovhis', 'dofus-mastodon-cemetery-basic-tutorial'),
+                               ('joshuaetim','rewarding-hardwork-and-excellence-amongst-school-children-'
+                                             'through-steem-powered-notebooks-and-writing-materials-3rd-phase-of')],
+                               steem=steem)
+
+    post_frame = pd.DataFrame(posts)
+    post_frame = tppp.preprocess(post_frame, ncores=1)
+
+    assert not any(post_frame.filtered_body.apply(lambda x: '.JPG' in x))
+
+
+def test_filtered_body_classtextjustify_regression(steem):
+    """ Test for error in fitlering as in these quotes: https://steemit.com/steemit/@trufflepig/daily-truffle-picks-2018-03-31"""
+    posts = tpgd.get_post_data([('colovhis', 'dofus-mastodon-cemetery-basic-tutorial'),
+                               ('joshuaetim','rewarding-hardwork-and-excellence-amongst-school-children-'
+                                             'through-steem-powered-notebooks-and-writing-materials-3rd-phase-of')],
+                               steem=steem)
+
+    post_frame = pd.DataFrame(posts)
+    post_frame = tppp.preprocess(post_frame, ncores=1)
+
+    assert not any(post_frame.filtered_body.apply(lambda x: 'classtextjustify' in x))

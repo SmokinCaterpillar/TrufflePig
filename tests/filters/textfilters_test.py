@@ -32,7 +32,7 @@ def test_filter_special_characters():
 
 def test_filter_formatting():
     result = tptf.filter_formatting('Hi&nbsphey aligncenter nbsp Styletextalign kk')
-    assert result == 'Hi hey     kk'
+    assert result == 'Hihey    kk'
 
 
 def test_replace_newlines():

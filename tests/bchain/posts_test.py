@@ -158,3 +158,25 @@ Topic 19: devices: -0.32, station: -0.30, lte: -0.29, base: -0.29, equipment: -0
 
     assert body
     assert title
+
+
+def test_top_trending_post():
+    posts = random_data.create_n_random_posts(10)
+    df = pd.DataFrame(posts)
+    df = tppp.preprocess(df, ncores=1)
+
+    date = pd.datetime.utcnow().date()
+    df.image_urls = df.body.apply(lambda x: tptf.get_image_urls(x))
+
+    title, post = tbpo.top_trending_post(topN_authors=df.author,
+                                 topN_permalinks=df.permalink,
+                                 topN_titles=df.title,
+                                 topN_filtered_bodies=df.filtered_body,
+                                 topN_image_urls=df.image_urls,
+                                 topN_rewards=df.reward, sbd_amount=10,
+                                 steem_amount=10,
+                                 title_date=date, trufflepicks_link='de.de.de',
+                                 truffle_link='www.de')
+
+    assert post
+    assert title

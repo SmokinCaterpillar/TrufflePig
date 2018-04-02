@@ -51,7 +51,6 @@ def test_existence(steem):
     assert isinstance(result, str)
 
 
-@pytest.mark.skipif(config.PASSWORD is None, reason="needs posting key")
 def test_weekly_post(steem):
     posts = create_n_random_posts(300)
 
@@ -72,7 +71,8 @@ def test_weekly_post(steem):
     post_frame['sbd_bought_reward'] = 0
     post_frame['bought_votes'] = 0
 
-    poster = Poster(account=config.ACCOUNT, steem=steem)
+    poster = Poster(account=config.ACCOUNT, steem=steem,
+                    no_posting_key_mode=config.PASSWORD is None)
     permalink = tppw.post_weakly_update(pipeline, post_frame,
                                         poster=poster,
                                         current_datetime=current_date)

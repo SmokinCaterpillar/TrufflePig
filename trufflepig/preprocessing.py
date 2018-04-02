@@ -20,7 +20,7 @@ FILTER_TAGS = ('mitnebcurationtrail', 'informationwar', 'truth', 'conspiracy',
                'vaccines', 'contest', 'giveaway', 'deutsch', 'kr', 'kr-newbie',
                'nsfw', 'sex', 'daily', 'photofeed',
                # other weird stuff
-               'steemsilvergold', 'horoscope', 'guns',
+               'steemsilvergold', 'horoscope', 'guns', 'investing', 'tib',
                # Somehow religious texts do not work in combination with others
                # maybe I need a bot just to rate spiritual content
                # for simplicity let's ignore them for now,
@@ -29,7 +29,7 @@ FILTER_TAGS = ('mitnebcurationtrail', 'informationwar', 'truth', 'conspiracy',
 
 
 # Stay out of the whale wars!
-FILTER_AUTHORS = ('haejin', 'ew-and-patterns', 'caladium', 'cryptopassion')
+FILTER_AUTHORS = ('haejin', 'ew-and-patterns', 'caladium', 'cryptopassion', 'thirdeye7')
 
 # Get out plagiarismos!
 FILTER_VOTERS = ('cheetah',)
@@ -103,7 +103,8 @@ def preprocess(post_df, ncores=4, chunksize=500,
                min_max_average_sentence_length=(10, 350),
                filter_tags=FILTER_TAGS,
                filter_authors=FILTER_AUTHORS,
-               filter_voters=FILTER_VOTERS):
+               filter_voters=FILTER_VOTERS,
+               dropna=True):
     """ Preprocessing of raw steemit posts, filters and adds features
 
     All filtering happening inplace!
@@ -154,6 +155,8 @@ def preprocess(post_df, ncores=4, chunksize=500,
         Authors to be filtered...
     filter_voters: tuple of string
         If vored by one of them post is excluded
+    dropna: bool
+        If NaN rows should be dropped
 
     Returns
     -------
@@ -189,7 +192,7 @@ def preprocess(post_df, ncores=4, chunksize=500,
                                                   tftf.filter_images_and_links(x))
 
     logger.info('Filtering quotes')
-    post_df['filtered_body'] = post_df.body.apply(lambda x: tftf.filter_quotes(x))
+    post_df['filtered_body'] = post_df.filtered_body.apply(lambda x: tftf.filter_quotes(x))
 
     logger.info('Counting and filtering headings')
     post_df['num_headings'] = post_df.filtered_body.apply(lambda x:
@@ -403,7 +406,9 @@ def preprocess(post_df, ncores=4, chunksize=500,
                                                             num_words=post_df.num_words,
                                                             num_sentences=post_df.num_sentences)
 
-    post_df.dropna(inplace=True)
+    if dropna:
+        logger.info('Dropping NaN rows')
+        post_df.dropna(inplace=True)
     logger.info('Final data set has {} shape'.format(post_df.shape))
 
     return post_df
@@ -462,8 +467,8 @@ def load_or_preprocess(post_frame, filename, *args,
     return post_frame
 
 
-def compute_bidbot_correction(post_frame, upvote_payments, sbd_punishment_factor=1.3,
-                              steem_punishment_factor=1.2):
+def compute_bidbot_correction(post_frame, upvote_payments, sbd_punishment_factor=2.2,
+                              steem_punishment_factor=2.0):
     post_frame['sbd_bought_reward'] = 0.
     post_frame['steem_bought_reward'] = 0.
     post_frame['bought_votes'] = 0
