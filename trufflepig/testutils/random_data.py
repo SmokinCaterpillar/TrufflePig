@@ -125,7 +125,8 @@ def create_post():
             'title': title,
             'reward': reward,
             'votes': votes,
-            'active_votes': [dict(voter='marc{}'.format(x), percent=42)
+            'active_votes': [dict(voter='marc{}'.format(x), percent=42,
+                                  reputation='39360778478138')
                             for x in range(votes)],
             'created': created,
             'tags': tags,

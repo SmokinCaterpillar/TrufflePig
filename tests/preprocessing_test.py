@@ -52,3 +52,11 @@ def test_bid_bot_correction():
     assert all(post_frame.adjusted_reward >= 0)
     assert post_frame.adjusted_votes.mean() < post_frame.votes.mean()
     assert all(post_frame.adjusted_votes >= 0)
+
+
+def test_repvote_score():
+    posts = create_n_random_posts(30)
+    post_frame = pd.DataFrame(posts)
+
+    post_frame = tppp.compute_reputation_vote_score(post_frame)
+    assert 'reputation_votes_score' in post_frame.columns

@@ -62,3 +62,24 @@ def create_trending_post(post_frame, upvote_payments, poster, topN_permalink,
                                 steem_amount=total_paid_steem,
                                 sbd_amount=total_paid_sbd)
 
+
+def create_contributor_top_post(post_frame, poster, topN_permalink,
+                         overview_permalink, current_datetime):
+    sorted_frame = post_frame.sort_values('reputation_votes_score',
+                                          ascending=False)
+
+    for x in range(10):
+        what = sorted_frame.iloc[x]
+        logger.info('{rank}. [{title}](https://steemit.com/@{author}/{permalink})  --  '
+                    '**by @{author} with a reputation vote score of {rvs} '
+                    'SBD'.format(rank=x+1,
+                                 title=what.title,
+                                 author=what.author,
+                                 permalink=what.permalink,
+                                 rvs=what.reputation_votes_score))
+
+    tbpd.post_top_rep_votes_score_list(sorted_post_frame=sorted_frame,
+                                       poster=poster,
+                                       current_datetime=current_datetime,
+                                       trufflepicks_permalink=topN_permalink,
+                                       overview_permalink=overview_permalink)
