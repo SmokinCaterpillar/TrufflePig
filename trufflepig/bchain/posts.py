@@ -513,6 +513,11 @@ So without further ado, here are the top earning, text based posts (excluding dm
 
 So? What is your opinion about these non-bot trending posts? Before I forget, do not miss out on checking my other top list of [DAILY TRUFFLE PICKS]({trufflepicks_link}) to help minnows and promote good content! Moreover, if you want to find out more about me, [here I give a detailed explanation about my inner workings]({truffle_link}).
 
+
+## Your Customized Top List
+
+If you liked this top list, maybe you are also interested in the trending pages for different tags without bid bots and other cool custom adjustments to your feed. In this case I can recommend you the awesome frontend developed by @jga: [HERE IS YOUR PERSONALIZED STEEMIT FEED](https://joticajulian.github.io/custom-feed/). 
+
 ## You can Help and Contribute
 
 By upvoting and resteeming this top list, you help covering the server costs and finance further development and improvements. 
