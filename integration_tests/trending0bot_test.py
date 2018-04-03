@@ -38,3 +38,14 @@ def test_create_trending_post(steem):
 
     tt0b.create_trending_post(data_frame, upvote_payments, poster, 'test',
                          'test', current_datetime)
+
+
+def test_bottracker_api(steem):
+
+    min_datetime = pd.datetime.utcnow() - pd.Timedelta(minutes=30)
+    max_datetime = pd.datetime.utcnow()
+    upvote_payments = tpad.get_upvote_payments_to_bots(steem=steem,
+                                                  min_datetime=min_datetime,
+                                                  max_datetime=max_datetime,
+                                                 bots='default')
+    assert upvote_payments

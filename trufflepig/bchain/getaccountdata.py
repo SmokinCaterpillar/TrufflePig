@@ -346,7 +346,16 @@ def get_upvote_payments_for_accounts(accounts, steem, min_datetime, max_datetime
 
 
 def get_upvote_payments_to_bots(steem, min_datetime, max_datetime,
-                                bots=BITBOTS, ncores=30):
+                                bots='default', ncores=30):
+    if bots == 'default':
+        try:
+            bot_frame = pd.read_json('https://steembottracker.net/bid_bots')
+            names = bot_frame.name.tolist()
+            bots = list(set(BITBOTS + names))
+            logger.info('Succesfully called the bottracker API!')
+        except Exception:
+            logger.exception('Could not reach bottracker')
+            bots = BITBOTS
     logger.info('Getting payments to following bots {}'.format(bots))
     return get_upvote_payments_for_accounts(accounts=bots,
                                             steem=steem,
