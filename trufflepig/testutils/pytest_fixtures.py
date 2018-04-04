@@ -12,6 +12,11 @@ def steem():
 
 
 @pytest.fixture
+def noapisteem():
+    return MPSteem(nodes=config.NODES[1:], no_broadcast=True)
+
+
+@pytest.fixture
 def bchain(steem):
     return Blockchain(steem)
 
