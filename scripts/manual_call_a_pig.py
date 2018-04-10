@@ -164,20 +164,6 @@ def main():
                     hours=24,
                     overview_permalink=overview_permalink)
 
-    logger.info('Cleaning up after myself')
-    tfut.clean_up_directory(model_directoy, keep_last=3)
-    tfut.clean_up_directory(data_directory, keep_last=25)
-    tfut.clean_up_directory(log_directory, keep_last=14)
-
-    logger.info('Preloading -8 days for later training')
-    tpgd.load_or_scrape_training_data(steem, data_directory,
-                                                       current_datetime=current_datetime,
-                                                       days=1,
-                                                       offset_days=8,
-                                                       ncores=32)
-
-    logger.info('DONE at {}'.format(current_datetime))
-
 
 if __name__ == '__main__':
     main()
