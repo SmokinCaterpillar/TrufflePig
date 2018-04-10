@@ -139,7 +139,7 @@ def main():
     noapisteem = MPSteem(nodes=config.NODES[1:], no_broadcast=no_broadcast)
     # To post stuff
     account = config.ACCOUNT
-    poster = Poster(account=account, steem=steem)
+    poster = Poster(account=account, steem=noapisteem)
 
     tppd.create_wallet(steem, config.PASSWORD,
                        posting_key=config.POSTING_KEY,
