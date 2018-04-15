@@ -78,7 +78,8 @@ def find_nearest_index(target_datetime,
                            errors=(Exception,))(account, steem)
 
     if latest_index is None:
-        latest_index = next(acc.history_reverse(batch_size=1))['index']
+        latest_index = next(none_error_retry(acc.history_reverse,
+                                   errors=(Exception,))(batch_size=1))['index']
 
     current_index = latest_index
     best_largest_index = latest_index
