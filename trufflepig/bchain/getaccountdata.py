@@ -114,7 +114,8 @@ def find_nearest_index(target_datetime,
                                                                 current_index,
                                                                 latest_index))
         except Exception:
-            logger.exception('Problems for index {}. Reconeccting...'.format(current_index))
+            logger.exception('Problems for index {} of account {}. '
+                             'Reconnecting...'.format(current_index, account))
             current_index -= 1
             best_largest_index -= 1
             steem.reconnect()

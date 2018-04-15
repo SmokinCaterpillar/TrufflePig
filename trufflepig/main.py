@@ -52,7 +52,7 @@ def large_mp_preprocess(log_directory, current_datetime, steem, data_directory,
 
 
 def load_and_preprocess_2_frames(log_directory, current_datetime, steem,
-                                 data_directory, offset_days=8,
+                                 noapisteem, data_directory, offset_days=8,
                                  days=7, days2=7):
     """ Function to load and preprocess the time span split into 2
     for better memory footprint
@@ -62,6 +62,7 @@ def load_and_preprocess_2_frames(log_directory, current_datetime, steem,
     log_directory: str
     current_datetime: datetime
     steem: MPSteem
+    noapisteem: MPSteem
     data_directory: str
     offset_days: int
     days: int
@@ -102,7 +103,7 @@ def load_and_preprocess_2_frames(log_directory, current_datetime, steem,
     logger.info('Searching for bid bots and bought votes')
     min_datetime = post_frame.created.min()
     max_datetime = post_frame.created.max() + pd.Timedelta(days=8)
-    upvote_payments = tpad.get_upvote_payments_to_bots(steem=steem,
+    upvote_payments = tpad.get_upvote_payments_to_bots(steem=noapisteem,
                                                   min_datetime=min_datetime,
                                                   max_datetime=max_datetime)
     logger.info('Adjusting votes and reward')
@@ -156,6 +157,7 @@ def main():
             log_directory=log_directory,
             current_datetime=current_datetime,
             steem=steem,
+            noapisteem=noapisteem,
             data_directory=data_directory)
         logger.info('Garbage collecting')
         gc.collect()
@@ -196,6 +198,7 @@ def main():
             log_directory=log_directory,
             current_datetime=current_datetime,
             steem=steem,
+            noapisteem=noapisteem,
             data_directory=data_directory)
 
         logger.info('I want to post my weekly overview')
@@ -234,7 +237,7 @@ def main():
     logger.info('Searching for bid bots and bought votes')
     min_datetime = sorted_frame.created.min()
     max_datetime = sorted_frame.created.max() + pd.Timedelta(days=1)
-    upvote_payments = tpad.get_upvote_payments_to_bots(steem=steem,
+    upvote_payments = tpad.get_upvote_payments_to_bots(steem=noapisteem,
                                                   min_datetime=min_datetime,
                                                   max_datetime=max_datetime)
     logger.info('Adjusting votes and reward')
