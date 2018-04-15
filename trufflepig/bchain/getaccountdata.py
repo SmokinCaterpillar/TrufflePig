@@ -130,8 +130,8 @@ def find_nearest_index(target_datetime,
             acc = none_error_retry(Account,
                                    errors=(Exception,))(account, steem)
             if current_index <= 1:
-                logger.error('Could not find index returning 1')
-                return 1, current_datetime
+                logger.error('Could not find index, raising StopIteration')
+                raise StopIteration('Problems for account {}'.format(account))
 
 
 def get_delegates_and_shares(account, steem):
