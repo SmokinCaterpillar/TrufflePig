@@ -192,6 +192,8 @@ Have a nice day and sincerely yours,
     """
     post = BODY_PREFIX + post
 
+    # Well, let's be nice ;-)
+    reward += 1
     return post.format(author=author, reward=int(reward), votes=int(votes), topN_link=topN_link,
                        truffle_link=truffle_link,
                        truffle_image_small=truffle_image_small)
