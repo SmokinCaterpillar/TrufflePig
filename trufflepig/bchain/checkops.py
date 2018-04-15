@@ -44,11 +44,16 @@ def check_all_ops_in_block(block_num, steem, account):
     List of tuples with comment authors and permalinks
 
     """
-    operations = none_error_retry(steem.get_ops_in_block)(block_num, False)
-    if operations:
-        return extract_comment_authors_and_permalinks(operations, account)
-    else:
-        logger.warning('Could not find any operations for block {}'.format(block_num))
+    try:
+        operations = none_error_retry(steem.get_ops_in_block)(block_num, False)
+        if operations:
+            return extract_comment_authors_and_permalinks(operations, account)
+        else:
+            logger.warning('Could not find any operations for block {}'.format(block_num))
+        return []
+    except Exception as e:
+        logger.exception('Error for block {}. Reconnecting...'.format(block_num))
+        steem.reconnect()
     return []
 
 

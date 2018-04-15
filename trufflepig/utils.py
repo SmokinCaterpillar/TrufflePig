@@ -295,8 +295,9 @@ def none_retry(f, retries=16, sleep_time=2):
     return wrapped
 
 
-def none_error_retry(f, retries=5, sleep_time=11, errors=(RPCError,),
-                not_log_errors=(PostDoesNotExist,)):
+def none_error_retry(f, retries=5, sleep_time=11,
+                     errors=(RPCError,),
+                     not_log_errors=(PostDoesNotExist,)):
     """Combines Error and None retry"""
     return none_retry(error_retry(f,
                                   retries=retries,
