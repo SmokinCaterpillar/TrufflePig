@@ -7,7 +7,7 @@ import numpy as np
 from steem.account import Account
 
 import trufflepig.bchain.getdata as tpbg
-from trufflepig.utils import progressbar
+from trufflepig.utils import progressbar, none_error_retry
 
 
 logger = logging.getLogger(__name__)
@@ -74,7 +74,7 @@ def find_nearest_index(target_datetime,
     datetime: datetime of matching index
 
     """
-    acc = Account(account, steem)
+    acc = none_error_retry(Account)(account, steem)
 
     if latest_index is None:
         latest_index = next(acc.history_reverse(batch_size=1))['index']
@@ -119,7 +119,7 @@ def find_nearest_index(target_datetime,
             current_index -= 1
             best_largest_index -= 1
             steem.reconnect()
-            acc = Account(account, steem)
+            acc = none_error_retry(Account)(account, steem)
             if current_index <= 1:
                 logger.error('Could not find index returning 1')
                 return 1, current_datetime
@@ -138,7 +138,7 @@ def get_delegates_and_shares(account, steem):
     dict of float
 
     """
-    acc = Account(account, steem)
+    acc = none_error_retry(Account)(account, steem)
     delegators = {}
     for tr in acc.history_reverse(filter_by='delegate_vesting_shares'):
         try:
@@ -188,7 +188,7 @@ def get_delegate_payouts(account, steem, current_datetime,
     filtered_vests_by = {delegator: dict_['vests']
                          for delegator, dict_ in vests_by.items()
                             if dict_['timestamp'] < threshold_date}
-    acc = Account(account, steem)
+    acc = none_error_retry(Account)(account, steem)
 
     pending = acc.balances['rewards']['SBD']
     vests = acc.balances['total']['VESTS']
@@ -265,7 +265,7 @@ def get_upvote_payments(account, steem, min_datetime, max_datetime,
 def history_reverse(account, steem, start_index, filter_by=None,
                     batch_size=1000, raw_output=False):
         """ Stream account history in reverse chronological order."""
-        acc = Account(account, steem)
+        acc = none_error_retry(Account)(account, steem)
         i = start_index
         if batch_size > start_index:
             batch_size = start_index
