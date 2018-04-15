@@ -83,7 +83,8 @@ def find_nearest_index(target_datetime,
     current_index = latest_index
     best_largest_index = latest_index
 
-    action = next(acc.get_account_history(best_largest_index, limit=1))
+    action = next(none_error_retry(acc.get_account_history,
+                                   errors=(Exception,))(best_largest_index, limit=1))
     best_largest_datetime = pd.to_datetime(action['timestamp'])
     if target_datetime > best_largest_datetime:
         logger.debug('Target beyond largest block num')
@@ -94,7 +95,8 @@ def find_nearest_index(target_datetime,
     current_datetime = None
     for _ in range(max_tries):
         try:
-            action = next(acc.get_account_history(current_index, limit=1))
+            action = next(none_error_retry(acc.get_account_history,
+                                   errors=(Exception,))(current_index, limit=1))
             current_datetime = pd.to_datetime(action['timestamp'])
             if increase <= index_tolerance:
                 return current_index, current_datetime
