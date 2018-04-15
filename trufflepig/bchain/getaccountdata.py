@@ -78,13 +78,13 @@ def find_nearest_index(target_datetime,
                            errors=(Exception,))(account, steem)
 
     if latest_index is None:
-        latest_index = next(none_error_retry(acc.history_reverse,
+        latest_index = none_error_retry(next, errors=(Exception,))(none_error_retry(acc.history_reverse,
                                    errors=(Exception,))(batch_size=1))['index']
 
     current_index = latest_index
     best_largest_index = latest_index
 
-    action = next(none_error_retry(acc.get_account_history,
+    action = none_error_retry(next, errors=(Exception,))(none_error_retry(acc.get_account_history,
                                    errors=(Exception,))(best_largest_index, limit=1))
     best_largest_datetime = pd.to_datetime(action['timestamp'])
     if target_datetime > best_largest_datetime:
@@ -96,7 +96,7 @@ def find_nearest_index(target_datetime,
     current_datetime = None
     for _ in range(max_tries):
         try:
-            action = next(none_error_retry(acc.get_account_history,
+            action = none_error_retry(next, errors=(Exception,))(none_error_retry(acc.get_account_history,
                                    errors=(Exception,))(current_index, limit=1))
             current_datetime = pd.to_datetime(action['timestamp'])
             if increase <= index_tolerance:
