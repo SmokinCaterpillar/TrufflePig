@@ -76,40 +76,42 @@ def load_and_preprocess_2_frames(log_directory, current_datetime, steem,
     """
     # hack for better memory footprint,
     # see https://stackoverflow.com/questions/15455048/releasing-memory-in-python
-    with concurrent.futures.ProcessPoolExecutor(max_workers=1) as executor:
-        post_frame = executor.submit(large_mp_preprocess,
-                                     log_directory=log_directory,
-                                     current_datetime=current_datetime,
-                                     steem=steem,
-                                     data_directory=data_directory,
-                                     days=days,
-                                     offset_days=offset_days).result()
-    with concurrent.futures.ProcessPoolExecutor(max_workers=1) as executor:
-        post_frame2 = executor.submit(large_mp_preprocess,
-                                     log_directory=log_directory,
-                                     current_datetime=current_datetime,
-                                     steem=steem,
-                                     data_directory=data_directory,
-                                     days=days2,
-                                     offset_days=offset_days + days).result()
-
-    post_frame = pd.concat([post_frame, post_frame2], axis=0)
-    # We need to reset the index because due to concatenation
-    # the default indices are duplicates!
-    post_frame.reset_index(inplace=True, drop=True)
-    logger.info('Combining 2 frames into 1')
-    post_frame = tppp.filter_duplicates(post_frame)
-
-    logger.info('Searching for bid bots and bought votes')
-    min_datetime = post_frame.created.min()
-    max_datetime = post_frame.created.max() + pd.Timedelta(days=8)
+    # with concurrent.futures.ProcessPoolExecutor(max_workers=1) as executor:
+    #     post_frame = executor.submit(large_mp_preprocess,
+    #                                  log_directory=log_directory,
+    #                                  current_datetime=current_datetime,
+    #                                  steem=steem,
+    #                                  data_directory=data_directory,
+    #                                  days=days,
+    #                                  offset_days=offset_days).result()
+    # with concurrent.futures.ProcessPoolExecutor(max_workers=1) as executor:
+    #     post_frame2 = executor.submit(large_mp_preprocess,
+    #                                  log_directory=log_directory,
+    #                                  current_datetime=current_datetime,
+    #                                  steem=steem,
+    #                                  data_directory=data_directory,
+    #                                  days=days2,
+    #                                  offset_days=offset_days + days).result()
+    #
+    # post_frame = pd.concat([post_frame, post_frame2], axis=0)
+    # # We need to reset the index because due to concatenation
+    # # the default indices are duplicates!
+    # post_frame.reset_index(inplace=True, drop=True)
+    # logger.info('Combining 2 frames into 1')
+    # post_frame = tppp.filter_duplicates(post_frame)
+    #
+    # logger.info('Searching for bid bots and bought votes')
+    # min_datetime = post_frame.created.min()
+    # max_datetime = post_frame.created.max() + pd.Timedelta(days=8)
+    max_datetime = pd.datetime.utcnow() - pd.Timedelta(days=3)
+    min_datetime = max_datetime - pd.Timedelta(days=14)
     upvote_payments = tpad.get_upvote_payments_to_bots(steem=noapisteem,
                                                   min_datetime=min_datetime,
                                                   max_datetime=max_datetime)
-    logger.info('Adjusting votes and reward')
-    post_frame = tppp.compute_bidbot_correction(post_frame=post_frame,
-                                                upvote_payments=upvote_payments)
-    return post_frame
+    # logger.info('Adjusting votes and reward')
+    # post_frame = tppp.compute_bidbot_correction(post_frame=post_frame,
+    #                                             upvote_payments=upvote_payments)
+    # return post_frame
 
 
 def main():
