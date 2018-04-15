@@ -145,7 +145,8 @@ def get_delegates_and_shares(account, steem):
     acc = none_error_retry(Account,
                            errors=(Exception,))(account, steem)
     delegators = {}
-    for tr in acc.history_reverse(filter_by='delegate_vesting_shares'):
+    for tr in none_error_retry(acc.history_reverse,
+                                   errors=(Exception,))(filter_by='delegate_vesting_shares'):
         try:
             delegator = tr['delegator']
             if delegator not in delegators:
@@ -279,7 +280,8 @@ def history_reverse(account, steem, start_index, filter_by=None,
         while i > 0:
             if i - batch_size < 0:
                 batch_size = i
-            yield from acc.get_account_history(
+            yield from none_error_retry(acc.get_account_history,
+                                   errors=(Exception,))(
                 index=i,
                 limit=batch_size,
                 order=-1,
