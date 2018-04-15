@@ -215,8 +215,15 @@ def get_upvote_payments(account, steem, min_datetime, max_datetime,
     start = time.time()
     upvote_payments = {}
 
-    start_index, _ = find_nearest_index(max_datetime,
-                                     account, steem)
+    try:
+        start_index, _ = find_nearest_index(max_datetime,
+                                         account, steem)
+    except StopIteration:
+        logger.exception('Could not get account INDEX data from '
+                         '{}. Reconnecting'.format(account))
+        steem.reconnect()
+        start_index = 1
+
     try:
         transfers = history_reverse(account, steem, filter_by='transfer',
                                     start_index=start_index,
