@@ -117,6 +117,10 @@ def find_nearest_index(target_datetime,
                                        'latest_index {}'.format(account,
                                                                 current_index,
                                                                 latest_index))
+        except StopIteration:
+            logger.exception('Problems for index {} of account {}. '
+                             'Reraising...'.format(current_index, account))
+            raise
         except Exception:
             logger.exception('Problems for index {} of account {}. '
                              'Reconnecting...'.format(current_index, account))
