@@ -153,7 +153,9 @@ def get_delegates_and_shares(account, steem):
                     raise RuntimeError('Weird shares {}'.format(shares))
 
         except Exception as e:
-            logger.exception('Error extracting delegator from {}'.format(tr))
+            logger.exception('Error extracting delegator from '
+                             '{}, restarting steem'.format(tr))
+            steem.reconnect()
     return delegators
 
 
@@ -211,8 +213,10 @@ def get_upvote_payments(account, steem, min_datetime, max_datetime,
                                     start_index=start_index,
                                     batch_size=batch_size)
     except Exception as e:
-        logger.exception('Could not get account data from {}'.format(account))
+        logger.exception('Could not get account data from '
+                         '{}, restarting steem'.format(account))
         transfers = []
+        steem.reconnect()
 
     for transfer in transfers:
         try:
