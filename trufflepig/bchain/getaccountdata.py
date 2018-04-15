@@ -53,7 +53,7 @@ def find_nearest_index(target_datetime,
                            steem,
                            latest_index=None,
                            max_tries=5000,
-                           index_tolerance=5):
+                           index_tolerance=2):
     """ Finds nearest account action index to `target_datetime`
 
     Parameters
