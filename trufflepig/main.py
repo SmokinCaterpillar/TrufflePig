@@ -74,6 +74,16 @@ def load_and_preprocess_2_frames(log_directory, current_datetime, steem,
     DataFrame
 
     """
+    min_datetime = current_datetime - pd.Timedelta(days=days2 + days + offset_days + 1)
+    max_datetime = current_datetime
+    logger.info('Searching for bid bots and bought votes between {} and '
+                '{}'.format(min_datetime, max_datetime))
+    # max_datetime = pd.datetime.utcnow() - pd.Timedelta(days=3)
+    # min_datetime = max_datetime - pd.Timedelta(days=14)
+    upvote_payments = tpad.get_upvote_payments_to_bots(steem=noapisteem,
+                                                  min_datetime=min_datetime,
+                                                  max_datetime=max_datetime)
+
     # hack for better memory footprint,
     # see https://stackoverflow.com/questions/15455048/releasing-memory-in-python
     with concurrent.futures.ProcessPoolExecutor(max_workers=1) as executor:
@@ -100,14 +110,6 @@ def load_and_preprocess_2_frames(log_directory, current_datetime, steem,
     logger.info('Combining 2 frames into 1')
     post_frame = tppp.filter_duplicates(post_frame)
 
-    logger.info('Searching for bid bots and bought votes')
-    min_datetime = post_frame.created.min()
-    max_datetime = post_frame.created.max() + pd.Timedelta(days=8)
-    # max_datetime = pd.datetime.utcnow() - pd.Timedelta(days=3)
-    # min_datetime = max_datetime - pd.Timedelta(days=14)
-    upvote_payments = tpad.get_upvote_payments_to_bots(steem=noapisteem,
-                                                  min_datetime=min_datetime,
-                                                  max_datetime=max_datetime)
     logger.info('Adjusting votes and reward')
     post_frame = tppp.compute_bidbot_correction(post_frame=post_frame,
                                                 upvote_payments=upvote_payments)
