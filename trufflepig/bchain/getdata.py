@@ -502,7 +502,7 @@ def load_or_scrape_training_data(steem, directory,
     # We need to reset the index because due to concatenation
     # the default indices are duplicates!
     frame.reset_index(inplace=True, drop=True)
-    to_drop = frame.loc[frame.created < start_datetime, :]
+    to_drop = frame.loc[frame.created < start_datetime.date(), :]
     logger.info('Dropping {} posts not created in time '
                 'window, but before {}'.format(len(to_drop), start_datetime))
     frame.drop(to_drop.index, inplace=True)
