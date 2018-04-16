@@ -150,6 +150,7 @@ def check_all_ops_between_parallel(start_datetime, end_datetime, steem,
     pool.close()
 
     comment_authors_and_permalinks = []
+    terminate = False
     for kdx, async in enumerate(async_results):
         try:
             new_posts = async.get(timeout=timeout)
@@ -162,7 +163,11 @@ def check_all_ops_between_parallel(start_datetime, end_datetime, steem,
                                                           account))
         except TimeoutError:
             logger.exception('Something went totally wrong dude!')
+            terminate = True
 
+    if terminate:
+        logger.error('Terminating pool due to timeout or errors')
+        pool.terminate()
     pool.join()
     return comment_authors_and_permalinks
 

@@ -350,6 +350,7 @@ def get_upvote_payments_for_accounts(accounts, steem, min_datetime, max_datetime
         pool.close()
 
         upvote_payments = {}
+        terminate = False
         for kdx, async in enumerate(async_results):
             try:
                 payments = async.get(timeout=timeout)
@@ -361,7 +362,11 @@ def get_upvote_payments_for_accounts(accounts, steem, min_datetime, max_datetime
                                 'upvote buyers...'.format(kdx + 1, len(async_results), len(upvote_payments)))
             except Exception as e:
                 logger.exception('Something went totally wrong dude!')
+                terminate = True
 
+        if terminate:
+            logger.error('Terminating pool due to timeout or errors')
+            pool.terminate()
         pool.join()
     else:
         return _get_upvote_payments_parrallel(accounts, steem, min_datetime,

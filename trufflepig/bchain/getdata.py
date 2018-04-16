@@ -375,6 +375,7 @@ def get_all_posts_between_parallel(start_datetime, end_datetime, steem,
     pool.close()
 
     posts = []
+    terminate = False
     for kdx, async in enumerate(async_results):
         try:
             new_posts = async.get(timeout=timeout)
@@ -385,7 +386,11 @@ def get_all_posts_between_parallel(start_datetime, end_datetime, steem,
                             'posts...'.format(kdx + 1, len(chunks), len(posts)))
         except Exception as e:
             logger.exception('Something went totally wrong dude!')
+            terminate = True
 
+    if terminate:
+        logger.error('Terminating pool due to timeout or errors')
+        pool.terminate()
     pool.join()
     return posts
 
@@ -497,6 +502,10 @@ def load_or_scrape_training_data(steem, directory,
     # We need to reset the index because due to concatenation
     # the default indices are duplicates!
     frame.reset_index(inplace=True, drop=True)
+    to_drop = frame.loc[frame.created < start_datetime, :]
+    logger.info('Dropping {} posts not created in time '
+                'window, but before {}'.format(len(to_drop), start_datetime))
+    frame.drop(to_drop.index, inplace=True)
     return frame
 
 
