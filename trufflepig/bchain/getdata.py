@@ -487,6 +487,7 @@ def load_or_scrape_training_data(steem, directory,
         current_datetime = pd.to_datetime(current_datetime)
 
     start_datetime = current_datetime - pd.Timedelta(days=days + offset_days)
+    end_datetime = current_datetime - pd.Timedelta(days=offset_days)
 
     frames = []
     for day in range(days):
@@ -503,10 +504,17 @@ def load_or_scrape_training_data(steem, directory,
     # the default indices are duplicates!
     frame.reset_index(inplace=True, drop=True)
     filter_date = start_datetime.date()
+
     to_drop = frame.loc[frame.created < filter_date, :]
     logger.info('Dropping {} posts not created in time '
                 'window, but before {}'.format(len(to_drop), filter_date))
     frame.drop(to_drop.index, inplace=True)
+
+    to_drop = frame.loc[frame.created > end_datetime, :]
+    logger.info('Dropping {} posts not created in time '
+                'window, but after {}'.format(len(to_drop), end_datetime))
+    frame.drop(to_drop.index, inplace=True)
+
     return frame
 
 
