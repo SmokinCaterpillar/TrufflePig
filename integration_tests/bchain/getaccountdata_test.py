@@ -4,10 +4,10 @@ from trufflepig.testutils.pytest_fixtures import steem, noapisteem
 import trufflepig.bchain.getaccountdata as tpac
 
 
-def test_find_index_offset(steem):
+def test_find_index_offset(noapisteem):
     now = pd.datetime.utcnow()
     target = now - pd.Timedelta(days=42)
-    offset, datetime = tpac.find_nearest_index(target, 'cheetah', steem)
+    offset, datetime = tpac.find_nearest_index(target, 'cheetah', noapisteem)
     assert 0 < offset
     assert abs((target - datetime).seconds) < 3600*48
 
@@ -29,28 +29,28 @@ def test_payouts(noapisteem):
     assert 'trufflepig' not in result
 
 
-def test_bidbot_test(steem):
+def test_bidbot_test(noapisteem):
     min_datetime = pd.datetime.utcnow() - pd.Timedelta(days=14)
     max_datetime = min_datetime + pd.Timedelta(days=13)
-    result = tpac.get_upvote_payments('brittuf', steem, min_datetime,
+    result = tpac.get_upvote_payments('brittuf', noapisteem, min_datetime,
                                       max_datetime)
     assert result
 
 
-def test_bidbot_test_max_time(steem):
+def test_bidbot_test_max_time(noapisteem):
     min_datetime = pd.datetime.utcnow() - pd.Timedelta(days=14)
     max_datetime = min_datetime + pd.Timedelta(days=13)
-    result = tpac.get_upvote_payments('brittuf', steem, min_datetime,
+    result = tpac.get_upvote_payments('brittuf', noapisteem, min_datetime,
                                       max_datetime, max_time=0.1)
     assert len(result) <= 1
 
 
-def test_get_upvote_payments_for_accounts(steem):
+def test_get_upvote_payments_for_accounts(noapisteem):
     min_datetime = pd.datetime.utcnow() - pd.Timedelta(days=14)
     max_datetime = min_datetime + pd.Timedelta(days=5)
     accounts = ['trufflepig', 'smcaterpillar', 'brittuf']
     result = tpac.get_upvote_payments_for_accounts(accounts,
-                                                   steem,
+                                                   noapisteem,
                                                    min_datetime=min_datetime,
                                                    max_datetime=max_datetime)
     assert result
