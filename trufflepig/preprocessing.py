@@ -29,7 +29,8 @@ FILTER_TAGS = ('mitnebcurationtrail', 'informationwar', 'truth', 'conspiracy',
 
 
 # Stay out of the whale wars!
-FILTER_AUTHORS = ('haejin', 'ew-and-patterns', 'caladium', 'cryptopassion', 'thirdeye7')
+FILTER_AUTHORS = ('haejin', 'ew-and-patterns', 'caladium',
+                  'cryptopassion', 'thirdeye7', 'shariarahammad')
 
 # Get out plagiarismos!
 FILTER_VOTERS = ('cheetah',)
