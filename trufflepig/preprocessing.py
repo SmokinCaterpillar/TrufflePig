@@ -11,6 +11,7 @@ from steem.amount import Amount
 import trufflepig.filters.stylemeasures as tfsm
 import trufflepig.filters.textfilters as tftf
 import trufflepig.bchain.getaccountdata as tfga
+from trufflepig.filters.blacklist import BUILD_A_WHALE_BLACKLIST
 
 
 logger = logging.getLogger(__name__)
@@ -103,7 +104,7 @@ def preprocess(post_df, ncores=4, chunksize=500,
                min_max_average_punctuation=(1.05, 5),
                min_max_average_sentence_length=(10, 350),
                filter_tags=FILTER_TAGS,
-               filter_authors=FILTER_AUTHORS,
+               filter_authors=FILTER_AUTHORS + BUILD_A_WHALE_BLACKLIST,
                filter_voters=FILTER_VOTERS,
                dropna=True):
     """ Preprocessing of raw steemit posts, filters and adds features
