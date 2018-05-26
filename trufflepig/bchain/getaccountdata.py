@@ -315,7 +315,11 @@ def _get_upvote_payments_parrallel(accounts, steem, min_datetime,
                                    max_datetime):
     results = {}
     for account in accounts:
-        result = get_upvote_payments(account, steem, min_datetime, max_datetime)
+        result = none_error_retry(get_upvote_payments,
+                                  errors=(Exception,),
+                                  retries=5,
+                                  sleep_time=2)(account, steem,
+                                                min_datetime, max_datetime)
         results = extend_upvotes_and_payments(results, result)
 
     return result
