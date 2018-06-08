@@ -1,5 +1,7 @@
 import re
 import string
+from xml.etree.ElementTree import ParseError
+import logging
 
 import numpy as np
 import scipy.stats as spst
@@ -7,6 +9,8 @@ import langdetect
 import language_check
 import pyphen
 from enchant.checker import SpellChecker
+
+logger = logging.getLogger(__name__)
 
 CAPS = "([A-Z])"
 PREFIXES = "(Mr|St|Mrs|Ms|Dr)[.]"
@@ -204,7 +208,11 @@ class GrammarErrorCounter(object):
     def count_mistakes_per_character(self, text):
         if self.max_length:
             text = text[:self.max_length]
-        nerrors = len(self.tool.check(text))
+        try:
+            nerrors = len(self.tool.check(text))
+        except ParseError:
+            logger.exception('Cannot count errors assuming maximum')
+            nerrors = len(text)
         return nerrors / len(text)
 
 
