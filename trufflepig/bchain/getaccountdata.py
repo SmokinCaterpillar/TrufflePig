@@ -397,4 +397,4 @@ def get_upvote_payments_to_bots(steem, min_datetime, max_datetime,
                                             min_datetime=min_datetime,
                                             max_datetime=max_datetime,
                                             ncores=ncores,
-                                            chunksize=1)
+                                            chunksize=1), bots

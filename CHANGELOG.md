@@ -1,3 +1,7 @@
+* 0.6.3a - 2018-07-06
+
+* Bots are now also actively filtered
+
 * 0.6.2a* - 2018-03-27
 
 * SQLite is now used to store blockchain data

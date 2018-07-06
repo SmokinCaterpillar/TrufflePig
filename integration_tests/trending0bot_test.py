@@ -23,12 +23,12 @@ def test_create_trending_post(noapisteem):
 
     min_datetime = data_frame.created.min()
     max_datetime = data_frame.created.max() + pd.Timedelta(days=8)
-    upvote_payments = tpad.get_upvote_payments_to_bots(steem=noapisteem,
+    upvote_payments, bots = tpad.get_upvote_payments_to_bots(steem=noapisteem,
                                                   min_datetime=min_datetime,
                                                   max_datetime=max_datetime,
                                                  bots=['booster'])
 
-    data_frame = df = tppp.preprocess(data_frame, ncores=1)
+    data_frame = tppp.preprocess(data_frame, ncores=1)
 
     data_frame = tppp.compute_bidbot_correction(post_frame=data_frame,
                                                 upvote_payments=upvote_payments)
@@ -37,15 +37,16 @@ def test_create_trending_post(noapisteem):
                     no_posting_key_mode=config.PASSWORD is None)
 
     tt0b.create_trending_post(data_frame, upvote_payments, poster, 'test',
-                         'test', current_datetime)
+                         'test', current_datetime, bots=bots)
 
 
 def test_bottracker_api(noapisteem):
 
     min_datetime = pd.datetime.utcnow() - pd.Timedelta(minutes=30)
     max_datetime = pd.datetime.utcnow()
-    upvote_payments = tpad.get_upvote_payments_to_bots(steem=noapisteem,
+    upvote_payments, bots = tpad.get_upvote_payments_to_bots(steem=noapisteem,
                                                        min_datetime=min_datetime,
                                                        max_datetime=max_datetime,
                                                        bots='default')
     assert upvote_payments
+    assert bots
