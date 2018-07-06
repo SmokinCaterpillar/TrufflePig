@@ -45,7 +45,9 @@ def create_trending_post(post_frame, upvote_payments, poster, topN_permalink,
     # exlude all bot votes
     bot_votes = []
     for idx, row in no_bid_bots_frame.iterrows():
-        bot_votes.append(len(bots.union({x['voter'] for x in row.active_votes})) > 0)
+        bot_votes.append(len(bots.intersection(
+            {x['voter'] for x in row.active_votes})
+        ) > 0)
     bot_votes = np.array(bot_votes)
     no_bid_bots_frame = no_bid_bots_frame.loc[~bot_votes, :]
 
