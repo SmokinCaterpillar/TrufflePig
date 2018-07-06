@@ -106,7 +106,7 @@ def load_and_preprocess_2_frames(log_directory, current_datetime, steem,
                 '{}'.format(min_datetime, max_datetime))
     # max_datetime = pd.datetime.utcnow() - pd.Timedelta(days=3)
     # min_datetime = max_datetime - pd.Timedelta(days=14)
-    upvote_payments = tpad.get_upvote_payments_to_bots(steem=noapisteem,
+    upvote_payments, _ = tpad.get_upvote_payments_to_bots(steem=noapisteem,
                                                   min_datetime=min_datetime,
                                                   max_datetime=max_datetime)
     logger.info('Adjusting votes and reward')
@@ -240,7 +240,7 @@ def main():
     logger.info('Searching for bid bots and bought votes')
     min_datetime = sorted_frame.created.min()
     max_datetime = sorted_frame.created.max() + pd.Timedelta(days=1)
-    upvote_payments = tpad.get_upvote_payments_to_bots(steem=noapisteem,
+    upvote_payments, bots = tpad.get_upvote_payments_to_bots(steem=noapisteem,
                                                   min_datetime=min_datetime,
                                                   max_datetime=max_datetime)
     logger.info('Adjusting votes and reward')
@@ -251,7 +251,8 @@ def main():
                               poster=poster,
                               topN_permalink=permalink,
                               overview_permalink=overview_permalink,
-                              current_datetime=current_datetime)
+                              current_datetime=current_datetime,
+                              bots=bots)
 
 
     logger.info('Done with normal duty, answering manual calls!')
