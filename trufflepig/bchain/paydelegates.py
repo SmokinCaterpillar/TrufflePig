@@ -37,7 +37,7 @@ def pay_delegates(account, steem,
 
     """
     logger.info('Computing payouts for delegates!')
-    payouts = tpga.get_delegate_payouts(account, steem,
+    payouts = error_retry(tpga.get_delegate_payouts)(account, steem,
                                         current_datetime=current_datetime,
                                         min_days=min_days,
                                         investor_share=investor_share)
