@@ -31,7 +31,7 @@ def test_filter_special_characters():
 
 
 def test_filter_formatting():
-    result = tptf.filter_formatting('Hi&nbsphey aligncenter nbsp Styletextalign kk')
+    result = tptf.filter_formatting('Hi&nbsphey aligncenter nbsp Styletextalign kkhspace10')
     assert result == 'Hihey    kk'
 
 

@@ -51,6 +51,12 @@ EXPRESSIONS = (
     'div',
     """class=["']text-justify["']""",
     'h[1-6]',
+    'hspace[0-9]*',
+    'alignleft',
+    'alignright',
+    'border[0-9]+',
+    'height[0-9]+',
+    'width[0-9]+',
 )
 
 
