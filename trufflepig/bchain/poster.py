@@ -7,7 +7,7 @@ from trufflepig.utils import error_retry
 logger = logging.getLogger(__name__)
 
 
-WAIT = 20.02
+WAIT = 24.42
 
 THRESHOLD = 'threshold'
 
