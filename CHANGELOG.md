@@ -1,6 +1,5 @@
 - 0.6.4a - 2018-07-11
 
-    * Support for steem-python 1.0
     * Sets in DataFrames can be dumped to SQLite now
 
 - 0.6.3a - 2018-07-06
