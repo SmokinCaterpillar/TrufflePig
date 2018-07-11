@@ -208,7 +208,7 @@ def create_wallet(steem, password, posting_key,
 
     logger.info('Unlocking or creating wallet')
     wallet = steem.wallet
-    wallet.unlock(pwd=password)
+    wallet.unlock(password)
 
     logger.info('Adding POSTING Key')
     try:
