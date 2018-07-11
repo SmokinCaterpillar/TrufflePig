@@ -1,3 +1,4 @@
+from trufflepig.testutils.pytest_fixtures import steem
 import trufflepig.pigonduty as tppd
 from tests.integration.model_test import MockPipeline
 from trufflepig import config
