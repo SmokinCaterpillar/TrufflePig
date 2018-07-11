@@ -1,10 +1,6 @@
-import pytest
-
-from trufflepig.testutils.pytest_fixtures import steem
-from integration_tests.model_test import MockPipeline
-
-from trufflepig import config
 import trufflepig.pigonduty as tppd
+from tests.integration.model_test import MockPipeline
+from trufflepig import config
 from trufflepig.bchain.poster import Poster
 
 
