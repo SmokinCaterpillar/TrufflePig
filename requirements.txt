@@ -5,7 +5,7 @@ python-coveralls
 pytest-cov
 google-compute-engine # this is not needed, but boto fails on travis otherwise!
 boto==2.48.0
-pandas==0.23.0
+pandas==0.23.3
 gensim==3.2.0
 scikit-learn==0.19.1
 langdetect==1.0.7
