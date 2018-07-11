@@ -6,6 +6,6 @@ install:
   - sudo apt-get install enchant
   - pip install -r requirements.txt
 script:
-  - py.test --cov=trufflepig
+  - py.test --cov=trufflepig ./tests
 after_success:
   - coveralls
