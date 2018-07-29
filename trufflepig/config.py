@@ -2,8 +2,8 @@ import os
 
 # The steemit nodes to load data from
 NODE_URL = os.environ.get('STEEM_NODE_URL','https://api.steemit.com')
-NODE_URL2 = os.environ.get('STEEM_NODE_URL2', 'https://rpc.buildteam.io')
-NODE_URL3 = os.environ.get('STEEM_NODE_URL3', 'https://api.steem.house')
+NODE_URL2 = os.environ.get('STEEM_NODE_URL2', 'https://api.steem.house')
+NODE_URL3 = os.environ.get('STEEM_NODE_URL3', 'https://rpc.buildteam.io')
 NODE_URL4 = os.environ.get('STEEM_NODE_URL4', 'steemd.minnowsupportproject.org')
 NODE_URL5 = os.environ.get('STEEM_NODE_URL5', 'steemd.pevo.science')
 NODE_URL6 = os.environ.get('STEEM_NODE_URL6', 'rpc.curiesteem.com')
