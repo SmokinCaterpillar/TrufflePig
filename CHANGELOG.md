@@ -1,3 +1,7 @@
+- 0.6.5a - 2018-07-29
+
+    * Now steem nodes are checked if they are up before being used
+
 - 0.6.4a - 2018-07-11
 
     * Sets in DataFrames can be dumped to SQLite now
