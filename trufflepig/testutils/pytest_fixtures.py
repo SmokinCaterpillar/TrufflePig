@@ -6,12 +6,12 @@ from trufflepig.bchain import getdata as tpbg
 from trufflepig.bchain.mpsteem import MPSteem
 
 
-@pytest.fixture
+@pytest.fixture(scope="session")
 def steem():
     return MPSteem(nodes=config.NODES, no_broadcast=True)
 
 
-@pytest.fixture
+@pytest.fixture(scope="session")
 def noapisteem():
     return MPSteem(nodes=config.NODES[1:], no_broadcast=True)
 
