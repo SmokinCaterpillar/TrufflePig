@@ -42,7 +42,7 @@ class MPSteem(Steem):
                 else:
                     test_node = node
                 node_codes.append((node, rqst.urlopen(test_node,
-                                                      timeout=1.1).getcode()))
+                                                      timeout=1.0).getcode()))
             except Exception as e:
                 node_codes.append((node, 400))
         up_nodes = [x[0] for x in node_codes if x[1] == 200]
