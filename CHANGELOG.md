@@ -1,3 +1,7 @@
+- 0.6.6a - 2018-08-12
+    
+    * Removed the hacky NoApiSteem connection
+
 - 0.6.5a - 2018-07-29
 
     * Now steem nodes are checked if they are up before being used
