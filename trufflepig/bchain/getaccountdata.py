@@ -195,7 +195,8 @@ def get_delegate_payouts(account, steem, current_datetime,
     current_datetime = pd.to_datetime(current_datetime)
     threshold_date = current_datetime - pd.Timedelta(days=min_days)
 
-    vests_by = get_delegates_and_shares(account, steem)
+    vests_by = none_error_retry(get_delegates_and_shares,
+                                retries=3, errors=(TypeError,))(account, steem)
     filtered_vests_by = {delegator: dict_['vests']
                          for delegator, dict_ in vests_by.items()
                             if dict_['timestamp'] < threshold_date}
