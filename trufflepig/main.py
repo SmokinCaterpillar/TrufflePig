@@ -52,7 +52,6 @@ def large_mp_preprocess(log_directory, current_datetime, steem, data_directory,
 
 
 def load_and_preprocess_2_frames(log_directory, current_datetime, steem,
-                                 noapisteem,
                                  data_directory, offset_days=8,
                                  days=7, days2=7):
     """ Function to load and preprocess the time span split into 2
@@ -106,7 +105,7 @@ def load_and_preprocess_2_frames(log_directory, current_datetime, steem,
                 '{}'.format(min_datetime, max_datetime))
     # max_datetime = pd.datetime.utcnow() - pd.Timedelta(days=3)
     # min_datetime = max_datetime - pd.Timedelta(days=14)
-    upvote_payments, _ = tpad.get_upvote_payments_to_bots(steem=noapisteem,
+    upvote_payments, _ = tpad.get_upvote_payments_to_bots(steem=steem,
                                                   min_datetime=min_datetime,
                                                   max_datetime=max_datetime)
     logger.info('Adjusting votes and reward')
@@ -139,11 +138,10 @@ def main():
     time.sleep(2)
 
     steem = MPSteem(nodes=config.NODES, no_broadcast=no_broadcast)
-    # hack to allow for payments, because of https://github.com/steemit/steem-python/issues/191
-    noapisteem = MPSteem(nodes=config.NODES[1:], no_broadcast=no_broadcast)
+
     # To post stuff
     account = config.ACCOUNT
-    poster = Poster(account=account, steem=noapisteem)
+    poster = Poster(account=account, steem=steem)
 
     tppd.create_wallet(steem, config.PASSWORD,
                        posting_key=config.POSTING_KEY,
@@ -151,7 +149,7 @@ def main():
 
     logger.info('Paying out investors')
     tpde.pay_delegates(account=account,
-                       steem=noapisteem, # use a steem instance without api.steem!
+                       steem=steem, # use a steem instance without api.steem!
                        current_datetime=current_datetime)
 
     if not tpmo.model_exists(current_datetime, model_directoy):
@@ -160,7 +158,6 @@ def main():
             log_directory=log_directory,
             current_datetime=current_datetime,
             steem=steem,
-            noapisteem=noapisteem,
             data_directory=data_directory)
         logger.info('Garbage collecting')
         gc.collect()
@@ -201,7 +198,6 @@ def main():
             log_directory=log_directory,
             current_datetime=current_datetime,
             steem=steem,
-            noapisteem=noapisteem,
             data_directory=data_directory)
 
         logger.info('I want to post my weekly overview')
@@ -240,7 +236,7 @@ def main():
     logger.info('Searching for bid bots and bought votes')
     min_datetime = sorted_frame.created.min()
     max_datetime = sorted_frame.created.max() + pd.Timedelta(days=1)
-    upvote_payments, bots = tpad.get_upvote_payments_to_bots(steem=noapisteem,
+    upvote_payments, bots = tpad.get_upvote_payments_to_bots(steem=steem,
                                                   min_datetime=min_datetime,
                                                   max_datetime=max_datetime)
     logger.info('Adjusting votes and reward')
