@@ -140,7 +140,7 @@ def main():
 
     steem = MPSteem(nodes=config.NODES, no_broadcast=no_broadcast)
     # hack to allow for payments, because of https://github.com/steemit/steem-python/issues/191
-    noapisteem = MPSteem(nodes=config.NODES[1:], no_broadcast=no_broadcast)
+    noapisteem = MPSteem(nodes=config.NODES, no_broadcast=no_broadcast)
     # To post stuff
     account = config.ACCOUNT
     poster = Poster(account=account, steem=noapisteem)
