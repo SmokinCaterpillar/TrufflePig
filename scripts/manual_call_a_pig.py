@@ -135,11 +135,10 @@ def main():
     time.sleep(2)
 
     steem = MPSteem(nodes=config.NODES, no_broadcast=no_broadcast)
-    # hack to allow for payments, because of https://github.com/steemit/steem-python/issues/191
-    noapisteem = MPSteem(nodes=config.NODES[1:], no_broadcast=no_broadcast)
+
     # To post stuff
     account = config.ACCOUNT
-    poster = Poster(account=account, steem=noapisteem)
+    poster = Poster(account=account, steem=steem)
 
     tppd.create_wallet(steem, config.PASSWORD,
                        posting_key=config.POSTING_KEY,
