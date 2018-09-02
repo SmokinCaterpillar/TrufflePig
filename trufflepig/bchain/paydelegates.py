@@ -37,13 +37,17 @@ def pay_delegates(account, steem,
 
     """
     logger.info('Computing payouts for delegates!')
-    payouts = error_retry(tpga.get_delegate_payouts)(account, steem,
-                                        current_datetime=current_datetime,
-                                        min_days=min_days,
-                                        investor_share=investor_share)
-    logger.info('Found the following payouts:\n{}'.format(payouts))
+    sbd_payouts, steem_payouts = error_retry(tpga.get_delegate_payouts)(
+        account, steem,
+        current_datetime=current_datetime,
+        min_days=min_days,
+        investor_share=investor_share
+    )
+
     claim_all_reward_balance(steem, account)
-    for delegator, payout in payouts.items():
+
+    logger.info('Found the following SBD payouts:\n{}'.format(sbd_payouts))
+    for delegator, payout in sbd_payouts.items():
         try:
             if payout:
                 logger.info('Paying {} SBD to {}'.format(delegator, payout))
@@ -55,6 +59,22 @@ def pay_delegates(account, steem,
                                                          account=account)
         except Exception as e:
             logger.exception('Could not pay {} SBD to {}! '
+                             'Reconnecting...'.format(payout, delegator))
+            steem.reconnect()
+
+    logger.info('Found the following STEEM payouts:\n{}'.format(steem_payouts))
+    for delegator, payout in steem_payouts.items():
+        try:
+            if payout:
+                logger.info('Paying {} STEEM to {}'.format(delegator, payout))
+                error_retry(steem.commit.transfer,
+                            errors=(RPCError, TypeError))(to=delegator,
+                                                         amount=payout,
+                                                         asset='STEEM',
+                                                         memo=memo,
+                                                         account=account)
+        except Exception as e:
+            logger.exception('Could not pay {} STEEM to {}! '
                              'Reconnecting...'.format(payout, delegator))
             steem.reconnect()
 

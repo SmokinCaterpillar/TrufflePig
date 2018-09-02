@@ -188,6 +188,8 @@ def get_delegate_payouts(account, steem, current_datetime,
     -------
     dict of float:
         SBD to pay to each investor
+    dict of float:
+        STEEM to pay to each investor
 
     """
     assert 0 < investor_share <= 1
@@ -203,15 +205,19 @@ def get_delegate_payouts(account, steem, current_datetime,
     acc = none_error_retry(Account,
                            errors=(Exception,))(account, steem)
 
-    pending = acc.balances['rewards']['SBD']
+    pending_sbd = acc.balances['rewards']['SBD']
+    pending_steem = acc.balances['rewards']['STEEM']
     vests = acc.balances['total']['VESTS']
     filtered_vests_by[account] = vests
 
     total_vests = sum(filtered_vests_by.values())
-    payouts = {delegator: np.round(vests / total_vests * investor_share * pending, decimals=3)
+    sbd_payouts = {delegator: np.round(vests / total_vests * investor_share * pending_sbd, decimals=3)
                     for delegator, vests in filtered_vests_by.items() if delegator != account}
 
-    return payouts
+    steem_payouts = {delegator: np.round(vests / total_vests * investor_share * pending_steem, decimals=3)
+                    for delegator, vests in filtered_vests_by.items() if delegator != account}
+
+    return sbd_payouts, steem_payouts
 
 
 def get_upvote_payments(account, steem, min_datetime, max_datetime,
