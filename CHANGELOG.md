@@ -1,3 +1,7 @@
+- 0.6.9a - 2018-10-20
+
+    * Filterint translations
+
 - 0.6.8a - 2018-09-02
 
     * Now paying STEEM to investors alongside SBD
