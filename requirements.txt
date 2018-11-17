@@ -2,6 +2,7 @@ pytest
 numpy
 scipy
 python-coveralls
+coverage==4.4
 pytest-cov
 google-compute-engine # this is not needed, but boto fails on travis otherwise!
 boto==2.48.0
