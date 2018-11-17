@@ -43,8 +43,8 @@ The bot works as follows:
 Clone the project directory:
 > `$ git clone https://github.com/SmokinCaterpillar/TrufflePig.git`
 
-Add the project directory to your `PYTHONPATH`:
-> `$ echo '$PYTHONPATH=$PYTHONPATH:<project-directory-path>' >> ~/.bash_profile & source ~/.bash_profile`
+Add the project directory to your `PYTHONPATH`, e.g.
+> `$ export PYTHONPATH=$PYTHONPATH:<path_to_project>`
 
 Start the bot using the provided `main.py` driver:
 > `python main.py`
