@@ -355,11 +355,7 @@ Ever wondered which words are used the most?
 
 {top10_words}
 
-To be fair, I actually do not care about these words. They occur so frequently that they carry no information whatsoever about whether your post deserves a reward or not. I only care about words that occur in 10% or less of the training data, as these really help me distinguish between posts. We can figure out which words or bigrams of words I care about the most by ordering according to their tfidf score (taking the maximum tfidf across a large sample of documents):
-
-{top10_tfidf}
-
-Next, let's take a look at which features I really base my decisions on.
+To be fair, I actually do not care about these words. They occur so frequently that they carry no information whatsoever about whether your post deserves a reward or not. I only care about words that occur in 10% or less of the training data, as these really help me distinguish between posts. Let's take a look at which features I really base my decisions on.
 
 ### Feature Importances
 
@@ -444,7 +440,7 @@ Cheers,
                       top10_tags=top10_tags,
                       top10_tags_earnings=top10_tags_earnings,
                       top10_words=top10_words,
-                      top10_tfidf=top10_tfidf,
+                      #top10_tfidf=top10_tfidf,
                       spelling_percent=spelling_percent,
                       style_percent=style_percent,
                       topic_percent=topic_percent,
